@@ -1,3 +1,14 @@
+/*  ABSTRACTION
+      Data Description:
+        - 500 Hz EKG data
+        - so should data be drawn at 500 fps? can device handle that?
+      Two parts:
+        I.  Data processor - cycles through EKG data
+        II. Painter - paints the canvas
+    - painter should run at browser framerate (max for device) for smoothness
+    - data processor should run as fast as possible, but 
+
+*/
 
 function onload() {
   var canvas = document.getElementById("demo");
@@ -30,12 +41,11 @@ function onload() {
 
   // initialize the timer variables and start the animation
 
-  
   var p = 0;
   var i = 0;
   var j = 0;
 
-  function randomPYval() {
+  function parseData() {
     py = -parseInt(data[i] * 1000) / 8 + verticalPositionFactor;
     j++;
     i++;
@@ -43,11 +53,12 @@ function onload() {
     if (i >= data.length) i = 0;
   }
 
+  // initiate animation (is only run once)
   function startAnimating() {
-    fpsInterval = 1000 / animatefps;
-    then = Date.now();
-    startTime = then;
-    loop();
+    ctx.beginPath();
+    for (let i = 0; i < 1400; i++) {
+      setInterval(loop(), 2);
+    }
   }
 
   setInterval(updateHertz, 1000);
@@ -62,47 +73,31 @@ function onload() {
 
   function loop() {
     // request another frame
-    requestAnimationFrame(loop);
-
+    parseData()
     l++; //count # of times through loop
-    if (HRmode == 0) {
-      if (p == 0) {
-        ctx.beginPath();
-      }
-      p++;
-      randomPYval();
-      px += speed; // horizontal pixels per data point
-
-      ctx.moveTo(opx, opy);
-      ctx.lineTo(px, py);
-
-      // calc elapsed time since last loop
-      now = Date.now();
-      elapsed = now - then;
-      // if enough time has elapsed, draw the next frame
-      if (elapsed > fpsInterval) {
-        // Get ready for next frame by setting then=now, but also adjust for your
-        // specified fpsInterval not being a multiple of RAF's interval (16.7ms)
-        then = now - (elapsed % fpsInterval);
-        drawit();
-        document.getElementById("demoTEXT3").innerText;
-        1 / elapsed;
-      }
-      opx = px;
-      opy = py;
-
-      if (opx > w) {
-        px = opx = 0; //-speed;
-      }
-      //document.getElementById('demoTEXT').innerText = PVCflag;
-      document.getElementById("demoTEXT2").innerText = i;
+    px += speed; // horizontal pixels per data point
+    //ctx.clearRect(px, 0, scanBarWidth, h);
+    ctx.beginPath();
+    ctx.moveTo(opx, opy);
+    ctx.lineTo(px, py);
+    if (i%10==0)
+    {
+    requestAnimationFrame(paint)
     }
+    
+    opx = px;
+    opy = py;
+
+    if (opx > w) {
+      px = opx = 0; //-speed;
+    }
+    //document.getElementById('demoTEXT').innerText = PVCflag;
+    document.getElementById("demoTEXT2").innerText = i;
   }
 
-  function drawit() {
-    ctx.clearRect(px, 0, scanBarWidth, h);
+  function paint()
+  {
     ctx.stroke();
-    p = 0;
   }
 
   document.getElementById("demoTEXT").onkeydown = function () {
