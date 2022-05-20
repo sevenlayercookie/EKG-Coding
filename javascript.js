@@ -36,7 +36,7 @@ function onload() {
     heartrate = 60,
     HRmode = 0,
     verticalPositionFactor = 100,
-    flatline = 0,
+    flatline = true, // set to true for default flatline
     px = 0,
     opx = 0,
     speed = 0.3, // speed of the cursor across the screen; affects spacing of data
@@ -80,18 +80,23 @@ function onload() {
   }
 
   function parseData() {
-    py = -parseInt(data[i] * 1000) / 8 + verticalPositionFactor;
+    py = -parseInt(dataFeed[i] * 1000) / 8 + verticalPositionFactor;
     j++;
     i++;
     // i=i+parseInt(animateRatio)-1;
-    if (i >= data.length) i = 0;
+    if (i >= dataFeed.length) i = 0;
   }
 
   function loop() {
     l++; //count # of times through loop
     ctx.beginPath();
     for (let z = 0; z < dataHertz / avgFPS; z++) {
+      if (flatline)
+      {
+        dataFeed = [0,0,0];
+      }
       parseData();
+      
       px += speed; // horizontal pixels per data point
       ctx.moveTo(opx, opy);
       ctx.lineTo(px, py);
@@ -123,6 +128,7 @@ function onload() {
 
   document.onkeydown = function () {
     i = 0;
-    PVCflag = 1;
+    dataFeed = dataFeed.concat(Pwave);
+    flatline=false;
   };
 }
