@@ -20,8 +20,18 @@
 
 */
 
+// -------------------------- GLOABL DEFINITIONS -----------------------------
+var flatline = true; // set to true for default flatline
+var PRInterval;
+var HeartRate = 60;
+
+
+// ------------------------- onload () ---------------------------------------
 function onload() {
+  // --------------------- LOCAL DEFINITIONS ---------------------------------
+  document.getElementById("demo").width = window.innerWidth;
   var canvas = document.getElementById("demo");
+  PRInterval = document.getElementById("PRbox").value = 200;
   var ctx = canvas.getContext("2d"),
     w = demo.width,
     h = demo.height,
@@ -33,19 +43,16 @@ function onload() {
     animateRatio = dataHertz / avgFPS,
     dataVoltage = 10, // in mV
     compressHfactor = 1,
-    heartrate = 60,
-    HRmode = 0,
-    verticalPositionFactor = 100,
-    flatline = true, // set to true for default flatline
+    canvasBaseline = demo.height/2,
+    
     px = 0,
     opx = 0,
-    speed = 0.3, // speed of the cursor across the screen; affects spacing of data
-    processSpeed = 2; //skips data points to "speed" the drawing; less resolution
-  isPainted = true;
-  timestamp = performance.now();
-  paintCount = 1;
-  (py = h * 1), (opy = py), (scanBarWidth = 40), (PVCflag = 0);
-  k = 0;
+    speed = 0.3, // speed of the cursor across the screen; affects "squeeze" of waves
+    isPainted = true;
+    timestamp = performance.now();
+    paintCount = 1;
+    (py = h * 1), (opy = py), (scanBarWidth = 40), (PVCflag = 0);
+    k = 0;
   ctx.strokeStyle = "#00bd00";
   ctx.lineWidth = 3;
 
@@ -80,21 +87,28 @@ function onload() {
   }
 
   function parseData() {
-    py = -parseInt(dataFeed[i] * 1000) / 8 + verticalPositionFactor;
+    py = -parseInt(dataFeed.shift() * 1000) / 8 + canvasBaseline;
     j++;
     i++;
     // i=i+parseInt(animateRatio)-1;
-    if (i >= dataFeed.length) i = 0;
+    if (dataFeed.length==0)
+    {
+      py=-(-0.04*1000)/8+canvasBaseline;
+      i = 0;
+    } 
   }
 
   function loop() {
+    //ctx.canvas.width  = window.innerWidth;
     l++; //count # of times through loop
     ctx.beginPath();
     for (let z = 0; z < dataHertz / avgFPS; z++) {
+      /*
       if (flatline)
       {
         dataFeed = [0,0,0];
       }
+      */
       parseData();
       
       px += speed; // horizontal pixels per data point
@@ -103,7 +117,7 @@ function onload() {
       opx = px;
       opy = py;
 
-      if (opx > w) {
+      if (opx > canvas.width) {
         px = opx = 0; //-speed;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
@@ -117,8 +131,8 @@ function onload() {
   function paint() {
     ctx.stroke();
     isPainted = true;
-    startAnimating();
     paintCount++;
+    startAnimating();
   }
 
   document.getElementById("demoTEXT").onkeydown = function () {
@@ -126,9 +140,76 @@ function onload() {
     PVCflag = 1;
   };
 
-  document.onkeydown = function () {
-    i = 0;
-    dataFeed = dataFeed.concat(Pwave);
+//  window.addEventListener('resize', function(event){
+//    // do stuff here
+//    w = document.getElementById("demo").width = window.innerWidth;
+//    ctx.beginPath();
+//  });
+
+}   // --------------------- end onLoad() ------------------------------
+
+
+function PwaveClick() {
+  i = 0;
+  if (dataFeed.length==0)
+    {
+      dataFeed = dataFeed.concat(Pwave);
+    }
+    else
+    {
+      for (let j = 0; j < Pwave.length; j++) 
+      {
+        if (j>=dataFeed.length)
+        {
+          dataFeed = dataFeed.concat(tempArray); // if flatline, then just throw in the full P wave
+          j = Pwave.length; // this exits the loop
+        }
+        else
+        {
+        var tempArray=Pwave.slice(); 
+        dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
+        }
+      }
+    }
     flatline=false;
-  };
+};
+
+function QRSClick() {
+  i = 0;
+  if (dataFeed.length==0)
+    {
+      dataFeed = dataFeed.concat(QRST);
+    }
+    else
+    {
+      for (let j = 0; j < QRST.length; j++) 
+      {
+        if (j>=dataFeed.length)
+        {
+          dataFeed = dataFeed.concat(tempArray); // if flatline, then just throw in the full P wave
+          j = QRST.length; // this exits the loop
+        }
+        else
+        {
+        var tempArray=QRST.slice(); 
+        dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
+        }
+      }
+    }
+    flatline=false;
+};
+
+var currentRhythmID;
+function NSRhythm() {
+	clearInterval(currentRhythmID);
+	HeartRate = document.getElementById("RateBox").value;
+  currentRhythmID = setInterval(function () 
+  {
+    PwaveClick();
+    PRInterval = document.getElementById("PRbox").value;
+    setTimeout(QRSClick,PRInterval);
+  
+  },(1/(HeartRate/60))*1000);
+  
 }
+

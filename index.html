@@ -4,13 +4,18 @@
   <link rel="stylesheet" href="css.css" />
 </head>
 <body onload="onload()">
-  avg data processing rate
-  <p id="demoTEXT">0</p>
-  <p id="demoTEXT2">0</p>
-  avg draw rate
-  <p id="demoTEXT3">0</p>
-
-  <canvas id="demo" width="1000" height="300"></canvas><br />
-  <p>Simulate input signal by moving the mouse over the canvas</p>
-  <p></p>
+    fps: <span id="demoTEXT">0</span>
+    <p></p>
+    i: <span id="demoTEXT2">0</span>
+    <p></p>
+    avg data points processed per second: <span id="demoTEXT3">0</span>
+    <p></p>
+    <label for="PRbox">PR interval</label> <input id="PRbox" value=200>
+    <label for="RateBox">rate:</label> <input id="RateBox" value=60>
+    <p></p>
+    <button onclick="clearInterval(currentRhythmID);">Flatline</button>
+    <button onclick="PwaveClick()">P wave</button>
+    <button onclick="QRSClick()">QRS</button>
+    <button onclick="NSRhythm()">NSR</button>
+    <canvas id="demo" width="1000" height="300"></canvas><br />
 </body>
