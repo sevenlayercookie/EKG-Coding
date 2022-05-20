@@ -99,16 +99,10 @@ function onload() {
   }
 
   function loop() {
-    //ctx.canvas.width  = window.innerWidth;
+    //ctx.canvas.width  = window.innerWidth; // working on screen resizing
     l++; //count # of times through loop
     ctx.beginPath();
     for (let z = 0; z < dataHertz / avgFPS; z++) {
-      /*
-      if (flatline)
-      {
-        dataFeed = [0,0,0];
-      }
-      */
       parseData();
       
       px += speed; // horizontal pixels per data point
@@ -124,7 +118,6 @@ function onload() {
     }
     isPainted = false;
     requestAnimationFrame(paint);
-    //document.getElementById('demoTEXT').innerText = PVCflag;
     document.getElementById("demoTEXT2").innerText = i;
   }
 
