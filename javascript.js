@@ -37,7 +37,6 @@ function onload() {
   dataFeed.fill(0,0,1000);
   document.getElementById("demo").width = window.innerWidth;
   PRInterval = document.getElementById("PRbox").value = 200;
-  
   var w = demo.width,
     h = demo.height,
     l = 0,
@@ -268,9 +267,9 @@ function ECGsyn() {
 }
 
 function CHB() {
+
   clearRhythms();
-  document.getElementById("ventRateBox").hidden=false;
-  document.getElementById("atrialRateBox").hidden=false;
+  document.getElementById("CHBstuff").hidden=false;
   var ventHeartRate = document.getElementById("ventRateBox").value;
   var atrialHeartRate = document.getElementById("atrialRateBox").value;
   HeartRate = document.getElementById("avgRateBox").value = ventHeartRate;

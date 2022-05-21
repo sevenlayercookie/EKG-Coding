@@ -1,32 +1,41 @@
 <head>
   <script type="text/javascript" src="data.js"></script>
   <link rel="stylesheet" href="css.css" />
+  <meta name="viewport" content="width=device-width" />
 </head>
 <body>
-    fps: <span id="demoTEXT">0</span>
+    <div style="text-align: right;width:100%">fps: <span id="demoTEXT">0</span>
     <p></p>
     i: <span id="demoTEXT2">0</span>
+  </div>
     <p></p>
     avg data points processed per second: <span id="demoTEXT3">0</span>
     <p></p>
     <label for="PRbox">PR interval</label> <input id="PRbox" value=200>
     <label for="avgRateBox">rate:</label> <input id="avgRateBox" value=60>
     <p></p>
-    <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40>
+
+    <div id="CHBstuff" hidden=true>
+      <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40>
+      <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=60>
+    </div>
     <p></p>
-    <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=60>
     <input type="checkbox" id="atrialPacing" value="atrialPacing">
     <label for="atrialPacing"> atrial pacing</label>
     <input type="checkbox" id="ventPacing" value="ventPacing">
     <label for="ventPacing"> ventricular pacing</label><br>
+    
     <br>
     <p></p>
-    <button onclick="clearRhythms()">Flatline</button>
-    <button onclick="PwaveClick()">P wave</button>
-    <button onclick="QRST()">QRS</button>
-    <button onclick="NSRhythm()">NSR</button>
-    <button onclick="CHB()">CHB</button>
-    <button onclick="ECGsyn()">Synthetic</button>
+    <div id="buttons" class="container">
+      <button style="height:100; width:100" onclick="clearRhythms()">Flatline</button>
+      <button onclick="PwaveClick()">P wave</button>
+      <button onclick="QRST()">QRS</button>
+      <button onclick="NSRhythm()">NSR</button>
+      <button onclick="CHB()">CHB</button>
+      <button onclick="ECGsyn()">Synthetic</button>
+    </div>
+    
     
     <div id="canvasesdiv" style="position:relative; width:1000px; height:300px">
         <canvas id="demo" style="position:absolute; left:0px; top:0px;" width="1000" height="300"></canvas>

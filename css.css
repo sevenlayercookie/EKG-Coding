@@ -2,3 +2,13 @@ canvas {
     background:#000;
     cursor:crosshair;
 }
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+  }
+
+.container {
+    display: flex;
+    justify-content: space-between;
+}
