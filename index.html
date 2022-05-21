@@ -2,7 +2,7 @@
   <script type="text/javascript" src="data.js"></script>
   <link rel="stylesheet" href="css.css" />
 </head>
-<body onload="onload()">
+<body>
     fps: <span id="demoTEXT">0</span>
     <p></p>
     i: <span id="demoTEXT2">0</span>
@@ -10,13 +10,28 @@
     avg data points processed per second: <span id="demoTEXT3">0</span>
     <p></p>
     <label for="PRbox">PR interval</label> <input id="PRbox" value=200>
-    <label for="RateBox">rate:</label> <input id="RateBox" value=60>
+    <label for="avgRateBox">rate:</label> <input id="avgRateBox" value=60>
     <p></p>
-    <button onclick="clearInterval(currentRhythmID);">Flatline</button>
+    <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40>
+    <p></p>
+    <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=60>
+    <input type="checkbox" id="atrialPacing" value="atrialPacing">
+    <label for="atrialPacing"> atrial pacing</label>
+    <input type="checkbox" id="ventPacing" value="ventPacing">
+    <label for="ventPacing"> ventricular pacing</label><br>
+    <br>
+    <p></p>
+    <button onclick="clearRhythms()">Flatline</button>
     <button onclick="PwaveClick()">P wave</button>
-    <button onclick="QRSClick()">QRS</button>
+    <button onclick="QRST()">QRS</button>
     <button onclick="NSRhythm()">NSR</button>
+    <button onclick="CHB()">CHB</button>
     <button onclick="ECGsyn()">Synthetic</button>
-    <canvas id="demo" width="1000" height="300"></canvas><br />
+    
+    <div id="canvasesdiv" style="position:relative; width:1000px; height:300px">
+        <canvas id="demo" style="position:absolute; left:0px; top:0px;" width="1000" height="300"></canvas>
+        <canvas id="HRLayer" style="position:absolute; left:0px; top:0px; background-color: transparent;" width="1000" height="300"></canvas>
+    </div>
+    
     <script type="text/javascript" src="javascript.js"></script>
 </body>
