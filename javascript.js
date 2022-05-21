@@ -21,14 +21,16 @@
 */
 
 // -------------------------- GLOABL DEFINITIONS -----------------------------
-var flatline = true; // set to true for default flatline
 var PRInterval;
 var HeartRate = 60;
+var dataFeedLength=500;
 
 
 // ------------------------- onload () ---------------------------------------
 function onload() {
   // --------------------- LOCAL DEFINITIONS ---------------------------------
+  dataFeed.length = 1000;
+  dataFeed.fill(0,0,1000);
   document.getElementById("demo").width = window.innerWidth;
   var canvas = document.getElementById("demo");
   PRInterval = document.getElementById("PRbox").value = 200;
@@ -47,7 +49,7 @@ function onload() {
     
     px = 0,
     opx = 0,
-    speed = 0.3, // speed of the cursor across the screen; affects "squeeze" of waves
+    speed = 0.2, // speed of the cursor across the screen; affects "squeeze" of waves
     isPainted = true;
     timestamp = performance.now();
     paintCount = 1;
@@ -88,12 +90,15 @@ function onload() {
 
   function parseData() {
     py = -parseInt(dataFeed.shift() * 1000) / 8 + canvasBaseline;
+    if (dataFeed.length < 1000) {
+      dataFeed.push(0);
+    }
     j++;
     i++;
     // i=i+parseInt(animateRatio)-1;
     if (dataFeed.length==0)
     {
-      py=-(-0.04*1000)/8+canvasBaseline;
+      py=-(0*1000)/8+canvasBaseline;
       i = 0;
     } 
   }
@@ -144,53 +149,22 @@ function onload() {
 
 function PwaveClick() {
   i = 0;
-  if (dataFeed.length==0)
-    {
-      dataFeed = dataFeed.concat(Pwave);
-    }
-    else
-    {
-      for (let j = 0; j < Pwave.length; j++) 
+  var tempArray=smoothP.slice();
+   for (let j = 0; j < smoothP.length; j++) 
       {
-        if (j>=dataFeed.length)
-        {
-          dataFeed = dataFeed.concat(tempArray); // if flatline, then just throw in the full P wave
-          j = Pwave.length; // this exits the loop
-        }
-        else
-        {
-        var tempArray=Pwave.slice(); 
         dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
-        }
       }
-    }
-    flatline=false;
-};
+    
+}
 
 function QRSClick() {
   i = 0;
-  if (dataFeed.length==0)
-    {
-      dataFeed = dataFeed.concat(QRST);
-    }
-    else
-    {
-      for (let j = 0; j < QRST.length; j++) 
+  var tempArray=cleanQRS.slice();
+      for (let j = 0; j < cleanQRS.length; j++) 
       {
-        if (j>=dataFeed.length)
-        {
-          dataFeed = dataFeed.concat(tempArray); // if flatline, then just throw in the full P wave
-          j = QRST.length; // this exits the loop
-        }
-        else
-        {
-        var tempArray=QRST.slice(); 
         dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
-        }
       }
-    }
-    flatline=false;
-};
+}
 
 var currentRhythmID;
 function NSRhythm() {
@@ -200,9 +174,29 @@ function NSRhythm() {
   {
     PwaveClick();
     PRInterval = document.getElementById("PRbox").value;
+    
     setTimeout(QRSClick,PRInterval);
   
   },(1/(HeartRate/60))*1000);
   
 }
 
+function ECGsyn() {
+	dataFeed=synthECG.slice();
+  
+}
+
+function CHB() {
+  clearInterval(currentRhythmID);
+  var ventHeartRate = 40;
+  var atrialHeartRate = HeartRate;
+  currentRhythmID = [setInterval(function ()
+    {
+      QRSClick();
+    },(1/(ventHeartRate/60))*1000)],
+    
+    setInterval(function ()
+  {
+    PwaveClick();
+  },(1/(atrialHeartRate/60))*1050);
+}
