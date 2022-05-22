@@ -22,13 +22,20 @@
 
 // -------------------------- GLOABL DEFINITIONS -----------------------------
 var PRInterval;
-var HeartRate = 60;
+var dataCount=0;
+var dataClock=0;
+var setHR = 60;
 var dataFeedLength=500;
 var canvas = document.getElementById("demo");
 var ctx = canvas.getContext("2d");
 var HRchanged = false;
 var paceSpike=false;
-var ventPaceCapturing=false;
+var ventPacingChecked=false;
+var px=0;
+h = demo.height
+var processingSpeed = 570;
+dataHertz = 500, // in Hz (data points per second)
+py = h * 1;
 // ------------------------- onload () ---------------------------------------
 onload();
 function onload() {
@@ -38,24 +45,21 @@ function onload() {
   document.getElementById("demo").width = window.innerWidth;
   PRInterval = document.getElementById("PRbox").value = 200;
   var w = demo.width,
-    h = demo.height,
+    
     l = 0,
     sec = 0,
     avgRefresh = 1,
-    dataHertz = 500, // in Hz (data points per second)
     avgFPS = 144,
     animateRatio = dataHertz / avgFPS,
     dataVoltage = 10, // in mV
     compressHfactor = 20,
     canvasBaseline = demo.height/2,
-    
-    px = 0,
     opx = 0,
     speed = 0.2, // speed of the cursor across the screen; affects "squeeze" of waves
     isPainted = true;
     timestamp = performance.now();
     paintCount = 1;
-    (py = h * 1), (opy = py), (scanBarWidth = 40), (PVCflag = 0);
+    (opy = py), (scanBarWidth = 40), (PVCflag = 0);
     k = 0;
   ctx.strokeStyle = "#00bd00";
   ctx.lineWidth = 3;
@@ -97,6 +101,8 @@ function onload() {
     }
     j++;
     i++;
+    dataCount++;
+    dataClock = dataClock + (1/dataHertz)*1000;  // clock for the project
     // i=i+parseInt(animateRatio)-1;
     if (dataFeed.length==0)
     {
@@ -114,7 +120,7 @@ function onload() {
       px += speed; // horizontal pixels per data point
 
       if (paceSpike)
-        {drawPacingSpike(px,py);}
+        {drawPacingSpike();}
 
       ctx.moveTo(opx, opy);
       ctx.lineTo(px, py);
@@ -150,37 +156,41 @@ function onload() {
     //ctx.restore();
   //});
 input = document.getElementById('avgRateBox');
-input.onchange = function(){HeartRate=input.value;HRchanged=true;};
+input.onchange = function(){setHR=input.value;HRchanged=true;};
 document.getElementById('atrialPacing').onchange = function () 
   {
   if (document.getElementById('atrialPacing').checked)
   {
-    atrialPaceCapturing=true;
+    atrialPacingChecked=true;
+    
   }
   else
   {
-    atrialPaceCapturing=false;
+    atrialPacingChecked=false;
   }
 }
 document.getElementById('ventPacing').onchange = function () 
   {
   if (document.getElementById('ventPacing').checked)
   {
-    ventPaceCapturing=true;
+    ventPacingChecked=true;
   }
   else
   {
-    ventPaceCapturing=false;
+    ventPacingChecked=false;
   }
 }
 }   // --------------------- end onLoad() ------------------------------
 
-atrialPaceCapturing=false;
+atrialPacingChecked=false;
+var histPTimes=[];
+
 function PwaveClick() {
   i = 0;
-  if (atrialPaceCapturing)
+  histPTimes.push(dataClock);
+  if (histPTimes.length>10)
   {
-    paceSpike=true;
+    histPTimes.shift();
   }
   var tempArray=smoothP.slice();
    for (let j = 0; j < smoothP.length; j++) 
@@ -192,10 +202,6 @@ function PwaveClick() {
 
 function QRSClick() {
   i = 0;
-  if (ventPaceCapturing)
-  {
-    paceSpike=true;
-  }
   var tempArray=cleanQRS.slice();
       for (let j = 0; j < cleanQRS.length; j++) 
       {
@@ -219,17 +225,13 @@ var histVentTimes = [];   // each time implies a beat
 function QRST() {
   i = 0;
   j = 0;
-
-  histVentTimes.push(performance.now());
+    // mark event according to data clock
+  histVentTimes.push(dataClock);
   if (histVentTimes.length>10)
   {
   histVentTimes.shift();
   }
   
-  if (ventPaceCapturing)
-  {
-    paceSpike=true;
-  }
   var tempArray=cleanQRS.slice();
       for (j = 0; j < cleanQRS.length; j++) 
       {
@@ -247,17 +249,22 @@ function QRST() {
 var currentRhythmID = [0,0];
 function NSRhythm() {
 	clearRhythms();
-	HeartRate = document.getElementById("avgRateBox").value;
+	setHR = document.getElementById("avgRateBox").value;
   currentRhythmID.push(setInterval(function () 
   {
+    setHR = document.getElementById("avgRateBox").value;
     if (HRchanged)
     {HRchanged=false;clearRhythms();NSRhythm();paintHR()}
+    let timeSinceV = timeSinceLastV();
+    let goalMS = (1/setHR)*60000
+    if (timeSinceV > goalMS)
+    {
     PwaveClick();
     PRInterval = document.getElementById("PRbox").value;
     
     setTimeout(function () {QRST()},PRInterval);
-  
-  },(1/(HeartRate/60))*1000));
+    }
+  },(1/setHR)*60000));
   
 }
 
@@ -272,7 +279,7 @@ function CHB() {
   document.getElementById("CHBstuff").hidden=false;
   var ventHeartRate = document.getElementById("ventRateBox").value;
   var atrialHeartRate = document.getElementById("atrialRateBox").value;
-  HeartRate = document.getElementById("avgRateBox").value = ventHeartRate;
+  setHR = document.getElementById("avgRateBox").value = ventHeartRate;
   currentRhythmID.push(setInterval(function ()
     {
       QRST();
@@ -294,15 +301,14 @@ function clearRhythms()
     clearInterval(element);
   });
 }
-
+var currentHeartRate=0;
 function paintHR() {
   canvas1 = document.getElementById("HRLayer");
   ctx1 = canvas1.getContext("2d");
   ctx1.font = "50px Arial";
   ctx1.fillStyle = "#00bd00";
   ctx1.lineWidth = 3;
-  ctx1.clearRect(0,00,canvas1.width,canvas1.height); //clears previous HR
-    
+  ctx1.clearRect(0,00,canvas1.width,canvas1.height); //clears previous HR 
   // rolling average (weighted)
   // histVentTimes contains absolute timestamps of V beats  
   // weighted average - weight more recent measurements
@@ -320,7 +326,7 @@ function paintHR() {
   }
 
   // take into account current wait (time since last beat)
-  let currentElapsed = performance.now()-histVentTimes.at(-1);
+  let currentElapsed = dataClock-histVentTimes.at(-1);
   let weightedAverageElapsed;
   let weightedAverageHR;
   // if currentElapsed > histVentTimes.at(-1) - histVentTimes.at(-2)
@@ -341,15 +347,155 @@ function paintHR() {
 
   if(isNaN(weightedAverageHR))
     {weightedAverageHR = null;}
-
-  ctx1.fillText("HR: "+Math.floor(weightedAverageHR), canvas.width-200, 50);
+    currentHeartRate=Math.floor(weightedAverageHR*(processingSpeed/dataHertz));
+  ctx1.fillText("HR: "+currentHeartRate, canvas.width-200, 50);
 }
 paintHR();
 setInterval(paintHR,1000);
 
-function drawPacingSpike(px,py) {
+function drawPacingSpike() {
   ctx.fillStyle = 'white';
   ctx.fillRect(px,py,2,-75)
   ctx.fillStyle = "#00bd00";
   paceSpike=false;
+}
+
+/*
+// ----------- PACEMAKER ABSTRACTION -------------
+// I.   Controls          
+// II.  Display on Feed   
+// III. Logic             
+// IV.  Pretty GUI        
+
+// ----- LOGIC -----
+//  I.  MODE (AAI,VVI,etc.)
+//    a. SENSING
+//    b. PACING
+//    c. RESPONSE (pace,inhibit) - will just work on inhibit for now
+//    d. RATE CONTROL   - only if I'm really wanting to hurt myself
+//
+//  II. SENSING
+//      - should be able to 'sense' user-set threshold (e.g. 5 mV)
+//      - if undersensing:  will pace 1:1 regardless of underlying rhythm
+//      - if oversensing:   will not pace at all
+//      - user should modify sensing threshold to cause appropriate pacing
+//  III.  CAPTURE
+//      - pacing spike should initiate a P wave or a QRS wave (depending if A or V lead)
+//      - there is an arbitrary pacing threshold, where if not met, capture doens't occur
+//      - failure to capture happens if output voltage is too low, or leads are off/corrupt
+//      - user should increase voltage until capture occurs
+
+// ------------- TO DO -------------
+// [X] pacing capture algorithm
+//    [ ] pacing spike should inhibit if intrinsic P's or V's present (if paced rate exceeds intrinsic)    
+// [ ] pacing controls
+//    [x] rate
+//    [ ] AAI, VVI, DDI (dropdown box?)
+//    [ ]
+*/
+
+const atrium = "atrium";
+const vent = "vent";
+
+function paceIt(target) // target : atrium = 1, vent = 2
+{
+  drawPacingSpike();  // draw pacing spike
+  if (target==atrium)
+    {
+      PwaveClick();
+    }
+    else if (target==vent)
+    {
+      QRST();
+    }
+
+}
+
+function paceButtonClick() {
+  let paceButton = document.getElementById("paceButton");
+  if (paceButton.innerText == "Start Pacing")
+  {
+    startPacing();
+    paceButton.innerText = "Stop Pacing";
+  }
+  else
+  {
+    stopPacing();
+    paceButton.innerText = "Start Pacing";
+  }
+}
+var aPacerInterval;
+var vPacerInterval;
+var pacerInterval;
+
+function startPacing() {
+	
+	var pacingRate = document.getElementById("pacingRate").value;
+  pacerInterval = setTimeout(function () 
+  {
+    // Atrial Pacing
+    let timeSinceP = timeSinceLastP();
+    if (atrialPacingChecked && timeSinceP > (1/pacingRate)*60000)
+    {
+      paceIt(atrium);
+    }
+      // pacer PR interval: default 200
+      let timeSinceV = timeSinceLastV()
+    if (ventPacingChecked && timeSinceV > (1/pacingRate)*60000)
+    {
+        if (atrialPacingChecked) // need PR first
+        {
+          let PRInterval = 200;
+          setTimeout(function ()  
+            {
+              if (ventPacingChecked)
+              {
+                paceIt(vent);
+              }
+            },PRInterval);
+        }
+        else
+        {
+          paceIt(vent);
+        }
+      }
+      else {console.log("inhibit V: recent V beat (timeSinceV = "+timeSinceV+")");}
+      setTimeout(startPacing(),1/(pacingRate/60));
+  },(1/(pacingRate/60))*1000);  
+}
+
+function pacerLoop() {
+
+}
+
+function stopPacing() {
+  clearInterval(pacerInterval);
+}
+
+/*
+function timeSinceLastP() {
+  if (isNaN(histPTimes.at(-1))) {return 100000;}
+  let timeee = (performance.now()-histPTimes.at(-1))
+  
+  return timeee;
+}
+
+function timeSinceLastV() {
+  if (isNaN(histVentTimes.at(-1))) {return 100000;}
+  let timeee = (performance.now()-histVentTimes.at(-1))
+  return timeee;
+}
+*/
+
+
+function timeSinceLastP() {
+  if (isNaN(histPTimes.at(-1))) {return 100000;}
+  let timeee = (dataClock - histPTimes.at(-1))*(processingSpeed/dataHertz);
+  return timeee;
+}
+
+function timeSinceLastV() {
+  if (isNaN(histVentTimes.at(-1))) {return 100000;}
+  let timeee = (dataClock - histVentTimes.at(-1))*(processingSpeed/dataHertz);
+  return timeee ;
 }
