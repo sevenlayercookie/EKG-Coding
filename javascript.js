@@ -18,9 +18,18 @@
     so 500 data points should be processed every second
     paint will paint at Max Browser Framerate. So data processing should be 500/Max Browse Frame Rate and then paint 
 
+
+          ***** 5/27 UPDATE: *****
+            Want to change timescale to be based on data points per second rather than elapsed ms of computer time,
+            but want to keep the data points per second in line with real time
+              Methods:
+              1) could limit data processing to exactly 500 Hz
+                - going to set a fixed animation rate of 30 fps
+                - could force input data to be 720Hz (LCM of all refresh rates) (but standard EKG data is 500Hz)
+    
 */
 
-// -------------------------- GLOABL DEFINITIONS -----------------------------
+// -------------------------- GLOBAL DEFINITIONS -----------------------------
 var PRInterval;
 var dataCount=0;
 var dataClock=0;
@@ -35,7 +44,12 @@ var px=0;
 h = demo.height
 var processingSpeed = 570;
 dataHertz = 500, // in Hz (data points per second)
+avgFPS = 144,
 py = h * 1;
+let cumZ = 0;
+let frameCount=0;
+let goalZ=Math.floor(dataHertz/avgFPS);
+
 // ------------------------- onload () ---------------------------------------
 onload();
 function onload() {
@@ -49,7 +63,6 @@ function onload() {
     l = 0,
     sec = 0,
     avgRefresh = 1,
-    avgFPS = 144,
     animateRatio = dataHertz / avgFPS,
     dataVoltage = 10, // in mV
     compressHfactor = 20,
@@ -63,7 +76,7 @@ function onload() {
     k = 0;
   ctx.strokeStyle = "#00bd00";
   ctx.lineWidth = 3;
-
+  
   // framelimiter code
   var fpsInterval, startTime, now, then, elapsed;
 
@@ -75,24 +88,33 @@ function onload() {
   var jold = 0;
 
   // initiate animation (is looped)
+  /*
   function startAnimating() {
     ctx.beginPath();
     for (let i = 0; i < 1200 && isPainted; i++) {
-      loop();
+      animateLoop();
     }
   }
 
+  */
+
   setInterval(updateHertz, 1000);
-  startAnimating();
+  let oldTimeStamp = 0;
 
   var lold = 0;
   function updateHertz() {
     sec++;
-    avgFPS = document.getElementById("demoTEXT").innerText = l - lold;
+    avgFPS = l - lold;
     document.getElementById("demoTEXT3").innerText = processingSpeed = j - jold;
     lold = l;
     jold = j;
   }
+  function startAnimating()
+  {
+    
+  }
+  let parseInterval = setInterval(parseData,1000/dataHertz); //start DataFeed
+   startAnimating();
 
   function parseData() {
     py = -parseInt(dataFeed.shift() * 1000) / compressHfactor + canvasBaseline;
@@ -109,14 +131,15 @@ function onload() {
       py=-(0*1000)/8+canvasBaseline;
       i = 0;
     } 
+    requestAnimationFrame(animateLoop);
   }
 
-  function loop() {
-    //ctx.canvas.width  = window.innerWidth; // working on screen resizing
+  function animateLoop(timeStamp) {
     l++; //count # of times through loop
+    let elapsedTime = timeStamp-oldTimeStamp;
+    let animateFPS = 1/(elapsedTime/1000);
+    oldTimeStamp=timeStamp;
     ctx.beginPath();
-    for (let z = 0; z < dataHertz / avgFPS; z++) {
-      parseData();
       px += speed; // horizontal pixels per data point
 
       if (paceSpike)
@@ -131,23 +154,34 @@ function onload() {
         px = opx = 0; //-speed;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
-    }
+     
+    cumZ=cumZ+goalZ;
+    goalZ=getGoalZ();
+    frameCount++;
     isPainted = false;
-    requestAnimationFrame(paint);
-    document.getElementById("demoTEXT2").innerText = i;
-  }
-
-  function paint() {
     ctx.stroke();
     isPainted = true;
     paintCount++;
-    startAnimating();
+    document.getElementById("demoTEXT2").innerText = i;
+    document.getElementById("fpsLabel").innerText = animateFPS;
   }
 
-  document.getElementById("demoTEXT").onkeydown = function () {
-    i = 0;
-    PVCflag = 1;
-  };
+  function getGoalZ()
+  { 
+    let project = goalZ*(avgFPS-frameCount)+cumZ;
+    if (project>dataHertz)
+    {
+      return goalZ-1;
+    }
+    else if (project<dataHertz)
+    {
+      return goalZ+1;
+    }
+    else if (project==dataHertz)
+    {
+      return goalZ;
+    }
+  }
 
   //window.addEventListener('resize', function(event){
     // do stuff here
