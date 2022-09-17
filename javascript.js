@@ -22,6 +22,9 @@
 
 // -------------------------- GLOABL DEFINITIONS -----------------------------
 var PRInterval;
+var HRadjustedPR=120;
+var PRtimer = 0;
+var goalMS=1000;
 var dataCount=0;
 var dataClock=0;
 var setHR = 60;
@@ -34,6 +37,9 @@ var ventPacingChecked=false;
 var px=0;
 h = demo.height
 var processingSpeed = 570;
+var realtimeProcessSpeed = 2;
+var adjustRatio = 1;
+var lastBrowserTime = Date.now();
 dataHertz = 500, // in Hz (data points per second)
 py = h * 1;
 // ------------------------- onload () ---------------------------------------
@@ -103,12 +109,25 @@ function onload() {
     i++;
     dataCount++;
     dataClock = dataClock + (1/dataHertz)*1000;  // clock for the project
+
+    if (i%100==0)
+    {
+    calcRealtimeProcessingSpeed();
+    }
+
+    masterRhythmFunction()
     // i=i+parseInt(animateRatio)-1;
     if (dataFeed.length==0)
     {
       py=-(0*1000)/8+canvasBaseline;
       i = 0;
     } 
+  }
+
+  function calcRealtimeProcessingSpeed() {
+    let browserTimeElapsed = Date.now()-lastBrowserTime;
+    console.log(browserTimeElapsed/100 + " ms");
+    lastBrowserTime=Date.now();
   }
 
   function loop() {
@@ -244,17 +263,79 @@ function QRST() {
         j++;
       }
 }
-  
+ 
+var currentRhythm = "flatline";
+
+function masterRhythmFunction()
+{
+  if (currentRhythm=='flatline')
+  {return;}
+
+  if (currentRhythm=='NSR')
+    {
+      if(dataClock%100 == 0)
+      {
+        PRInterval = document.getElementById("PRbox").value;
+        setHR = document.getElementById("avgRateBox").value;
+        HRadjustedPR = PRInterval - 0.5*setHR + 50;
+        goalMS = (1/setHR)*60000
+        adjustRatio = realtimeProcessSpeed/((1/dataHertz)*1000);
+      }
+        //let timeSinceV = timeSinceLastV();
+        let timeSinceP = timeSinceLastP();
+        if (timeSinceP > goalMS)
+        {
+          PwaveClick();
+          PRtimer = 1;    
+    
+        }
+        if (PRtimer>=HRadjustedPR)
+        {
+          QRST();
+          PRtimer=0;
+        }
+        if (PRtimer>0)
+        {PRtimer+=1;}
+      }
+      
+}
+
+
 
 var currentRhythmID = [0,0];
 function NSRhythm() {
+  PRInterval = document.getElementById("PRbox").value;
+  currentRhythm = 'NSR';
 	clearRhythms();
 	setHR = document.getElementById("avgRateBox").value;
+
+  goalMS = (1/setHR)*60000
+
+  /*
+  let PRtimer = 0;
+  
+  while (currentRhythm='NSR')
+  {
+    let timeSinceV = timeSinceLastV();
+    if (timeSinceV > goalMS)
+    {
+      PwaveClick();
+      if (currentRhythm='NSR'&& timeSinceLastP()>PRInterval)
+      {
+        QRST();
+      }
+      
+
+    }
+  }
+  */
+
+  /*
   currentRhythmID.push(setInterval(function () 
   {
     setHR = document.getElementById("avgRateBox").value;
     if (HRchanged)
-    {HRchanged=false;clearRhythms();NSRhythm();paintHR()}
+    {HRchanged=false;clearRhythms();NSRhythm();paintHR();return}
     let timeSinceV = timeSinceLastV();
     let goalMS = (1/setHR)*60000
     if (timeSinceV > goalMS)
@@ -265,7 +346,7 @@ function NSRhythm() {
     setTimeout(function () {QRST()},PRInterval);
     }
   },(1/setHR)*60000));
-  
+  */
 }
 
 function ECGsyn() {
@@ -300,8 +381,11 @@ function clearRhythms()
   {
     clearInterval(element);
   });
+  currentRhythmID = [];
 }
+
 var currentHeartRate=0;
+
 function paintHR() {
   canvas1 = document.getElementById("HRLayer");
   ctx1 = canvas1.getContext("2d");
@@ -490,12 +574,14 @@ function timeSinceLastV() {
 
 function timeSinceLastP() {
   if (isNaN(histPTimes.at(-1))) {return 100000;}
-  let timeee = (dataClock - histPTimes.at(-1))*(processingSpeed/dataHertz);
+  //let timeee = (dataClock - histPTimes.at(-1))*(processingSpeed/dataHertz);
+  let timeee = (dataClock - histPTimes.at(-1));
   return timeee;
 }
 
 function timeSinceLastV() {
   if (isNaN(histVentTimes.at(-1))) {return 100000;}
-  let timeee = (dataClock - histVentTimes.at(-1))*(processingSpeed/dataHertz);
+  //let timeee = (dataClock - histVentTimes.at(-1))*(processingSpeed/dataHertz);
+  let timeee = (dataClock - histVentTimes.at(-1));
   return timeee ;
 }
