@@ -146,7 +146,8 @@ function onload() {
 
   function calcRealtimeProcessingSpeed() {
     let browserTimeElapsed = Date.now()-lastBrowserTime;
-    console.log(browserTimeElapsed/100 + " ms");
+  
+
     lastBrowserTime=Date.now();
     return browserTimeElapsed/100;
   }
@@ -163,8 +164,8 @@ function onload() {
       parseData();
       px += speed; // horizontal pixels per data point
 
-      if (paceSpike)
-        {drawPacingSpike();}
+      //if (paceSpike)
+        //{drawPacingSpike();}
 
       ctx.moveTo(opx, opy);
       ctx.lineTo(px, py);
@@ -228,7 +229,22 @@ document.getElementById('ventPacing').onchange = function ()
     ventPacingChecked=false;
   }
 }
-}   // --------------------- end onLoad() ------------------------------
+document.getElementById('capturing').onchange = function () 
+  {
+    if (document.getElementById('capturing').checked)
+  {
+      pacerCapturing=true;
+  }
+    else
+    {
+      pacerCapturing=false;
+    }
+
+  
+}   
+}
+
+// --------------------- end onLoad() ------------------------------
 
 atrialPacingChecked=false;
 var histPTimes=[];
@@ -299,7 +315,14 @@ var drawQRS=false;
 function masterRhythmFunction()
 {
   if (currentRhythm=='flatline')
-  {return;}
+  {
+    if (conductionIntact && timeSinceLastP() >= PRInterval && drawQRS)
+    {
+      drawQRST();
+      drawQRS=false;
+    }
+  }
+
 
   if (currentRhythm=='NSR')
     {
@@ -505,15 +528,23 @@ const vent = "vent";
 
 function paceIt(target) // target : atrium = 1, vent = 2
 {
-  drawPacingSpike();  // draw pacing spike
-  if (target==atrium)
-    {
-      drawPWave();
-    }
-    else if (target==vent)
-    {
-      drawQRST();
-    }
+  if (pacerCapturing)
+  {
+    drawPacingSpike();  // draw pacing spike
+    if (target==atrium)
+      {
+        drawPWave();
+      }
+      else if (target==vent)
+      {
+        drawQRST();
+      }
+  }
+  else // if not capturing
+  {
+    drawPacingSpike();
+  }
+
 
 }
 
@@ -535,6 +566,8 @@ var vPacerInterval;
 var pacerInterval;
 var pacingState = false;
 var pacingRate = 60;
+var atrialPaceTimeout = 0;
+var ventPaceTimeout = 0;
 function startPacing() {
 	
 	pacingRate = document.getElementById("pacingRate").value;
@@ -543,6 +576,9 @@ function startPacing() {
 }
 
 let AVInterval = 120; // should link to form later
+let pacerCapturing = true;
+let sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
+
 function pacingFunction()
 {
   AVInterval = document.getElementById("AVInterval").value;
@@ -550,23 +586,61 @@ function pacingFunction()
   let timeSinceV = timeSinceLastV();
   let goalPacerMs = (1/pacingRate)*60000; // goal how many ms between R waves
     
-    // AAI (A pace only)
+    // AAI (A pace, A sense (ignore V) )
 
-    if (atrialPacingChecked && !ventPacingChecked && timeSinceLastP() > goalPacerMs && timeSinceLastV() > (1/pacingRate)*60000 - AVInterval)
+    if (atrialPacingChecked && !ventPacingChecked)
     {
-      paceIt(atrium);
-      if (conductionIntact)
+      if (timeSinceLastP() > goalPacerMs)
       {
-        drawQRS = true;
+      if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
+      {
+        if (pacerCapturing)
+        {
+          if (conductionIntact)
+          {
+            drawQRS = true;
+          }
+        paceIt(atrium);
+        }
+        else if (!pacerCapturing) // if not capturing, just draw a pacing spike and do nothing else
+        {
+          drawPacingSpike();
+        }
+        atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+      }
+     
+    }
+    if (atrialPaceTimeout>0)  // augment pacer timer if running
+    {
+      atrialPaceTimeout -= 2;
+    }
+  }
+    // VVI (V pace only, V sense, ignore A completely)
+    
+    if (ventPacingChecked && !atrialPacingChecked)
+    {
+      if (timeSinceLastV() > goalPacerMs)
+      {
+
+    
+      if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
+      {
+        if (pacerCapturing)
+        {
+        paceIt(vent);
+        }
+        else if (!pacerCapturing) // if not capturing, just draw a pacing spike and do nothing else
+        {
+          drawPacingSpike();
+        }
+        ventPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
       }
     }
-    
-    // VVI (V pace only)
-    
-    if (ventPacingChecked && !atrialPacingChecked && timeSinceLastV() > goalPacerMs)
+    if (ventPaceTimeout>0)  // augment pacer timer if running
     {
-      paceIt(vent);
+      ventPaceTimeout -= 2;
     }
+  }
             
     // DDD (pace A and V)
     if (atrialPacingChecked && ventPacingChecked)
@@ -577,20 +651,46 @@ function pacingFunction()
       // Atrial logic
       if (timeSinceLastP() > goalPacerMs && timeSinceLastV() > goalPacerMs - AVInterval)
       {
-      paceIt(atrium);
-      timeSinceP=timeSinceLastP();
-      }
-      
-      // vent logic
-      if (timeSinceLastV() > goalPacerMs)
+        if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-            if (timeSinceLastP()>=AVInterval)
-            {
-              paceIt(vent);
-            }
+        if (pacerCapturing)
+        {
+          paceIt(atrium);
+          timeSinceP=timeSinceLastP();
+        }
+        if (!pacerCapturing)
+        {
+          drawPacingSpike();
+        }
+        atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
       }
-        else {console.log("inhibit V: recent V beat (timeSinceV = "+timeSinceV+")");}
     }
+    if (atrialPaceTimeout>0)  // augment pacer timer if running
+    {
+      atrialPaceTimeout -= 2;
+    }
+
+    // vent logic
+    if (timeSinceLastV() > goalPacerMs)
+    {
+      if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
+      {
+        if (pacerCapturing)
+        {
+        paceIt(vent);
+        }
+        else if (!pacerCapturing) // if not capturing, just draw a pacing spike and do nothing else
+        {
+          drawPacingSpike();
+        }
+        ventPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+      }
+    }
+    if (ventPaceTimeout>0)  // augment pacer timer if running
+    {
+      ventPaceTimeout -= 2;
+    }
+  }
 }
 
 function pacerLoop() {
