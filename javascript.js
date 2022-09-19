@@ -25,6 +25,9 @@ var PRInterval;
 var timeSincePGlobal=10000;
 var timeSinceVGlobal=10000;
 var HRadjustedPR=120;
+var ventHeartRate = 40;
+var atrialHeartRate = 80;
+var conductionIntact = true;
 var avgProcessSpeed = 2;
 var PRtimer = 0;
 var goalMS=1000;
@@ -199,6 +202,9 @@ function onload() {
   //});
 input = document.getElementById('avgRateBox');
 input.onchange = function(){setHR=input.value;HRchanged=true;};
+pacerate = document.getElementById('pacingRate');
+pacerate.onchange = function(){pacingRate=pacerate.value};
+
 document.getElementById('atrialPacing').onchange = function () 
   {
   if (document.getElementById('atrialPacing').checked)
@@ -264,7 +270,7 @@ var avgVentRate=0;
 var oldTime=performance.now();
 var histVentBeats=0;
 var histVentTimes = [];   // each time implies a beat
-function QRST() {
+function drawQRST() {
   i = 0;
   j = 0;
     // mark event according to data clock
@@ -288,6 +294,7 @@ function QRST() {
 }
  
 var currentRhythm = "flatline";
+var drawQRS=false;
 
 function masterRhythmFunction()
 {
@@ -307,20 +314,40 @@ function masterRhythmFunction()
         //let timeSinceV = timeSinceLastV();
         let timeSinceP = timeSinceLastP();
         let timeSinceV = timeSinceLastV();
+        
         if (timeSinceP >= goalMS && timeSinceV >= goalMS - PRInterval)
         {
           drawPWave();
-          PRtimer = 1;    
-    
+          timeSinceP=timeSinceLastP();
+          PRtimer = 1;
+          drawQRS = true;
+
         }
-        if (PRtimer>=HRadjustedPR && timeSinceV>=goalMS)
+        //if (PRtimer>=HRadjustedPR && timeSinceV>=goalMS)
+        if (drawQRS && timeSinceLastP()>=HRadjustedPR)
         {
-          QRST();
-          PRtimer=0;
+          drawQRST();
+          drawQRS=false;
+          //PRtimer=0;
         }
-        if (PRtimer>0)
-        {PRtimer+=2;}
+        //if (PRtimer>0)
+        //{PRtimer+=2;}
       }
+
+    if (currentRhythm=='CHB')
+    {
+      let timeSinceP = timeSinceLastP()
+      let timeSinceV = timeSinceLastV()
+      if (timeSinceLastP() >= 1/(atrialHeartRate/60000))
+      {
+        drawPWave();
+      }
+
+      if (timeSinceLastV() >= 1/(ventHeartRate/60000))
+      {
+        drawQRST();
+      }
+    }
       
 }
 
@@ -345,12 +372,14 @@ function ECGsyn() {
 }
 
 function CHB() {
-
   clearRhythms();
+  currentRhythm = 'CHB';
   document.getElementById("CHBstuff").hidden=false;
-  var ventHeartRate = document.getElementById("ventRateBox").value;
-  var atrialHeartRate = document.getElementById("atrialRateBox").value;
+  ventHeartRate = document.getElementById("ventRateBox").value;
+  atrialHeartRate = document.getElementById("atrialRateBox").value;
   setHR = document.getElementById("avgRateBox").value = ventHeartRate;
+
+  /*
   currentRhythmID.push(setInterval(function ()
     {
       QRST();
@@ -360,6 +389,8 @@ function CHB() {
   {
     drawPWave();
   },(1/(atrialHeartRate/60))*1050));
+  */
+
 }
 
 function clearRhythms()
@@ -481,7 +512,7 @@ function paceIt(target) // target : atrium = 1, vent = 2
     }
     else if (target==vent)
     {
-      QRST();
+      drawQRST();
     }
 
 }
@@ -524,6 +555,10 @@ function pacingFunction()
     if (atrialPacingChecked && !ventPacingChecked && timeSinceLastP() > goalPacerMs && timeSinceLastV() > (1/pacingRate)*60000 - AVInterval)
     {
       paceIt(atrium);
+      if (conductionIntact)
+      {
+        drawQRS = true;
+      }
     }
     
     // VVI (V pace only)
