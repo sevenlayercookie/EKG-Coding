@@ -37,6 +37,8 @@ var setHR = 60;
 var dataFeedLength=500;
 var canvas = document.getElementById("demo");
 var ctx = canvas.getContext("2d");
+var canvas1 = document.getElementById("HRLayer");
+var ctx1 = canvas1.getContext("2d");
 var HRchanged = false;
 var paceSpike=false;
 var ventPacingChecked=false;
@@ -74,7 +76,7 @@ function onload() {
     isPainted = true;
     timestamp = performance.now();
     paintCount = 1;
-    (opy = py), (scanBarWidth = 40), (PVCflag = 0);
+    (opy = py), (scanBarWidth = 1), (PVCflag = 0);
     k = 0;
   ctx.strokeStyle = "#00bd00";
   ctx.lineWidth = 3;
@@ -168,27 +170,20 @@ function onload() {
       //if (paceSpike)
         //{drawPacingSpike();}
 
-        ctx.moveTo(opx, opy);
-        ctx.lineTo(px, py);
-        opx = px;
-        opy = py;
-  
-        ctx.clearRect(px+10, 0, scanBarWidth, h); // **** MIGHT MESS THINGS UP ***
-        
-        if (opx > canvas.width) { // clear whole window (need to get back to the clearing column)
-          px = opx = 0; //-speed;
-          ctx.clearRect(px, 0, scanBarWidth, h); // **** MIGHT MESS THINGS UP ***
-        }
-        
-  
-        /* ---- THIS SECTION IS WORKING
-        if (opx > canvas.width) { // clear whole window (need to get back to the clearing column)
-          px = opx = 0; //-speed;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-        */
+      ctx.moveTo(opx, opy);
+      ctx.lineTo(px, py);
+      opx = px;
+      opy = py;
+
+      ctx.clearRect(px+10, 0, scanBarWidth, h); 
+      
+      if (opx > canvas.width) {
+        px = opx = 0; //-speed;
+        ctx.clearRect(px, 0, 10, h); 
+      }
       
     }
+    
     isPainted = false;
     requestAnimationFrame(paint);
     document.getElementById("demoTEXT2").innerText = i;
@@ -443,12 +438,11 @@ function clearRhythms()
 var currentHeartRate=0;
 
 function paintHR() {
-  canvas1 = document.getElementById("HRLayer");
-  ctx1 = canvas1.getContext("2d");
+
   ctx1.font = "50px Arial";
   ctx1.fillStyle = "#00bd00";
   ctx1.lineWidth = 3;
-  ctx1.clearRect(0,00,canvas1.width,canvas1.height); //clears previous HR 
+  ctx1.clearRect(0,0,canvas1.width,canvas1.height); //clears previous HR 
   // rolling average (weighted)
   // histVentTimes contains absolute timestamps of V beats  
   // weighted average - weight more recent measurements
@@ -488,7 +482,8 @@ function paintHR() {
   if(isNaN(weightedAverageHR))
     {weightedAverageHR = null;}
     currentHeartRate=Math.floor(weightedAverageHR*(processingSpeed/dataHertz));
-  ctx1.fillText("HR: "+currentHeartRate, canvas1.width-200, 50);
+  
+    ctx1.fillText("HR: "+currentHeartRate, canvas.width-200, 50); //actual paint command
 }
 paintHR();
 setInterval(paintHR,1000);
@@ -743,3 +738,20 @@ function timeSinceLastV() {
   timeSinceVGlobal=timeee;
   return timeee ;
 }
+
+function windowSizeChange() {
+  // run code to match canvas to current window size
+  // should probably change both canvas sizes (canvas, canvas1), clear both canvases, realign drawing point to left side of screen, and move HR indicator
+
+  canvas.width = window.innerWidth;
+  canvas1.width = window.innerWidth;
+  ctx.width = window.innerWidth;
+  ctx1.width = window.innerWidth;
+  
+  px = opx = 0;
+        ctx.clearRect(px, 0, scanBarWidth, h); 
+      
+
+}
+
+//window.addEventListener('resize',windowSizeChange);
