@@ -52,6 +52,13 @@ dataHertz = 500, // in Hz (data points per second)
 
 py = h * 1;
 var y = dataHertz/144;
+
+var aPacerSensitivity = document.getElementById("aSensitivityBox").value; // default 
+var aPacerOutput = document.getElementById("aOutputBox").value;
+var vThreshold = 5; // default V capture threshold (mA)
+var aThreshold = 2; // default A capture threshold (mA)
+
+
 // ------------------------- onload () ---------------------------------------
 onload();
 function onload() {
