@@ -57,6 +57,7 @@ function onload() {
   dataFeed.length = 1000;
   dataFeed.fill(0,0,1000);
   document.getElementById("demo").width = window.innerWidth;
+  document.getElementById("HRLayer").width = window.innerWidth;
   PRInterval = document.getElementById("PRbox").value;
   var w = demo.width,
     
