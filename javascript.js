@@ -72,7 +72,7 @@ function onload() {
     compressHfactor = 20,
     canvasBaseline = demo.height/2,
     opx = 0,
-    speed = 0.2, // speed of the cursor across the screen; affects "squeeze" of waves
+    speed = .2, // speed of the cursor across the screen; affects "squeeze" of waves
     isPainted = true;
     timestamp = performance.now();
     paintCount = 1;
@@ -753,7 +753,9 @@ function windowSizeChange() {
   //ctx1.width = window.innerWidth;
   //px = opx = 0;
   ctx.clearRect(px, 0, scanBarWidth, h); 
-      
+  paintHR();
+  //ctx1.clearRect(0,0,canvas1.width,canvas1.height); //clears previous HR 
+  
 
 }
 
