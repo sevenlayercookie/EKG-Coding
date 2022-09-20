@@ -177,7 +177,7 @@ function onload() {
 
       ctx.clearRect(px+10, 0, scanBarWidth, h); 
       
-      if (opx > canvas.width) {
+      if (opx > canvas.width || opx > window.innerWidth) {
         px = opx = 0; //-speed;
         ctx.clearRect(px, 0, 10, h); 
       }
@@ -483,8 +483,15 @@ function paintHR() {
     {weightedAverageHR = null;}
     currentHeartRate=Math.floor(weightedAverageHR*(processingSpeed/dataHertz));
   
-    ctx1.fillText("HR: "+currentHeartRate, canvas.width-200, 50); //actual paint command
-}
+    if (canvas.width < window.innerWidth)
+      {
+      ctx1.fillText("HR: "+currentHeartRate, canvas.width-200, 50); //actual paint command
+      }
+    else
+      {
+        ctx1.fillText("HR: "+currentHeartRate, window.innerWidth-200, 50); //actual paint command
+      }
+  }
 paintHR();
 setInterval(paintHR,1000);
 
@@ -699,9 +706,6 @@ function pacingFunction()
   }
 }
 
-function pacerLoop() {
-
-}
 
 function stopPacing() {
   pacingState=false;
@@ -743,15 +747,14 @@ function windowSizeChange() {
   // run code to match canvas to current window size
   // should probably change both canvas sizes (canvas, canvas1), clear both canvases, realign drawing point to left side of screen, and move HR indicator
 
-  canvas.width = window.innerWidth;
+  //canvas.width = window.innerWidth;
   canvas1.width = window.innerWidth;
-  ctx.width = window.innerWidth;
-  ctx1.width = window.innerWidth;
-  
-  px = opx = 0;
-        ctx.clearRect(px, 0, scanBarWidth, h); 
+  //ctx.width = window.innerWidth;
+  //ctx1.width = window.innerWidth;
+  //px = opx = 0;
+  ctx.clearRect(px, 0, scanBarWidth, h); 
       
 
 }
 
-//window.addEventListener('resize',windowSizeChange);
+window.addEventListener('resize',windowSizeChange);
