@@ -671,7 +671,7 @@ function pacingFunction()
     }
 
     // vent logic
-    if (timeSinceLastV() > goalPacerMs)
+    if (timeSinceLastV() > goalPacerMs && timeSinceLastP() > AVInterval)
     {
       if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
