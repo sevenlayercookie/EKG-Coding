@@ -168,15 +168,25 @@ function onload() {
       //if (paceSpike)
         //{drawPacingSpike();}
 
-      ctx.moveTo(opx, opy);
-      ctx.lineTo(px, py);
-      opx = px;
-      opy = py;
-
-      if (opx > canvas.width) {
-        px = opx = 0; //-speed;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
+        ctx.moveTo(opx, opy);
+        ctx.lineTo(px, py);
+        opx = px;
+        opy = py;
+  
+        ctx.clearRect(px+10, 0, scanBarWidth, h); // **** MIGHT MESS THINGS UP ***
+        
+        if (opx > canvas.width) { // clear whole window (need to get back to the clearing column)
+          px = opx = 0; //-speed;
+          ctx.clearRect(px, 0, scanBarWidth, h); // **** MIGHT MESS THINGS UP ***
+        }
+        
+  
+        /* ---- THIS SECTION IS WORKING
+        if (opx > canvas.width) { // clear whole window (need to get back to the clearing column)
+          px = opx = 0; //-speed;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        */
       
     }
     isPainted = false;
