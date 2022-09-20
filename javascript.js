@@ -477,7 +477,7 @@ function paintHR() {
   if(isNaN(weightedAverageHR))
     {weightedAverageHR = null;}
     currentHeartRate=Math.floor(weightedAverageHR*(processingSpeed/dataHertz));
-  ctx1.fillText("HR: "+currentHeartRate, canvas.width-200, 50);
+  ctx1.fillText("HR: "+currentHeartRate, canvas1.width-200, 50);
 }
 paintHR();
 setInterval(paintHR,1000);
