@@ -22,8 +22,8 @@
 
 // -------------------------- GLOABL DEFINITIONS -----------------------------
 var PRInterval;
-var timeSincePGlobal=10000;
-var timeSinceVGlobal=10000;
+var timeSincePGlobal=1;
+var timeSinceVGlobal=1;
 var HRadjustedPR=120;
 var ventHeartRate = 40;
 var atrialHeartRate = 80;
