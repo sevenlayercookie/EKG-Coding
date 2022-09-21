@@ -320,6 +320,7 @@ var aAmplitude = 0.290; // default amplitude of P-wave
 
 var aOversenseThreshold = 1.5 // threhsold below which pacer will oversense (e.g. T wave)
 var aUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see P wave)
+                              // The sensing threshold is the least sensitive mV setting at which the temporary pacemaker can detect a heartbeat
 
 var vOversenseThreshold = 1.5 // threhsold below which pacer will oversense (e.g. T wave)
 var vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
@@ -840,6 +841,12 @@ function pacingFunction()
   }
             
     // DDD (pace A and V)
+    // DDD vs DDI
+    // DDD: can track the atrium and pace ventricle accordingly (not good for tachyarrhythmias)
+    //      so if senses intrinsic P -> paces V at intrinsic P rate ("atrial tracking")
+    // DDI: only inhibits (so senses P -> inhibits P; senses V -> inhibits V)
+    // "atrial tracking: ON" means DDD. "atrial tracking: OFF" means DDI.
+    
     if (atrialPacingChecked && ventPacingChecked)
     {
       timeSinceV=timeSinceLastSensedV();
