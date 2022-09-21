@@ -33,10 +33,10 @@
     <button id="paceButton" onclick="paceButtonClick()">Start Pacing</button>
     <br>
     <label for="aOutputBox">atrial output:</label>
-    <input id="aOutputBox" value=10>mA <label for="aSensitivityBox">sensitivity:</label><input id="aSensitivityBox" value=2>mV
+    <input id="aOutputBox" value=10 onChange="onOutputChange('atrium')">mA <label for="aSensitivityBox">sensitivity:</label><input id="aSensitivityBox" value=2>mV
     <br>
     <label for="vOutputBox">ventricle output:</label>
-    <input id="vOutputBox" value=10>mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" value=2>mV
+    <input id="vOutputBox" value=10 onChange="onOutputChange('ventricle')">mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" value=2>mV
     
     <br>
     <p></p>

@@ -271,6 +271,12 @@ function drawPWave() {
   {
     histPTimes.shift();
   }
+
+  if (aPacerSensitivity <= aAmplitude*7) // to bring to 5-20mV range
+  {
+    sensedPTimes.push(dataClock); // mark sensed A
+  }
+
   var tempArray=smoothP.slice();
    for (let j = 0; j < smoothP.length; j++) 
       {
@@ -301,6 +307,12 @@ var avgVentRate=0;
 var oldTime=performance.now();
 var histVentBeats=0;
 var histVentTimes = [];   // each time implies a beat
+
+var sensedVentTimes = [];   // each time implies a beat
+var vAmplitude = 0.660; // default amplitude of R-wave
+var sensedPTimes = [];   // each time implies a beat
+var aAmplitude = 0.290; // default amplitude of P-wave
+
 function drawQRST() {
   i = 0;
   j = 0;
@@ -309,6 +321,11 @@ function drawQRST() {
   if (histVentTimes.length>10)
   {
   histVentTimes.shift();
+  }
+
+  if (vPacerSensitivity <= vAmplitude*7) // *7 to bring with 1-20mV range
+  {
+    sensedVentTimes.push(dataClock); //mark sensed V
   }
   
   var tempArray=cleanQRS.slice();
@@ -527,8 +544,10 @@ function drawPacingSpike() {
 //
 //  II. SENSING
 //      - should be able to 'sense' user-set threshold (e.g. 5 mV)
-//      - if undersensing:  will pace 1:1 regardless of underlying rhythm
+//      - if undersensing:  will pace asynchrohnously regardless of underlying rhythm
 //      - if oversensing:   will not pace at all
+//           - crosstalk = leads in different chambers interact (e.g. A-lead interprets V-pace stimulus as a native P wave)
+//           - T-wave = T is sensed as an R wave
 //      - user should modify sensing threshold to cause appropriate pacing
 //  III.  CAPTURE
 //      - pacing spike should initiate a P wave or a QRS wave (depending if A or V lead)
@@ -785,4 +804,15 @@ function pacerCapturing(chamber) {
     }
     else {return false;}
   } 
+}
+
+function onOutputChange(chamber) {
+  if (chamber == "atrium")
+  {
+    aPacerOutput = document.getElementById("aOutputBox").value;
+  }
+  if (chamber == "ventricle")
+  {
+    vPacerOutput = document.getElementById("vOutputBox").value;
+  }
 }
