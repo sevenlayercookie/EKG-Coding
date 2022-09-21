@@ -441,7 +441,7 @@ function NSRhythm()
   currentRhythm = 'NSR';
   CHB = false;
   document.getElementById("CHBbox").checked = false;
-
+  document.getElementById("CHBstuff").hidden = true;
 	setHR = document.getElementById("avgRateBox").value;
 
   goalMS = (1/setHR)*60000
@@ -455,8 +455,10 @@ function ECGsyn() {
 }
 
 function showCHB() {
+  document.getElementById("CHBbox").checked = true;
   clearRhythms();
   currentRhythm = 'CHB';
+  CHB = true;
   document.getElementById("CHBstuff").hidden=false;
   ventHeartRate = document.getElementById("ventRateBox").value;
   atrialHeartRate = document.getElementById("atrialRateBox").value;
