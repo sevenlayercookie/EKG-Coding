@@ -54,7 +54,9 @@ py = h * 1;
 var y = dataHertz/144;
 
 var aPacerSensitivity = document.getElementById("aSensitivityBox").value; // default 
+var vPacerSensitivity = document.getElementById("vSensitivityBox").value; // default 
 var aPacerOutput = document.getElementById("aOutputBox").value;
+var vPacerOutput = document.getElementById("vOutputBox").value;
 var vThreshold = 5; // default V capture threshold (mA)
 var aThreshold = 2; // default A capture threshold (mA)
 
@@ -548,7 +550,7 @@ const vent = "vent";
 
 function paceIt(target) // target : atrium = 1, vent = 2
 {
-  if (pacerCapturing)
+  if (pacerCapturingFunc(target))
   {
     drawPacingSpike();  // draw pacing spike
     if (target==atrium)
@@ -614,7 +616,7 @@ function pacingFunction()
       {
       if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturing)
+        if (pacerCapturingFunc(atrium))
         {
           if (conductionIntact)
           {
@@ -622,7 +624,7 @@ function pacingFunction()
           }
         paceIt(atrium);
         }
-        else if (!pacerCapturing) // if not capturing, just draw a pacing spike and do nothing else
+        else if (!pacerCapturingFunc(atrium)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
@@ -645,11 +647,11 @@ function pacingFunction()
     
       if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturing)
+        if (pacerCapturingFunc(vent))
         {
         paceIt(vent);
         }
-        else if (!pacerCapturing) // if not capturing, just draw a pacing spike and do nothing else
+        else if (!pacerCapturingFunc(vent)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
@@ -673,12 +675,12 @@ function pacingFunction()
       {
         if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturing)
+        if (pacerCapturingFunc(atrium))
         {
           paceIt(atrium);
           timeSinceP=timeSinceLastP();
         }
-        if (!pacerCapturing)
+        if (!pacerCapturingFunc(atrium))
         {
           drawPacingSpike();
         }
@@ -695,11 +697,11 @@ function pacingFunction()
     {
       if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturing)
+        if (pacerCapturingFunc(vent))
         {
         paceIt(vent);
         }
-        else if (!pacerCapturing) // if not capturing, just draw a pacing spike and do nothing else
+        else if (!pacerCapturingFunc(vent)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
@@ -767,3 +769,15 @@ function windowSizeChange() {
 }
 
 window.addEventListener('resize',windowSizeChange);
+
+function pacerCapturingFunc(chamber) {
+  if (chamber == atrium && aPacerOutput >= aThreshold)
+  {
+    return true;
+  }
+  if (chamber == vent && vPacerOutput >= vThreshold)
+  {
+    return true;
+  }
+  else {return false;}
+}
