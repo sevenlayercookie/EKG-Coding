@@ -22,8 +22,10 @@
 
 // -------------------------- GLOABL DEFINITIONS -----------------------------
 var PRInterval;
-var timeSincePGlobal=10000;
-var timeSinceVGlobal=10000;
+var timeSincePGlobal=1;
+var timeSinceVGlobal=1;
+var timeSinceSensedPGlobal=1;
+var timeSinceSensedVGlobal=1;
 var HRadjustedPR=120;
 var ventHeartRate = 40;
 var atrialHeartRate = 80;
@@ -34,9 +36,12 @@ var goalMS=1000;
 var dataCount=0;
 var dataClock=0;
 var setHR = 60;
+var CHB = false;
 var dataFeedLength=500;
 var canvas = document.getElementById("demo");
 var ctx = canvas.getContext("2d");
+var canvas1 = document.getElementById("HRLayer");
+var ctx1 = canvas1.getContext("2d");
 var HRchanged = false;
 var paceSpike=false;
 var ventPacingChecked=false;
@@ -50,6 +55,15 @@ dataHertz = 500, // in Hz (data points per second)
 
 py = h * 1;
 var y = dataHertz/144;
+
+var aPacerSensitivity = document.getElementById("aSensitivityBox").value; // default 
+var vPacerSensitivity = document.getElementById("vSensitivityBox").value; // default 
+var aPacerOutput = document.getElementById("aOutputBox").value;
+var vPacerOutput = document.getElementById("vOutputBox").value;
+var vCaptureThreshold = 5; // default V capture threshold (mA)
+var aCaptureThreshold = 2; // default A capture threshold (mA)
+
+
 // ------------------------- onload () ---------------------------------------
 onload();
 function onload() {
@@ -57,6 +71,7 @@ function onload() {
   dataFeed.length = 1000;
   dataFeed.fill(0,0,1000);
   document.getElementById("demo").width = window.innerWidth/2;
+  document.getElementById("HRLayer").width = window.innerWidth;
   PRInterval = document.getElementById("PRbox").value;
   var w = demo.width,
     
@@ -69,11 +84,11 @@ function onload() {
     compressHfactor = 20,
     canvasBaseline = demo.height/2,
     opx = 0,
-    speed = 0.2, // speed of the cursor across the screen; affects "squeeze" of waves
+    speed = .2, // speed of the cursor across the screen; affects "squeeze" of waves
     isPainted = true;
     timestamp = performance.now();
     paintCount = 1;
-    (opy = py), (scanBarWidth = 40), (PVCflag = 0);
+    (opy = py), (scanBarWidth = 1), (PVCflag = 0);
     k = 0;
   ctx.strokeStyle = "#00bd00";
   ctx.lineWidth = 3;
@@ -118,8 +133,9 @@ function onload() {
     dataCount++;
     dataClock = dataClock + (1/dataHertz)*1000;  // clock for the project
 
-    if (i%100==0) // every 100 data points, calc realtime Hz
+    if (i%100==0) // every 100 data points (200 ms), calc realtime Hz
     {
+      randomizeThresholds();
     avgProcessSpeed = calcRealtimeProcessingSpeed();
       if (avgProcessSpeed<2)
       {
@@ -130,6 +146,7 @@ function onload() {
         y+=1;
       }
     }
+    
 
     masterRhythmFunction()
     if (pacingState)
@@ -172,12 +189,15 @@ function onload() {
       opx = px;
       opy = py;
 
-      if (opx > canvas.width) {
+      ctx.clearRect(px+10, 0, scanBarWidth, h); 
+      
+      if (opx > canvas.width || opx > window.innerWidth) {
         px = opx = 0; //-speed;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(px, 0, 10, h); 
       }
       
     }
+    
     isPainted = false;
     requestAnimationFrame(paint);
     document.getElementById("demoTEXT2").innerText = i;
@@ -233,11 +253,11 @@ document.getElementById('capturing').onchange = function ()
   {
     if (document.getElementById('capturing').checked)
   {
-      pacerCapturing=true;
+    captureOverride=true;
   }
     else
     {
-      pacerCapturing=false;
+      captureOverride=false;
     }
 
   
@@ -256,6 +276,12 @@ function drawPWave() {
   {
     histPTimes.shift();
   }
+
+  if (aPacerSensitivity <= aUndersenseThreshold) // not undersensed
+  {
+    sensedPTimes.push(dataClock); // mark sensed A
+  }
+
   var tempArray=smoothP.slice();
    for (let j = 0; j < smoothP.length; j++) 
       {
@@ -286,6 +312,19 @@ var avgVentRate=0;
 var oldTime=performance.now();
 var histVentBeats=0;
 var histVentTimes = [];   // each time implies a beat
+
+var sensedVentTimes = [];   // each time implies a beat
+var vAmplitude = 0.660; // default amplitude of R-wave
+var sensedPTimes = [];   // each time implies a beat
+var aAmplitude = 0.290; // default amplitude of P-wave
+
+var aOversenseThreshold = 1.5 // threhsold below which pacer will oversense (e.g. T wave)
+var aUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see P wave)
+
+var vOversenseThreshold = 1.5 // threhsold below which pacer will oversense (e.g. T wave)
+var vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
+
+
 function drawQRST() {
   i = 0;
   j = 0;
@@ -294,6 +333,11 @@ function drawQRST() {
   if (histVentTimes.length>10)
   {
   histVentTimes.shift();
+  }
+
+  if (vPacerSensitivity <= vUndersenseThreshold) // not undersensing -> mark real V
+  {
+    sensedVentTimes.push(dataClock); //mark sensed V
   }
   
   var tempArray=cleanQRS.slice();
@@ -316,7 +360,7 @@ function masterRhythmFunction()
 {
   if (currentRhythm=='flatline')
   {
-    if (conductionIntact && timeSinceLastP() >= PRInterval && drawQRS)
+    if (!CHB && timeSinceLastP() >= PRInterval && drawQRS)
     {
       drawQRST();
       drawQRS=false;
@@ -342,17 +386,30 @@ function masterRhythmFunction()
         {
           drawPWave();
           timeSinceP=timeSinceLastP();
+          if (!CHB)
+          {
           PRtimer = 1;
           drawQRS = true;
+          }
 
         }
         //if (PRtimer>=HRadjustedPR && timeSinceV>=goalMS)
-        if (drawQRS && timeSinceLastP()>=HRadjustedPR)
+        if (drawQRS && timeSinceLastP()>=HRadjustedPR && !CHB)
         {
           drawQRST();
           drawQRS=false;
           //PRtimer=0;
         }
+
+        if (CHB)
+          {
+            ventHeartRate = document.getElementById("ventRateBox").value;
+            let timeeeeee = timeSinceLastV()
+            if (timeeeeee >= 1/(ventHeartRate/60000))
+            {
+              drawQRST();
+            }
+          }
         //if (PRtimer>0)
         //{PRtimer+=2;}
       }
@@ -382,6 +439,9 @@ function NSRhythm()
   PRInterval = document.getElementById("PRbox").value;
 	clearRhythms();
   currentRhythm = 'NSR';
+  CHB = false;
+  document.getElementById("CHBbox").checked = false;
+  document.getElementById("CHBstuff").hidden = true;
 	setHR = document.getElementById("avgRateBox").value;
 
   goalMS = (1/setHR)*60000
@@ -394,13 +454,15 @@ function ECGsyn() {
   
 }
 
-function CHB() {
+function showCHB() {
+  document.getElementById("CHBbox").checked = true;
   clearRhythms();
   currentRhythm = 'CHB';
+  CHB = true;
   document.getElementById("CHBstuff").hidden=false;
   ventHeartRate = document.getElementById("ventRateBox").value;
   atrialHeartRate = document.getElementById("atrialRateBox").value;
-  setHR = document.getElementById("avgRateBox").value = ventHeartRate;
+  // setHR = document.getElementById("avgRateBox").value = ventHeartRate;
 
   /*
   currentRhythmID.push(setInterval(function ()
@@ -432,12 +494,11 @@ function clearRhythms()
 var currentHeartRate=0;
 
 function paintHR() {
-  canvas1 = document.getElementById("HRLayer");
-  ctx1 = canvas1.getContext("2d");
+
   ctx1.font = "50px Arial";
   ctx1.fillStyle = "#00bd00";
   ctx1.lineWidth = 3;
-  ctx1.clearRect(0,00,canvas1.width,canvas1.height); //clears previous HR 
+  ctx1.clearRect(0,0,canvas1.width,canvas1.height); //clears previous HR 
   // rolling average (weighted)
   // histVentTimes contains absolute timestamps of V beats  
   // weighted average - weight more recent measurements
@@ -477,8 +538,16 @@ function paintHR() {
   if(isNaN(weightedAverageHR))
     {weightedAverageHR = null;}
     currentHeartRate=Math.floor(weightedAverageHR*(processingSpeed/dataHertz));
-  ctx1.fillText("HR: "+currentHeartRate, canvas.width-200, 50);
-}
+  
+    if (canvas.width < window.innerWidth)
+      {
+      ctx1.fillText("HR: "+currentHeartRate, canvas.width-200, 50); //actual paint command
+      }
+    else
+      {
+        ctx1.fillText("HR: "+currentHeartRate, window.innerWidth-200, 50); //actual paint command
+      }
+  }
 paintHR();
 setInterval(paintHR,1000);
 
@@ -505,8 +574,10 @@ function drawPacingSpike() {
 //
 //  II. SENSING
 //      - should be able to 'sense' user-set threshold (e.g. 5 mV)
-//      - if undersensing:  will pace 1:1 regardless of underlying rhythm
+//      - if undersensing:  will pace asynchrohnously regardless of underlying rhythm
 //      - if oversensing:   will not pace at all
+//           - crosstalk = leads in different chambers interact (e.g. A-lead interprets V-pace stimulus as a native P wave)
+//           - T-wave = T is sensed as an R wave
 //      - user should modify sensing threshold to cause appropriate pacing
 //  III.  CAPTURE
 //      - pacing spike should initiate a P wave or a QRS wave (depending if A or V lead)
@@ -528,7 +599,7 @@ const vent = "vent";
 
 function paceIt(target) // target : atrium = 1, vent = 2
 {
-  if (pacerCapturing)
+  if (pacerCapturing(target))
   {
     drawPacingSpike();  // draw pacing spike
     if (target==atrium)
@@ -576,9 +647,10 @@ function startPacing() {
 }
 
 let AVInterval = 120; // should link to form later
-let pacerCapturing = true;
+let captureOverride = false;
 let sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
 
+/* GOOD PACING FUNCTION BACKUP
 function pacingFunction()
 {
   AVInterval = document.getElementById("AVInterval").value;
@@ -594,7 +666,7 @@ function pacingFunction()
       {
       if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturing)
+        if (pacerCapturing(atrium))
         {
           if (conductionIntact)
           {
@@ -602,7 +674,7 @@ function pacingFunction()
           }
         paceIt(atrium);
         }
-        else if (!pacerCapturing) // if not capturing, just draw a pacing spike and do nothing else
+        else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
@@ -625,11 +697,11 @@ function pacingFunction()
     
       if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturing)
+        if (pacerCapturing(vent))
         {
         paceIt(vent);
         }
-        else if (!pacerCapturing) // if not capturing, just draw a pacing spike and do nothing else
+        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
@@ -653,12 +725,12 @@ function pacingFunction()
       {
         if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturing)
+        if (pacerCapturing(atrium))
         {
           paceIt(atrium);
           timeSinceP=timeSinceLastP();
         }
-        if (!pacerCapturing)
+        if (!pacerCapturing(atrium))
         {
           drawPacingSpike();
         }
@@ -671,15 +743,15 @@ function pacingFunction()
     }
 
     // vent logic
-    if (timeSinceLastV() > goalPacerMs)
+    if (timeSinceLastV() > goalPacerMs && timeSinceLastP() > AVInterval)
     {
       if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturing)
+        if (pacerCapturing(vent))
         {
         paceIt(vent);
         }
-        else if (!pacerCapturing) // if not capturing, just draw a pacing spike and do nothing else
+        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
@@ -693,8 +765,142 @@ function pacingFunction()
   }
 }
 
-function pacerLoop() {
+*/
 
+function pacingFunction()
+{
+  AVInterval = document.getElementById("AVInterval").value;
+  let timeSinceP = timeSinceLastSensedP();
+  let timeSinceV = timeSinceLastSensedV();
+  let goalPacerMs = (1/pacingRate)*60000; // goal how many ms between R waves
+  
+  //randomizeThresholds();
+
+    // AAI (A pace, A sense (ignore V) )
+
+    if (atrialPacingChecked && !ventPacingChecked)
+    {
+      if (timeSinceLastSensedP() > goalPacerMs) // has it been long enough since last P?
+      {
+        
+        if (aPacerSensitivity >= aOversenseThreshold) // is pacer not oversensing?
+        {
+          if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
+          {
+            if (pacerCapturing(atrium)) // is output high enough?
+            {
+              if (!CHB) // is conduction intact?
+              {
+                drawQRS = true; // signal that QRS should be drawn next
+              }
+            paceIt(atrium);
+            }
+            else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
+            {
+              drawPacingSpike();
+            }
+            atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+          }
+     
+    }
+  }
+    if (atrialPaceTimeout>0)  // augment pacer timer if running
+    {
+      atrialPaceTimeout -= 2;
+    }
+  }
+    // VVI (V pace only, V sense, ignore A completely)
+    
+    if (ventPacingChecked && !atrialPacingChecked)
+    {
+      if (timeSinceLastSensedV() > goalPacerMs)
+      {
+        
+        if (vPacerSensitivity >= vOversenseThreshold) // is pacer not oversensing?
+        {
+    
+          if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
+          {
+            if (pacerCapturing(vent))
+            {
+            paceIt(vent);
+            }
+            else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
+            {
+              drawPacingSpike();
+            }
+            ventPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+          }
+    }
+  }
+    if (ventPaceTimeout>0)  // augment pacer timer if running
+    {
+      ventPaceTimeout -= 2;
+    }
+  }
+            
+    // DDD (pace A and V)
+    if (atrialPacingChecked && ventPacingChecked)
+    {
+      timeSinceV=timeSinceLastSensedV();
+      timeSinceP=timeSinceLastSensedP();
+      
+      // Atrial logic
+      if (timeSinceLastSensedP() > goalPacerMs && timeSinceLastSensedV() > goalPacerMs - AVInterval)
+      { 
+        
+        if (aPacerSensitivity >= aOversenseThreshold) // is pacer not oversensing?
+        {
+          
+        if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
+      {
+        if (pacerCapturing(atrium))
+        {
+          paceIt(atrium);
+          if (!CHB) // is conduction intact?
+              {
+                drawQRS = true; // signal that QRS should be drawn next
+              }
+          timeSinceP=timeSinceLastSensedP();
+        }
+        if (!pacerCapturing(atrium))
+        {
+          drawPacingSpike();
+        }
+        atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+      }
+          }
+    }
+    if (atrialPaceTimeout>0)  // augment pacer timer if running
+    {
+      atrialPaceTimeout -= 2;
+    }
+
+    // vent logic
+    if (timeSinceLastSensedV() > goalPacerMs && timeSinceLastSensedP() > AVInterval)
+    {
+   
+      if (vPacerSensitivity >= vOversenseThreshold) // is pacer not oversensing?
+        {
+      if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
+      {
+        if (pacerCapturing(vent))
+        {
+        paceIt(vent);
+        }
+        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
+        {
+          drawPacingSpike();
+        }
+        ventPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+      }
+    }
+  }
+    if (ventPaceTimeout>0)  // augment pacer timer if running
+    {
+      ventPaceTimeout -= 2;
+    }
+  }
 }
 
 function stopPacing() {
@@ -725,10 +931,114 @@ function timeSinceLastP() {
   return timeee;
 }
 
+function timeSinceLastSensedP() {
+  if (isNaN(sensedPTimes.at(-1))) {return 100000;}
+  //let timeee = (dataClock - histPTimes.at(-1))*(processingSpeed/dataHertz);
+  let timeee = (dataClock - sensedPTimes.at(-1));
+  timeSinceSensedPGlobal=timeee;
+  return timeee;
+}
+
 function timeSinceLastV() {
   if (isNaN(histVentTimes.at(-1))) {return 100000;}
   //let timeee = (dataClock - histVentTimes.at(-1))*(processingSpeed/dataHertz);
   let timeee = (dataClock - histVentTimes.at(-1));
   timeSinceVGlobal=timeee;
   return timeee ;
+}
+
+function timeSinceLastSensedV() {
+  if (isNaN(sensedVentTimes.at(-1))) {return 100000;}
+  //let timeee = (dataClock - histVentTimes.at(-1))*(processingSpeed/dataHertz);
+  let timeee = (dataClock - sensedVentTimes.at(-1));
+  timeSinceSensedVGlobal=timeee;
+  return timeee;
+}
+
+function windowSizeChange() {
+  // run code to match canvas to current window size
+  // should probably change both canvas sizes (canvas, canvas1), clear both canvases, realign drawing point to left side of screen, and move HR indicator
+
+  //canvas.width = window.innerWidth;
+  canvas1.width = window.innerWidth;
+  //ctx.width = window.innerWidth;
+  //ctx1.width = window.innerWidth;
+  //px = opx = 0;
+  ctx.clearRect(px, 0, scanBarWidth, h); 
+  paintHR();
+  //ctx1.clearRect(0,0,canvas1.width,canvas1.height); //clears previous HR 
+  
+
+}
+
+window.addEventListener('resize',windowSizeChange);
+
+function pacerCapturing(chamber) {
+  if (captureOverride)
+  {return true;}
+  else
+  {
+    if (chamber == atrium && aPacerOutput >= aCaptureThreshold)
+    {
+      return true;
+    }
+    if (chamber == vent && vPacerOutput >= vCaptureThreshold)
+    {
+      return true;
+    }
+    else {return false;}
+  } 
+}
+
+function onOutputChange(chamber) {
+  if (chamber == "atrium")
+  {
+    aPacerOutput = document.getElementById("aOutputBox").value;
+  }
+  if (chamber == "ventricle")
+  {
+    vPacerOutput = document.getElementById("vOutputBox").value;
+  }
+}
+
+function onSensitivityChange(chamber) {
+  if (chamber == "atrium")
+  {
+    aPacerSensitivity = document.getElementById("aSensitivityBox").value;
+  }
+  if (chamber == "ventricle")
+  {
+    vPacerSensitivity = document.getElementById("vSensitivityBox").value;
+  }
+}
+
+function clickCHB() {
+  if (document.getElementById("CHBbox").checked)
+  {
+    CHB=true;
+    document.getElementById("CHBstuff").hidden=false;
+    ventHeartRate = document.getElementById("ventRateBox").value;
+    atrialHeartRate = document.getElementById("atrialRateBox").value;
+  }
+  else
+  {
+    CHB=false;
+    document.getElementById("CHBstuff").hidden=true;
+    ventHeartRate = document.getElementById("ventRateBox").value;
+    atrialHeartRate = document.getElementById("atrialRateBox").value;
+  }
+}
+
+function randomizeThresholds() // randomize a bit capture, oversense, undersense thresholds
+{
+  // capture thresholds (default A=2, V=5)
+  vCaptureThreshold = 5 + (Math.random() - 0.5)*2 //      +/- 1
+  aCaptureThreshold = 2 + (Math.random() - 0.5)*2 //      +/- 1
+
+  // sensitivity Thresholds (default A=1.5, 10   and V=1.5, 10)
+  aOversenseThreshold = 1.5 + (Math.random() - 0.5)*2 //      +/- 1
+  aUndersenseThreshold = 10 + (Math.random() - 0.5)*2 //      +/- 1
+  vOversenseThreshold = 1.5 + (Math.random() - 0.5)*2 //      +/- 1
+  vUndersenseThreshold = 10 + (Math.random() - 0.5)*2 //      +/- 1
+  
 }
