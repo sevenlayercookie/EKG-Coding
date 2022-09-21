@@ -816,3 +816,14 @@ function onOutputChange(chamber) {
     vPacerOutput = document.getElementById("vOutputBox").value;
   }
 }
+
+function onSensitivityChange(chamber) {
+  if (chamber == "atrium")
+  {
+    aPacerSensitivity = document.getElementById("aSensitivityBox").value;
+  }
+  if (chamber == "ventricle")
+  {
+    vPacerSensitivity = document.getElementById("vSensitivityBox").value;
+  }
+}
