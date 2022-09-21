@@ -24,6 +24,8 @@
 var PRInterval;
 var timeSincePGlobal=1;
 var timeSinceVGlobal=1;
+var timeSinceSensedPGlobal=1;
+var timeSinceSensedVGlobal=1;
 var HRadjustedPR=120;
 var ventHeartRate = 40;
 var atrialHeartRate = 80;
@@ -620,6 +622,7 @@ let AVInterval = 120; // should link to form later
 let captureOverride = false;
 let sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
 
+/* GOOD PACING FUNCTION BACKUP
 function pacingFunction()
 {
   AVInterval = document.getElementById("AVInterval").value;
@@ -734,6 +737,121 @@ function pacingFunction()
   }
 }
 
+*/
+
+function pacingFunction()
+{
+  AVInterval = document.getElementById("AVInterval").value;
+  let timeSinceP = timeSinceLastSensedP();
+  let timeSinceV = timeSinceLastSensedV();
+  let goalPacerMs = (1/pacingRate)*60000; // goal how many ms between R waves
+    
+    // AAI (A pace, A sense (ignore V) )
+
+    if (atrialPacingChecked && !ventPacingChecked)
+    {
+      if (timeSinceLastSensedP() > goalPacerMs)
+      {
+      if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
+      {
+        if (pacerCapturing(atrium))
+        {
+          if (conductionIntact)
+          {
+            drawQRS = true;
+          }
+        paceIt(atrium);
+        }
+        else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
+        {
+          drawPacingSpike();
+        }
+        atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+      }
+     
+    }
+    if (atrialPaceTimeout>0)  // augment pacer timer if running
+    {
+      atrialPaceTimeout -= 2;
+    }
+  }
+    // VVI (V pace only, V sense, ignore A completely)
+    
+    if (ventPacingChecked && !atrialPacingChecked)
+    {
+      if (timeSinceLastSensedV() > goalPacerMs)
+      {
+
+    
+      if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
+      {
+        if (pacerCapturing(vent))
+        {
+        paceIt(vent);
+        }
+        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
+        {
+          drawPacingSpike();
+        }
+        ventPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+      }
+    }
+    if (ventPaceTimeout>0)  // augment pacer timer if running
+    {
+      ventPaceTimeout -= 2;
+    }
+  }
+            
+    // DDD (pace A and V)
+    if (atrialPacingChecked && ventPacingChecked)
+    {
+      timeSinceV=timeSinceLastSensedV();
+      timeSinceP=timeSinceLastSensedP();
+      
+      // Atrial logic
+      if (timeSinceLastSensedP() > goalPacerMs && timeSinceLastSensedV() > goalPacerMs - AVInterval)
+      {
+        if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
+      {
+        if (pacerCapturing(atrium))
+        {
+          paceIt(atrium);
+          timeSinceP=timeSinceLastSensedP();
+        }
+        if (!pacerCapturing(atrium))
+        {
+          drawPacingSpike();
+        }
+        atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+      }
+    }
+    if (atrialPaceTimeout>0)  // augment pacer timer if running
+    {
+      atrialPaceTimeout -= 2;
+    }
+
+    // vent logic
+    if (timeSinceLastSensedV() > goalPacerMs && timeSinceLastSensedP() > AVInterval)
+    {
+      if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
+      {
+        if (pacerCapturing(vent))
+        {
+        paceIt(vent);
+        }
+        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
+        {
+          drawPacingSpike();
+        }
+        ventPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+      }
+    }
+    if (ventPaceTimeout>0)  // augment pacer timer if running
+    {
+      ventPaceTimeout -= 2;
+    }
+  }
+}
 
 function stopPacing() {
   pacingState=false;
@@ -763,12 +881,28 @@ function timeSinceLastP() {
   return timeee;
 }
 
+function timeSinceLastSensedP() {
+  if (isNaN(sensedPTimes.at(-1))) {return 100000;}
+  //let timeee = (dataClock - histPTimes.at(-1))*(processingSpeed/dataHertz);
+  let timeee = (dataClock - sensedPTimes.at(-1));
+  timeSinceSensedPGlobal=timeee;
+  return timeee;
+}
+
 function timeSinceLastV() {
   if (isNaN(histVentTimes.at(-1))) {return 100000;}
   //let timeee = (dataClock - histVentTimes.at(-1))*(processingSpeed/dataHertz);
   let timeee = (dataClock - histVentTimes.at(-1));
   timeSinceVGlobal=timeee;
   return timeee ;
+}
+
+function timeSinceLastSensedV() {
+  if (isNaN(sensedVentTimes.at(-1))) {return 100000;}
+  //let timeee = (dataClock - histVentTimes.at(-1))*(processingSpeed/dataHertz);
+  let timeee = (dataClock - sensedVentTimes.at(-1));
+  timeSinceSensedVGlobal=timeee;
+  return timeee;
 }
 
 function windowSizeChange() {
