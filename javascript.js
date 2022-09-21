@@ -59,8 +59,8 @@ var aPacerSensitivity = document.getElementById("aSensitivityBox").value; // def
 var vPacerSensitivity = document.getElementById("vSensitivityBox").value; // default 
 var aPacerOutput = document.getElementById("aOutputBox").value;
 var vPacerOutput = document.getElementById("vOutputBox").value;
-var vThreshold = 5; // default V capture threshold (mA)
-var aThreshold = 2; // default A capture threshold (mA)
+var vCaptureThreshold = 5; // default V capture threshold (mA)
+var aCaptureThreshold = 2; // default A capture threshold (mA)
 
 
 // ------------------------- onload () ---------------------------------------
@@ -315,6 +315,13 @@ var vAmplitude = 0.660; // default amplitude of R-wave
 var sensedPTimes = [];   // each time implies a beat
 var aAmplitude = 0.290; // default amplitude of P-wave
 
+var aOversenseThreshold = 1.5 // threhsold below which pacer will oversense (e.g. T wave)
+var aUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see P wave)
+
+var vOversenseThreshold = 1.5 // threhsold below which pacer will oversense (e.g. T wave)
+var vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
+
+
 function drawQRST() {
   i = 0;
   j = 0;
@@ -325,7 +332,7 @@ function drawQRST() {
   histVentTimes.shift();
   }
 
-  if (vPacerSensitivity <= vAmplitude*7) // *7 to bring with 1-20mV range
+  if (vPacerSensitivity <= vUndersenseThreshold) // not undersensing -> mark real V
   {
     sensedVentTimes.push(dataClock); //mark sensed V
   }
@@ -750,26 +757,29 @@ function pacingFunction()
 
     if (atrialPacingChecked && !ventPacingChecked)
     {
-      if (timeSinceLastSensedP() > goalPacerMs)
+      if (timeSinceLastSensedP() > goalPacerMs) // has it been long enough since last P?
       {
-      if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
-      {
-        if (pacerCapturing(atrium))
+        if (aPacerSensitivity >= aOversenseThreshold) // is pacer not oversensing?
         {
-          if (conductionIntact)
+          if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
           {
-            drawQRS = true;
+            if (pacerCapturing(atrium)) // is output high enough?
+            {
+              if (conductionIntact) // is conduction intact?
+              {
+                drawQRS = true; // signal that QRS should be drawn next
+              }
+            paceIt(atrium);
+            }
+            else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
+            {
+              drawPacingSpike();
+            }
+            atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
           }
-        paceIt(atrium);
-        }
-        else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
-        {
-          drawPacingSpike();
-        }
-        atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
-      }
      
     }
+  }
     if (atrialPaceTimeout>0)  // augment pacer timer if running
     {
       atrialPaceTimeout -= 2;
@@ -781,7 +791,8 @@ function pacingFunction()
     {
       if (timeSinceLastSensedV() > goalPacerMs)
       {
-
+        if (vPacerSensitivity >= vOversenseThreshold) // is pacer not oversensing?
+        {
     
       if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
@@ -796,6 +807,7 @@ function pacingFunction()
         ventPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
       }
     }
+  }
     if (ventPaceTimeout>0)  // augment pacer timer if running
     {
       ventPaceTimeout -= 2;
@@ -811,6 +823,8 @@ function pacingFunction()
       // Atrial logic
       if (timeSinceLastSensedP() > goalPacerMs && timeSinceLastSensedV() > goalPacerMs - AVInterval)
       {
+        if (aPacerSensitivity >= aOversenseThreshold) // is pacer not oversensing?
+        {
         if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
         if (pacerCapturing(atrium))
@@ -824,6 +838,7 @@ function pacingFunction()
         }
         atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
       }
+          }
     }
     if (atrialPaceTimeout>0)  // augment pacer timer if running
     {
@@ -833,6 +848,8 @@ function pacingFunction()
     // vent logic
     if (timeSinceLastSensedV() > goalPacerMs && timeSinceLastSensedP() > AVInterval)
     {
+      if (vPacerSensitivity >= vOversenseThreshold) // is pacer not oversensing?
+        {
       if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
         if (pacerCapturing(vent))
@@ -846,6 +863,7 @@ function pacingFunction()
         ventPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
       }
     }
+  }
     if (ventPaceTimeout>0)  // augment pacer timer if running
     {
       ventPaceTimeout -= 2;
@@ -928,11 +946,11 @@ function pacerCapturing(chamber) {
   {return true;}
   else
   {
-    if (chamber == atrium && aPacerOutput >= aThreshold)
+    if (chamber == atrium && aPacerOutput >= aCaptureThreshold)
     {
       return true;
     }
-    if (chamber == vent && vPacerOutput >= vThreshold)
+    if (chamber == vent && vPacerOutput >= vCaptureThreshold)
     {
       return true;
     }
