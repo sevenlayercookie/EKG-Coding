@@ -248,11 +248,11 @@ document.getElementById('capturing').onchange = function ()
   {
     if (document.getElementById('capturing').checked)
   {
-      pacerCapturing=true;
+    captureOverride=true;
   }
     else
     {
-      pacerCapturing=false;
+      captureOverride=false;
     }
 
   
@@ -550,7 +550,7 @@ const vent = "vent";
 
 function paceIt(target) // target : atrium = 1, vent = 2
 {
-  if (pacerCapturingFunc(target))
+  if (pacerCapturing(target))
   {
     drawPacingSpike();  // draw pacing spike
     if (target==atrium)
@@ -598,7 +598,7 @@ function startPacing() {
 }
 
 let AVInterval = 120; // should link to form later
-let pacerCapturing = true;
+let captureOverride = false;
 let sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
 
 function pacingFunction()
@@ -616,7 +616,7 @@ function pacingFunction()
       {
       if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturingFunc(atrium))
+        if (pacerCapturing(atrium))
         {
           if (conductionIntact)
           {
@@ -624,7 +624,7 @@ function pacingFunction()
           }
         paceIt(atrium);
         }
-        else if (!pacerCapturingFunc(atrium)) // if not capturing, just draw a pacing spike and do nothing else
+        else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
@@ -647,11 +647,11 @@ function pacingFunction()
     
       if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturingFunc(vent))
+        if (pacerCapturing(vent))
         {
         paceIt(vent);
         }
-        else if (!pacerCapturingFunc(vent)) // if not capturing, just draw a pacing spike and do nothing else
+        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
@@ -675,12 +675,12 @@ function pacingFunction()
       {
         if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturingFunc(atrium))
+        if (pacerCapturing(atrium))
         {
           paceIt(atrium);
           timeSinceP=timeSinceLastP();
         }
-        if (!pacerCapturingFunc(atrium))
+        if (!pacerCapturing(atrium))
         {
           drawPacingSpike();
         }
@@ -697,11 +697,11 @@ function pacingFunction()
     {
       if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
       {
-        if (pacerCapturingFunc(vent))
+        if (pacerCapturing(vent))
         {
         paceIt(vent);
         }
-        else if (!pacerCapturingFunc(vent)) // if not capturing, just draw a pacing spike and do nothing else
+        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
@@ -770,14 +770,19 @@ function windowSizeChange() {
 
 window.addEventListener('resize',windowSizeChange);
 
-function pacerCapturingFunc(chamber) {
-  if (chamber == atrium && aPacerOutput >= aThreshold)
+function pacerCapturing(chamber) {
+  if (captureOverride)
+  {return true;}
+  else
   {
-    return true;
-  }
-  if (chamber == vent && vPacerOutput >= vThreshold)
-  {
-    return true;
-  }
-  else {return false;}
+    if (chamber == atrium && aPacerOutput >= aThreshold)
+    {
+      return true;
+    }
+    if (chamber == vent && vPacerOutput >= vThreshold)
+    {
+      return true;
+    }
+    else {return false;}
+  } 
 }
