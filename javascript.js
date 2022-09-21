@@ -70,7 +70,7 @@ function onload() {
   // --------------------- LOCAL DEFINITIONS ---------------------------------
   dataFeed.length = 1000;
   dataFeed.fill(0,0,1000);
-  document.getElementById("demo").width = window.innerWidth/2;
+  document.getElementById("demo").width = window.innerWidth;
   document.getElementById("HRLayer").width = window.innerWidth;
   PRInterval = document.getElementById("PRbox").value;
   var w = demo.width,
@@ -846,7 +846,7 @@ function pacingFunction()
     //      so if senses intrinsic P -> paces V at intrinsic P rate ("atrial tracking")
     // DDI: only inhibits (so senses P -> inhibits P; senses V -> inhibits V)
     // "atrial tracking: ON" means DDD. "atrial tracking: OFF" means DDI.
-    
+
     if (atrialPacingChecked && ventPacingChecked)
     {
       timeSinceV=timeSinceLastSensedV();
