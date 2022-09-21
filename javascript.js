@@ -1030,13 +1030,13 @@ function clickCHB() {
 function randomizeThresholds() // randomize a bit capture, oversense, undersense thresholds
 {
   // capture thresholds (default A=2, V=5)
-  vCaptureThreshold = 5 + (Math.random() - 0.5)*2
-  aCaptureThreshold = 2 + (Math.random() - 0.5)*2
+  vCaptureThreshold = 5 + (Math.random() - 0.5)*2 //      +/- 1
+  aCaptureThreshold = 2 + (Math.random() - 0.5)*2 //      +/- 1
 
   // sensitivity Thresholds (default A=1.5, 10   and V=1.5, 10)
-  aOversenseThreshold = 1.5 + (Math.random() - 0.5)*2
-  aUndersenseThreshold = 10 + (Math.random() - 0.5)*2
-  vOversenseThreshold = 1.5 + (Math.random() - 0.5)*2
-  vUndersenseThreshold = 10 + (Math.random() - 0.5)*2
+  aOversenseThreshold = 1.5 + (Math.random() - 0.5)*2 //      +/- 1
+  aUndersenseThreshold = 10 + (Math.random() - 0.5)*2 //      +/- 1
+  vOversenseThreshold = 1.5 + (Math.random() - 0.5)*2 //      +/- 1
+  vUndersenseThreshold = 10 + (Math.random() - 0.5)*2 //      +/- 1
   
 }
