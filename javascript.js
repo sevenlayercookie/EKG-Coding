@@ -36,6 +36,7 @@ var goalMS=1000;
 var dataCount=0;
 var dataClock=0;
 var setHR = 60;
+var CHB = false;
 var dataFeedLength=500;
 var canvas = document.getElementById("demo");
 var ctx = canvas.getContext("2d");
@@ -383,17 +384,30 @@ function masterRhythmFunction()
         {
           drawPWave();
           timeSinceP=timeSinceLastP();
+          if (!CHB)
+          {
           PRtimer = 1;
           drawQRS = true;
+          }
 
         }
         //if (PRtimer>=HRadjustedPR && timeSinceV>=goalMS)
-        if (drawQRS && timeSinceLastP()>=HRadjustedPR)
+        if (drawQRS && timeSinceLastP()>=HRadjustedPR && !CHB)
         {
           drawQRST();
           drawQRS=false;
           //PRtimer=0;
         }
+
+        if (CHB)
+          {
+            ventHeartRate = document.getElementById("ventRateBox").value;
+            let timeeeeee = timeSinceLastV()
+            if (timeeeeee >= 1/(ventHeartRate/60000))
+            {
+              drawQRST();
+            }
+          }
         //if (PRtimer>0)
         //{PRtimer+=2;}
       }
@@ -423,6 +437,9 @@ function NSRhythm()
   PRInterval = document.getElementById("PRbox").value;
 	clearRhythms();
   currentRhythm = 'NSR';
+  CHB = false;
+  document.getElementById("CHBbox").checked = false;
+
 	setHR = document.getElementById("avgRateBox").value;
 
   goalMS = (1/setHR)*60000
@@ -435,13 +452,13 @@ function ECGsyn() {
   
 }
 
-function CHB() {
+function showCHB() {
   clearRhythms();
   currentRhythm = 'CHB';
   document.getElementById("CHBstuff").hidden=false;
   ventHeartRate = document.getElementById("ventRateBox").value;
   atrialHeartRate = document.getElementById("atrialRateBox").value;
-  setHR = document.getElementById("avgRateBox").value = ventHeartRate;
+  // setHR = document.getElementById("avgRateBox").value = ventHeartRate;
 
   /*
   currentRhythmID.push(setInterval(function ()
@@ -977,5 +994,22 @@ function onSensitivityChange(chamber) {
   if (chamber == "ventricle")
   {
     vPacerSensitivity = document.getElementById("vSensitivityBox").value;
+  }
+}
+
+function clickCHB() {
+  if (document.getElementById("CHBbox").checked)
+  {
+    CHB=true;
+    document.getElementById("CHBstuff").hidden=false;
+    ventHeartRate = document.getElementById("ventRateBox").value;
+    atrialHeartRate = document.getElementById("atrialRateBox").value;
+  }
+  else
+  {
+    CHB=false;
+    document.getElementById("CHBstuff").hidden=true;
+    ventHeartRate = document.getElementById("ventRateBox").value;
+    atrialHeartRate = document.getElementById("atrialRateBox").value;
   }
 }

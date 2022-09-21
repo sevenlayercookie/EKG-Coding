@@ -15,16 +15,13 @@
     <label for="avgRateBox">rate:</label> <input id="avgRateBox" value=60>
     <p></p>
 
-    <div id="CHBstuff" hidden=true>
-      <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40>
-      <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=60>
-    </div>
+
     <p></p>
     <input type="checkbox" id="atrialPacing" value="atrialPacing">
     <label for="atrialPacing"> atrial pacing</label>
     <input type="checkbox" id="ventPacing" value="ventPacing">
     <label for="ventPacing"> ventricular pacing</label>
-    <input type="checkbox" id="capturing" value="capturing" checked>
+    <input type="checkbox" id="capturing" value="capturing">
     <label for="capturing"> capture override</label><br>
     <label for="pacingRate">pacing rate:</label>
     <input id="pacingRate" value=60>
@@ -37,7 +34,13 @@
     <br>
     <label for="vOutputBox">ventricle output:</label>
     <input id="vOutputBox" value=10 onChange="onOutputChange('ventricle')">mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" value=2 onChange="onSensitivityChange('ventricle')">mV
-    
+    <br><br>
+    <input type="checkbox" id="CHBbox" value="CHBbox" onchange="clickCHB()">
+    <label for="CHBbox">complete heart block</label><br>
+    <div id="CHBstuff" hidden=true>
+      <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40>
+      <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=60>
+    </div>
     <br>
     <p></p>
     <div id="buttons" class="container">
@@ -45,7 +48,7 @@
       <button onclick="drawPWave()">P wave</button>
       <button onclick="drawQRST()">QRS</button>
       <button onclick="NSRhythm()">NSR</button>
-      <button onclick="CHB()">CHB</button>
+      <button onclick="showCHB()">CHB</button>
       <button onclick="ECGsyn()">Synthetic</button>
     </div>
     
