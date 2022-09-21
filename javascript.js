@@ -56,7 +56,7 @@ function onload() {
   // --------------------- LOCAL DEFINITIONS ---------------------------------
   dataFeed.length = 1000;
   dataFeed.fill(0,0,1000);
-  document.getElementById("demo").width = window.innerWidth;
+  document.getElementById("demo").width = window.innerWidth/2;
   PRInterval = document.getElementById("PRbox").value;
   var w = demo.width,
     
