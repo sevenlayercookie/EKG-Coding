@@ -379,7 +379,7 @@ function masterRhythmFunction()
     }
   }
 
-
+  /* old working NSR 
   if (currentRhythm=='NSR')
     {
       if(dataClock%100 == 0)
@@ -411,6 +411,57 @@ function masterRhythmFunction()
 
       // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
       if (drawQRS && timeSinceLastP()>=HRadjustedPR && !CHB)  // !!! THIS PART CAUSING DOUBLE V-PACING
+      {
+          drawQRST();
+          drawQRS=false;
+          
+        }
+
+        if (CHB)
+          {
+            ventHeartRate = document.getElementById("ventRateBox").value;
+            let timeeeeee = timeSinceLastV()
+            if (timeeeeee >= 1/(ventHeartRate/60000))
+            {
+              drawQRST();
+            }
+          }
+        
+      }
+
+*/
+
+if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so that a V follows every P (paced or not) (unless CHB)
+    {
+      if(dataClock%100 == 0)
+      {
+        PRInterval = document.getElementById("PRbox").value;
+        setHR = document.getElementById("avgRateBox").value;
+        HRadjustedPR = PRInterval - 0.5*setHR + 50;
+        goalMS = (1/setHR)*60000
+        adjustRatio = realtimeProcessSpeed/((1/dataHertz)*1000);
+      }
+        //let timeSinceV = timeSinceLastV();
+        let timeSinceP = timeSinceLastP();
+        let timeSinceV = timeSinceLastV();
+        
+        if (timeSinceP >= goalMS && timeSinceV >= goalMS - PRInterval)
+        {
+          drawPWave();
+          timeSinceP=timeSinceLastP();
+          if (!CHB)
+          {
+            drawQRS = true; // flag that QRS should come
+          }
+
+        }
+        testClock = dataClock;
+        timeSinceP=timeSinceLastP()
+        timeSinceV=timeSinceLastV()
+
+
+      // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
+      if (timeSinceLastP()>=HRadjustedPR && !CHB)  // !!! THIS PART CAUSING DOUBLE V-PACING
       {
           drawQRST();
           drawQRS=false;
