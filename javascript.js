@@ -18,6 +18,17 @@
     so 500 data points should be processed every second
     paint will paint at Max Browser Framerate. So data processing should be 500/Max Browse Frame Rate and then paint 
 
+PHYSIOLOGY POINTS
+ - in typical conduction scenarios, SA node is NOT affected by ectopic impulses, including those coming from the ventricle.
+    - it can however sometimes be reset by ectopic impulses (non-compensatory pause)
+        - for simplicity, might just ignore this and do only compensatory pauses (consistent P clock throughout)
+    - so, any PVCs should NOT disturb the timing of the SA node
+    - this doesn't mean we will always see a P wave though (the SA can fire, but not cause atrial contraction if the surrounding tissue is refractory)
+    - so after a PVC/PJC/PAC, maybe no P wave, but the next P will be right on time with original P-P interval (compensatory pause)
+    - program relevance: there needs to be an absolute sinus interval/clock (P-P interval) that is not affected by ectopy (PVCs, pacing, etc.)
+
+
+
 */
 
 // -------------------------- GLOABL DEFINITIONS -----------------------------
@@ -31,10 +42,10 @@ var ventHeartRate = 40;
 var atrialHeartRate = 80;
 var conductionIntact = true;
 var avgProcessSpeed = 2;
-var PRtimer = 0;
 var goalMS=1000;
 var dataCount=0;
 var dataClock=0;
+var testClock=0;
 var setHR = 60;
 var CHB = false;
 var dataFeedLength=500;
@@ -389,17 +400,21 @@ function masterRhythmFunction()
           timeSinceP=timeSinceLastP();
           if (!CHB)
           {
-          PRtimer = 1;
-          drawQRS = true;
+          drawQRS = true; // flag that QRS should come
           }
 
         }
-        //if (PRtimer>=HRadjustedPR && timeSinceV>=goalMS)
-        if (drawQRS && timeSinceLastP()>=HRadjustedPR && !CHB)
-        {
+        testClock = dataClock;
+        timeSinceP=timeSinceLastP()
+        timeSinceV=timeSinceLastV()
+
+
+      // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
+      if (drawQRS && timeSinceLastP()>=HRadjustedPR && !CHB)  // !!! THIS PART CAUSING DOUBLE V-PACING
+      {
           drawQRST();
           drawQRS=false;
-          //PRtimer=0;
+          
         }
 
         if (CHB)
@@ -411,8 +426,7 @@ function masterRhythmFunction()
               drawQRST();
             }
           }
-        //if (PRtimer>0)
-        //{PRtimer+=2;}
+        
       }
 
     if (currentRhythm=='CHB')
@@ -638,8 +652,8 @@ var vPacerInterval;
 var pacerInterval;
 var pacingState = false;
 var pacingRate = 60;
-var atrialPaceTimeout = 0;
-var ventPaceTimeout = 0;
+var atrialRefactoryPeriod = 0;
+var ventBlankingPeriod = 0;
 function startPacing() {
 	
 	pacingRate = document.getElementById("pacingRate").value;
@@ -786,7 +800,7 @@ function pacingFunction()
         
         if (aPacerSensitivity >= aOversenseThreshold) // is pacer not oversensing?
         {
-          if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
+          if (atrialRefactoryPeriod <= 0) // if pacer fires, should have a 'refractory period' where it will not pace again
           {
             if (pacerCapturing(atrium)) // is output high enough?
             {
@@ -800,14 +814,14 @@ function pacingFunction()
             {
               drawPacingSpike();
             }
-            atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+            atrialRefactoryPeriod = goalPacerMs; // with capture or not, start pacertimeout
           }
      
     }
   }
-    if (atrialPaceTimeout>0)  // augment pacer timer if running
+    if (atrialRefactoryPeriod>0)  // augment pacer timer if running
     {
-      atrialPaceTimeout -= 2;
+      atrialRefactoryPeriod -= 2;
     }
   }
     // VVI (V pace only, V sense, ignore A completely)
@@ -820,7 +834,7 @@ function pacingFunction()
         if (vPacerSensitivity >= vOversenseThreshold) // is pacer not oversensing?
         {
     
-          if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
+          if (ventBlankingPeriod <= 0) // if pacer fires, should have a timeout period
           {
             if (pacerCapturing(vent))
             {
@@ -830,13 +844,13 @@ function pacingFunction()
             {
               drawPacingSpike();
             }
-            ventPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+            ventBlankingPeriod = goalPacerMs; // with capture or not, start pacertimeout
           }
     }
   }
-    if (ventPaceTimeout>0)  // augment pacer timer if running
+    if (ventBlankingPeriod>0)  // augment pacer timer if running
     {
-      ventPaceTimeout -= 2;
+      ventBlankingPeriod -= 2;
     }
   }
             
@@ -846,20 +860,29 @@ function pacingFunction()
     //      so if senses intrinsic P -> paces V at intrinsic P rate ("atrial tracking")
     // DDI: only inhibits (so senses P -> inhibits P; senses V -> inhibits V)
     // "atrial tracking: ON" means DDD. "atrial tracking: OFF" means DDI.
-
+    //
+    // -- FROM THE MANUAL --
+    // 
+    // if no intrinsic P, pace V after V-A interval which is equal to the programmed base RATE minus the programmed A-V INTERVAL. 
+    // if no intrinsic V, pace V after programmed A-V interval
+    //
+    // 
+    //
+    //
+    //
     if (atrialPacingChecked && ventPacingChecked)
     {
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
       
       // Atrial logic
-      if (timeSinceLastSensedP() > goalPacerMs && timeSinceLastSensedV() > goalPacerMs - AVInterval)
+      if (timeSinceLastSensedP() >= goalPacerMs && timeSinceLastSensedV() >= goalPacerMs - AVInterval)
       { 
         
         if (aPacerSensitivity >= aOversenseThreshold) // is pacer not oversensing?
         {
           
-        if (atrialPaceTimeout <= 0) // if pacer fires, should have a timeout period
+        if (atrialRefactoryPeriod <= 0) // if pacer fires, should have a timeout period (refractory period)
       {
         if (pacerCapturing(atrium))
         {
@@ -874,22 +897,24 @@ function pacingFunction()
         {
           drawPacingSpike();
         }
-        atrialPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+        atrialRefactoryPeriod = goalPacerMs; // with capture or not, start pacertimeout
       }
           }
     }
-    if (atrialPaceTimeout>0)  // augment pacer timer if running
+    if (atrialRefactoryPeriod>0)  // augment pacer timer if running
     {
-      atrialPaceTimeout -= 2;
+      atrialRefactoryPeriod -= 2;
     }
 
     // vent logic
-    if (timeSinceLastSensedV() > goalPacerMs && timeSinceLastSensedP() > AVInterval)
+    timeSinceV=timeSinceLastSensedV();
+    timeSinceP=timeSinceLastSensedP();
+    if (timeSinceLastSensedV() >= goalPacerMs && timeSinceLastSensedP() >= AVInterval)
     {
    
       if (vPacerSensitivity >= vOversenseThreshold) // is pacer not oversensing?
         {
-      if (ventPaceTimeout <= 0) // if pacer fires, should have a timeout period
+      if (ventBlankingPeriod <= 0) // if pacer fires, should have a timeout period
       {
         if (pacerCapturing(vent))
         {
@@ -899,13 +924,13 @@ function pacingFunction()
         {
           drawPacingSpike();
         }
-        ventPaceTimeout = goalPacerMs; // with capture or not, start pacertimeout
+        ventBlankingPeriod = goalPacerMs; // with capture or not, start pacertimeout
       }
     }
   }
-    if (ventPaceTimeout>0)  // augment pacer timer if running
+    if (ventBlankingPeriod>0)  // augment pacer timer if running
     {
-      ventPaceTimeout -= 2;
+      ventBlankingPeriod -= 2;
     }
   }
 }

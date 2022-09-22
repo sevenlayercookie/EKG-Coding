@@ -1,0 +1,27 @@
+The Medtronic uses a series of timers and intervals to function.
+- base rate interval
+- A-V interval
+- lots more
+
+
+DDD Mode
+This mode provides a P-wave synchronous rate response with A-V 
+sequential pacing. Intrinsic activity in the atrium and ventricle 
+inhibits output stimuli and restarts certain timers. 
+Without atrial events within certain periods, the pacemaker 
+delivers a pacing stimulus to the atrium at the end of the 
+V-A interval which is equal to the programmed base RATE minus 
+the programmed A-V INTERVAL. 
+
+Without ventricular activity during certain periods, the pacemaker 
+delivers a pacing stimulus to the ventricle at the end of the 
+programmed A-V INTERVAL. An exception to this is safety 
+pacing, which is illustrated in the diagrams. 
+The pacing rate can be limited by the programmed UPPER RATE
+so that the pacemaker does not pace the ventricle too fast in the 
+presence of atrial arrhythmias.
+
+When pacing in the DDD mode, the pacemaker will pace the 
+atrium and the ventricle at the programmed base RATE and with 
+the programmed A-V INTERVAL in the absence of detected atrial 
+or ventricular intrinsic events
