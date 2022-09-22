@@ -38,22 +38,22 @@ var dataClock=0;
 var setHR = 60;
 var CHB = false;
 var dataFeedLength=500;
-var canvas = document.getElementById("demo");
-var ctx = canvas.getContext("2d");
-var canvas1 = document.getElementById("HRLayer");
-var ctx1 = canvas1.getContext("2d");
+var teleCanvas = document.getElementById("tele");
+var teleCtx = teleCanvas.getContext("2d");
+var HRCanvas = document.getElementById("HRLayer");
+var HRctx = HRCanvas.getContext("2d");
 var HRchanged = false;
 var paceSpike=false;
 var ventPacingChecked=false;
 var px=0;
-h = demo.height
+h = tele.height
 var processingSpeed = 570;
 var realtimeProcessSpeed = 2;
 var adjustRatio = 1;
 var lastBrowserTime = Date.now();
 dataHertz = 500, // in Hz (data points per second)
-
-py = h * 1;
+canvasBaseline = tele.height/2+25,
+py = canvasBaseline;
 var y = dataHertz/144;
 
 var aPacerSensitivity = document.getElementById("aSensitivityBox").value; // default 
@@ -70,10 +70,10 @@ function onload() {
   // --------------------- LOCAL DEFINITIONS ---------------------------------
   dataFeed.length = 1000;
   dataFeed.fill(0,0,1000);
-  document.getElementById("demo").width = window.innerWidth;
+  document.getElementById("tele").width = window.innerWidth;
   document.getElementById("HRLayer").width = window.innerWidth;
   PRInterval = document.getElementById("PRbox").value;
-  var w = demo.width,
+  var w = tele.width,
     
     l = 0,
     sec = 0,
@@ -82,7 +82,7 @@ function onload() {
     animateRatio = dataHertz / avgFPS,
     dataVoltage = 10, // in mV
     compressHfactor = 20,
-    canvasBaseline = demo.height/2,
+    
     opx = 0,
     speed = .2, // speed of the cursor across the screen; affects "squeeze" of waves
     isPainted = true;
@@ -90,8 +90,8 @@ function onload() {
     paintCount = 1;
     (opy = py), (scanBarWidth = 1), (PVCflag = 0);
     k = 0;
-  ctx.strokeStyle = "#00bd00";
-  ctx.lineWidth = 3;
+  teleCtx.strokeStyle = "#00bd00";
+  teleCtx.lineWidth = 3;
 
   // framelimiter code
   var fpsInterval, startTime, now, then, elapsed;
@@ -105,7 +105,7 @@ function onload() {
 
   // initiate animation (is looped)
   function startAnimating() {
-    ctx.beginPath();
+    teleCtx.beginPath();
     for (let i = 0; i < 1200 && isPainted; i++) {
       loop();
     }
@@ -172,7 +172,7 @@ function onload() {
   function loop() {
     //ctx.canvas.width  = window.innerWidth; // working on screen resizing
     l++; //count # of times through loop
-    ctx.beginPath();
+    teleCtx.beginPath();
     //for (let z = 0; z < dataHertz / avgFPS; z++)
     // let y = dataHertz/avgFPS
     
@@ -184,16 +184,16 @@ function onload() {
       //if (paceSpike)
         //{drawPacingSpike();}
 
-      ctx.moveTo(opx, opy);
-      ctx.lineTo(px, py);
+      teleCtx.moveTo(opx, opy);
+      teleCtx.lineTo(px, py);
       opx = px;
       opy = py;
 
-      ctx.clearRect(px+10, 0, scanBarWidth, h); 
+      teleCtx.clearRect(px+10, 0, scanBarWidth, h); 
       
-      if (opx > canvas.width || opx > window.innerWidth) {
+      if (opx > teleCanvas.width || opx > document.getElementById("canvasesdiv").offsetWidth) {
         px = opx = 0; //-speed;
-        ctx.clearRect(px, 0, 10, h); 
+        teleCtx.clearRect(px, 0, 10, h); 
       }
       
     }
@@ -204,7 +204,7 @@ function onload() {
   }
 
   function paint() {
-    ctx.stroke();
+    teleCtx.stroke();
     isPainted = true;
     paintCount++;
     startAnimating();
@@ -354,7 +354,7 @@ function drawQRST() {
       }
 }
  
-var currentRhythm = "flatline";
+var currentRhythm = "NSR";
 var drawQRS=false;
 
 function masterRhythmFunction()
@@ -496,10 +496,10 @@ var currentHeartRate=0;
 
 function paintHR() {
 
-  ctx1.font = "50px Arial";
-  ctx1.fillStyle = "#00bd00";
-  ctx1.lineWidth = 3;
-  ctx1.clearRect(0,0,canvas1.width,canvas1.height); //clears previous HR 
+  HRctx.font = "50px Arial";
+  HRctx.fillStyle = "#00bd00";
+  HRctx.lineWidth = 3;
+  HRctx.clearRect(0,0,HRCanvas.width,HRCanvas.height); //clears previous HR 
   // rolling average (weighted)
   // histVentTimes contains absolute timestamps of V beats  
   // weighted average - weight more recent measurements
@@ -540,22 +540,22 @@ function paintHR() {
     {weightedAverageHR = null;}
     currentHeartRate=Math.floor(weightedAverageHR*(processingSpeed/dataHertz));
   
-    if (canvas.width < window.innerWidth)
+    if (teleCanvas.width < document.getElementById("canvasesdiv").offsetWidth)
       {
-      ctx1.fillText("HR: "+currentHeartRate, canvas.width-200, 50); //actual paint command
+      HRctx.fillText("HR: "+currentHeartRate, teleCanvas.width-200, 50); //actual paint command
       }
     else
       {
-        ctx1.fillText("HR: "+currentHeartRate, window.innerWidth-200, 50); //actual paint command
+        HRctx.fillText("HR: "+currentHeartRate, document.getElementById("canvasesdiv").offsetWidth-190, 50); //actual paint command
       }
   }
 paintHR();
 setInterval(paintHR,1000);
 
 function drawPacingSpike() {
-  ctx.fillStyle = 'white';
-  ctx.fillRect(px,py,2,-75)
-  ctx.fillStyle = "#00bd00";
+  teleCtx.fillStyle = 'white';
+  teleCtx.fillRect(px,py,2,-75)
+  teleCtx.fillStyle = "#00bd00";
   paceSpike=false;
 }
 
@@ -967,11 +967,11 @@ function windowSizeChange() {
   // should probably change both canvas sizes (canvas, canvas1), clear both canvases, realign drawing point to left side of screen, and move HR indicator
 
   //canvas.width = window.innerWidth;
-  canvas1.width = window.innerWidth;
+  HRCanvas.width = window.innerWidth;
   //ctx.width = window.innerWidth;
   //ctx1.width = window.innerWidth;
   //px = opx = 0;
-  ctx.clearRect(px, 0, scanBarWidth, h); 
+  teleCtx.clearRect(px, 0, scanBarWidth, h); 
   paintHR();
   //ctx1.clearRect(0,0,canvas1.width,canvas1.height); //clears previous HR 
   

@@ -4,6 +4,70 @@
   <meta name="viewport" content="width=device-width" />
 </head>
 <body>
+
+  <div class="split left">
+    
+      <div hidden="true" style="text-align: right;width:100%">fps: <span id="demoTEXT">0</span>
+        <p></p>
+        i: <span id="demoTEXT2">0</span>
+      </div>
+        <!--avg data points processed per second: --><span hidden=true id="demoTEXT3">0</span>
+        
+        <label for="PRbox">PR interval</label> <input id="PRbox" value=120>
+        <label for="avgRateBox">rate:</label> <input id="avgRateBox" value=60>
+        <p></p>
+    
+    
+        <p></p>
+        <input type="checkbox" id="atrialPacing" value="atrialPacing">
+        <label for="atrialPacing"> atrial pacing</label>
+        <input type="checkbox" id="ventPacing" value="ventPacing">
+        <label for="ventPacing"> ventricular pacing</label>
+        <input hidden=true type="checkbox" id="capturing" value="capturing">
+        <label hidden=true for="capturing"> capture override</label><br>
+        <label for="pacingRate">pacing rate:</label>
+        <input id="pacingRate" value=60>
+        <label for="AVInterval">pacer AV interval:</label>
+        <input id="AVInterval" value=120>
+        <button id="paceButton" onclick="paceButtonClick()">Start Pacing</button>
+        <br>
+        <label for="aOutputBox">atrial output:</label>
+        <input id="aOutputBox" value=10 onChange="onOutputChange('atrium')">mA <label for="aSensitivityBox">sensitivity:</label><input id="aSensitivityBox" value=4 onChange="onSensitivityChange('atrium')">mV
+        <br>
+        <label for="vOutputBox">ventricle output:</label>
+        <input id="vOutputBox" value=10 onChange="onOutputChange('ventricle')">mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" value=4 onChange="onSensitivityChange('ventricle')">mV
+        <br><br>
+        <input type="checkbox" id="CHBbox" value="CHBbox" onchange="clickCHB()">
+        <label for="CHBbox">complete heart block</label><br>
+        <div id="CHBstuff" hidden=true>
+          <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40>
+          <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=60>
+        </div>
+        <br>
+        <p></p>
+        <div id="buttons" class="container">
+          <button class="buttonsStyle" onclick="clearRhythms()">Flatline</button>
+          <button class="buttonsStyle" onclick="drawPWave()">P wave</button>
+          <button class="buttonsStyle" onclick="drawQRST()">QRS</button>
+          <button class="buttonsStyle" onclick="NSRhythm()">NSR</button>
+          <button class="buttonsStyle" onclick="showCHB()">CHB</button>
+          <button class="buttonsStyle" onclick="ECGsyn()">Synthetic</button>
+        </div>
+        
+        
+        <div id="canvasesdiv" style="position:relative; width:100%; height:300px">
+            <canvas id="tele" style="position:absolute; left:0px; top:0px;" width=100% height=200px></canvas>
+            <canvas id="HRLayer" style="position:absolute; left:0px; top:0px; background-color: transparent;" width=100% height="200"></canvas>
+        </div>
+
+    
+  </div>
+  
+  <div class="split right">
+    <img src="assets/pacemaker.svg">
+    
+  </div>
+  <!-- OLD STUFF
     <div style="text-align: right;width:100%">fps: <span id="demoTEXT">0</span>
     <p></p>
     i: <span id="demoTEXT2">0</span>
@@ -57,6 +121,8 @@
         <canvas id="demo" style="position:absolute; left:0px; top:0px;" width="1000" height="500"></canvas>
         <canvas id="HRLayer" style="position:absolute; left:0px; top:0px; background-color: transparent;" width="500" height="300"></canvas>
     </div>
-    
+  -->
+
+
     <script type="text/javascript" src="javascript.js"></script>
 </body>
