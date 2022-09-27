@@ -56,16 +56,18 @@
         
         
         <div id="canvasesdiv" style="position:relative; width:100%; height:300px">
-            <canvas id="tele" style="position:absolute; left:0px; top:0px;" width=100% height=200px></canvas>
-            <canvas id="HRLayer" style="position:absolute; left:0px; top:0px; background-color: transparent;" width=100% height="200"></canvas>
+            <canvas class="leftSideCanvas" id="tele" style="position:absolute; left:0px; top:0px;" width=100% height=200px></canvas>
+            <canvas class="leftSideCanvas" id="HRLayer" style="position:absolute; left:0px; top:0px; background-color: transparent;" width=100% height="200"></canvas>
         </div>
 
     
   </div>
   
   <div class="split right">
-    <img src="assets/pacemaker.svg">
-    
+  <img id="pacemakerImg" src="assets/pacemaker.svg" hidden="true">
+    <div id="pacemakerDiv" style="position:relative; width:100%; height:100%"">
+      <canvas class ="rightSideCanvas" id="pacemakerCanvas"></canvas>
+    </div>
   </div>
   <!-- OLD STUFF
     <div style="text-align: right;width:100%">fps: <span id="demoTEXT">0</span>

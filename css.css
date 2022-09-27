@@ -1,6 +1,11 @@
-canvas {
+.leftSideCanvas {
     background:#000;
     cursor:crosshair;
+}
+
+.rightSideCanvas {
+  background: #fff;
+  cursor:crosshair;
 }
 
 .buttons {

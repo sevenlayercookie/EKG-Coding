@@ -618,7 +618,8 @@ function paintHR() {
 
   if(isNaN(weightedAverageHR))
     {weightedAverageHR = null;}
-    currentHeartRate=Math.floor(weightedAverageHR*(processingSpeed/dataHertz));
+   // currentHeartRate=Math.round(weightedAverageHR*(processingSpeed/dataHertz));  // depends on realtime browser time measurements
+      currentHeartRate=Math.ceil(weightedAverageHR); // unaffected by realtime browser time measurements
   
     if (teleCanvas.width < document.getElementById("canvasesdiv").offsetWidth)
       {
@@ -1065,7 +1066,7 @@ function windowSizeChange() {
   teleCtx.clearRect(px, 0, scanBarWidth, h); 
   paintHR();
   //ctx1.clearRect(0,0,canvas1.width,canvas1.height); //clears previous HR 
-  
+  drawPacemaker();
 
 }
 
@@ -1139,4 +1140,24 @@ function randomizeThresholds() // randomize a bit capture, oversense, undersense
   vOversenseThreshold = 1.5 + (Math.random() - 0.5)*2 //      +/- 1
   vUndersenseThreshold = 10 + (Math.random() - 0.5)*2 //      +/- 1
   
+}
+
+
+// ------- PACEMAKER CANVAS ---------
+var pacemakerCanvas = document.getElementById("pacemakerCanvas");
+var pacemakerHeight = pacemakerCanvas.height = document.getElementById("pacemakerDiv").offsetHeight
+var pacemakerWidth = pacemakerCanvas.width = document.getElementById("pacemakerDiv").offsetWidth
+
+var pacemakerCtx = pacemakerCanvas.getContext("2d");
+var pacemakerImg = new Image();
+pacemakerImg.src = "assets/pacemaker.svg";
+pacemakerImg.onload = function() {
+  drawPacemaker()
+};
+
+function drawPacemaker()
+{
+  pacemakerHeight = pacemakerCanvas.height = document.getElementById("pacemakerDiv").offsetHeight
+  pacemakerWidth = pacemakerCanvas.width = document.getElementById("pacemakerDiv").offsetWidth
+  pacemakerCtx.drawImage(pacemakerImg,0,0);
 }
