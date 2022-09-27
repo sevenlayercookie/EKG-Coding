@@ -367,7 +367,7 @@ function drawQRST() {
  
 var currentRhythm = "NSR";
 var drawQRS=false;
-
+var PRtimer=-1;
 function masterRhythmFunction()
 {
   if (currentRhythm=='flatline')
@@ -435,9 +435,9 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
     {
       if(dataClock%100 == 0)
       {
-        PRInterval = document.getElementById("PRbox").value;
+        PRInterval = document.getElementById("PRbox").value;  // native PR interval
         setHR = document.getElementById("avgRateBox").value;
-        HRadjustedPR = PRInterval - 0.5*setHR + 50;
+        HRadjustedPR = PRInterval - 0.5*setHR + 30;   // PR should decrease with increasing heart rates
         goalMS = (1/setHR)*60000
         adjustRatio = realtimeProcessSpeed/((1/dataHertz)*1000);
       }
@@ -451,7 +451,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
           timeSinceP=timeSinceLastP();
           if (!CHB)
           {
-            drawQRS = true; // flag that QRS should come
+            drawQRS = true; // flag that QRS should come follow sinus P
           }
 
         }
@@ -459,24 +459,39 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         timeSinceP=timeSinceLastP()
         timeSinceV=timeSinceLastV()
 
+        if (timeSinceP==2)
+        {
+          PRtimer=0; //start timer
+        }
+        if (PRtimer>=0)
+        {
+          PRtimer+=2;
+        }
 
+        if (timeSinceV == goalMS){
+          let test=0;
+        }   // data breakpoint
       // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
-      if (timeSinceLastP()>=HRadjustedPR && !CHB)  // !!! THIS PART CAUSING DOUBLE V-PACING
+      if (drawQRS && PRtimer >= HRadjustedPR && !CHB && timeSinceLastSensedV() > 150)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
       {
           drawQRST();
           drawQRS=false;
-          
-        }
-
-        if (CHB)
+          PRtimer=-1;
+      }
+      else if (drawQRS && PRtimer >= HRadjustedPR && !CHB) // if above never runs, then clear QRS and PR timer
+      {
+        drawQRS=false;
+        PRtimer=-1;
+      }
+      if (CHB)
+        {
+          ventHeartRate = document.getElementById("ventRateBox").value;
+          let timeeeeee = timeSinceLastV()
+          if (timeeeeee >= 1/(ventHeartRate/60000))
           {
-            ventHeartRate = document.getElementById("ventRateBox").value;
-            let timeeeeee = timeSinceLastV()
-            if (timeeeeee >= 1/(ventHeartRate/60000))
-            {
-              drawQRST();
-            }
+            drawQRST();
           }
+        }
         
       }
 
@@ -712,7 +727,7 @@ function startPacing() {
   pacingState = true;  
 }
 
-let AVInterval = 120; // should link to form later
+let AVInterval = 120; // pacemaker interval between atrial and v pace
 let captureOverride = false;
 let sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
 
@@ -835,7 +850,7 @@ function pacingFunction()
 
 function pacingFunction()
 {
-  AVInterval = document.getElementById("AVInterval").value;
+  AVInterval = document.getElementById("AVInterval").value; // delay between atrial and vent pace
   let timeSinceP = timeSinceLastSensedP();
   let timeSinceV = timeSinceLastSensedV();
   let goalPacerMs = (1/pacingRate)*60000; // goal how many ms between R waves
@@ -960,7 +975,7 @@ function pacingFunction()
     // vent logic
     timeSinceV=timeSinceLastSensedV();
     timeSinceP=timeSinceLastSensedP();
-    if (timeSinceLastSensedV() >= goalPacerMs && timeSinceLastSensedP() >= AVInterval)
+    if (timeSinceLastSensedV() > goalPacerMs && timeSinceLastSensedP() >= AVInterval)
     {
    
       if (vPacerSensitivity >= vOversenseThreshold) // is pacer not oversensing?
