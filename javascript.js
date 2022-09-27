@@ -444,8 +444,9 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         //let timeSinceV = timeSinceLastV();
         let timeSinceP = timeSinceLastP();
         let timeSinceV = timeSinceLastV();
-        
-        if (timeSinceP >= goalMS && timeSinceV >= goalMS - PRInterval)
+
+        //if (timeSinceP >= goalMS && timeSinceV >= goalMS - HRadjustedPR)   // this working 9/27
+        if (timeSinceP >= goalMS && timeSinceV >= goalMS - HRadjustedPR)
         {
           drawPWave();
           timeSinceP=timeSinceLastP();
@@ -476,7 +477,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       {
           drawQRST();
           drawQRS=false;
-          PRtimer=-1;
+          PRtimer=-1; // stop PRtimer
       }
       else if (drawQRS && PRtimer >= HRadjustedPR && !CHB) // if above never runs, then clear QRS and PR timer
       {
@@ -906,6 +907,7 @@ function pacingFunction()
             if (pacerCapturing(vent))
             {
             paceIt(vent);
+            PRtimer=-1; // stop PRtimer
             }
             else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
             {
