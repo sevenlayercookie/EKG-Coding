@@ -40,6 +40,9 @@ var VAItimer = 1000 - 200 // the timer after sensed/paced V and next due A
 var VRP // prevent ventricular sensing of immediate post-V noise (OPTIONAL)
 var PVARP // prevent atrial sensing of immediate post-V noise (OPTIONAL)
 var upperRateLimit //prevent atrial tracking of atrial tachyarrythmias (OPTIONAL)
+var rNEW=0
+var rOLD=0
+var AVExtension=0
 var PRInterval;
 var timeSincePGlobal=1;
 var timeSinceVGlobal=1;
@@ -756,6 +759,7 @@ var sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
 function pacingFunction()
 {
   AVInterval = document.getElementById("AVInterval").value; // delay between atrial and vent pace
+  
   let timeSinceP = timeSinceLastSensedP();
   let timeSinceV = timeSinceLastSensedV();
   let goalPacerMs = (1/pacingRate)*60000; // goal how many ms between R waves
@@ -964,28 +968,69 @@ function pacingFunction()
     // var upperRateLimit //prevent atrial tracking of atrial tachyarrythmias (OPTIONAL)
     //
     // LRL = VAI + AVI
+    // 
+    // If there is intact conduction through the AV node after an atrial pacing stimulus such that the AR interval
+    // (atrial stimulus to sensed R wave) is shorter than the programmed AVI, the resulting paced rate accelerates 
+    // by a small amount. This response is demonstrated in Figure 6.12 (top).
+    //
+    // The addition of an RRAVD to a ventricular-based timing system minimizes the increase in the 
+    // paced atrial rate above the programmed sensor-indicated rate.
+    //
+    // Another option is extending the VAI as needed to control the AA pacing rate according to the programmed MSR 
+    // (Fig. 6.44). This extension results in adaptive-rate pacing, regardless of AV conduction status, which is 
+    // equal to, but does not exceed, the desired MSR.
+    //  -- Basically, extend the VA interval based on sensed AR interval to ensure R-R equals goalMS
 
     
     if (atrialPacingChecked && ventPacingChecked && pacerMode == 'DDD')
     {
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
-      
+      var autoAV = AVIntervalHRAdjustBox.checked;
+      let lowerRateLimit = VAItimer + AVInterval
+      let VAinterval = goalPacerMs - AVInterval
+      let HRadjustedAV = 300 - (1.67 * pacingRate)
+      var usedAVinterval = HRadjustedAV
+      if (HRadjustedAV < 50) {HRadjustedAV = 50}
+      if (HRadjustedAV > 250) {HRadjustedAV = 250}
+
+      if (autoAV)
+      {
+        usedAVinterval = HRadjustedAV // auto AV 
+      }
+      else
+      {
+        usedAVinterval = AVInterval // use whatever is in the box
+      }
 
       if (timeSinceLastSensedV() == 2) // The first is the interval from a ventricular sensed or paced event to an atrial paced event and is known as the AEI, or VAI.
       {
-        VAItimer = goalPacerMs - AVInterval // start the VAI/AEI timer (interval from vent to next P)
-        AVITimerFlag = false;
-        AVITimer = AVInterval;
-        VAITimerFlag = true;
+        rOLD = rNEW
+        rNEW = dataClock
+        if (autoAV)
+        {
+        VAItimer = goalPacerMs - usedAVinterval + AVExtension // start the VAI/AEI timer (interval from vent to next P)
+        }
+        else
+        {
+        VAItimer = goalPacerMs - usedAVinterval // start the VAI/AEI timer (interval from vent to next P)
+        }
+        AVITimer = usedAVinterval; // set timers
+        VAITimerFlag = true;  // turn on V-A timer
+        AVITimerFlag = false; // turn off A-V timer
       }
+      if (goalPacerMs - (rNEW - rOLD) > 0 )
+      {
+      AVExtension = goalPacerMs - (rNEW - rOLD) // how far off was last effect pacing rate from goal rate?
+      }
+      else {AVExtension =0}
       
       if (timeSinceLastSensedP() == 2)  // The second interval begins with an atrial sensed or paced event and extends to a ventricular event. This interval may be defined by a paced AV, PR, AR, or PV interval.
       {
-        AVITimer = AVInterval // start the atria to vent timer (aorund 150 ms)
-        VAITimerFlag = false;
-        VAItimer = goalPacerMs - AVInterval
-        AVITimerFlag = true;
+        //VAItimer = goalPacerMs - AVInterval // start the VAI/AEI timer (interval from vent to next P)
+        AVITimer = usedAVinterval // set timers
+        VAITimerFlag = false; // turn off V-A timer
+        AVITimerFlag = true; // turn on A-V timer
         
       }
 
