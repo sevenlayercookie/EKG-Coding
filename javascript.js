@@ -37,6 +37,8 @@ PHYSIOLOGY POINTS
 var lowerRateLimitTimer // the rate of the pacemaker in ms
 var AVITimer = 200 // the set interval between a sensed/paced A and associated V (artificial PR interval)
 var VAItimer = 1000 - 200 // the timer after sensed/paced V and next due A
+var AAtimer = 1000
+var VVtimer = 1000
 var VRP // prevent ventricular sensing of immediate post-V noise (OPTIONAL)
 var PVARP // prevent atrial sensing of immediate post-V noise (OPTIONAL)
 var upperRateLimit //prevent atrial tracking of atrial tachyarrythmias (OPTIONAL)
@@ -796,7 +798,7 @@ function pacingFunction()
   
   let timeSinceP = timeSinceLastSensedP();
   let timeSinceV = timeSinceLastSensedV();
-  let goalPacerMs = (1/pacingRate)*60000; // goal how many ms between R waves
+  let goalPacerMs = Math.round(((1/pacingRate)*60000)/2)*2; // goal how many ms between R waves
   let element = document.getElementById("pacingMode")
   pacerMode = element.options[element.selectedIndex].text;
   
@@ -1104,6 +1106,63 @@ function pacingFunction()
         
       
   }
+
+
+
+  // AOO (asynchronous A pacing = no sensing)
+
+  if (pacerMode=='AOO')
+  {
+    
+    
+    if (AAtimer == 0) // when AAtimer runs out, pace
+    {
+      
+          if (pacerCapturing(atrium)) // is output high enough?
+          {
+            if (!CHB) // is conduction intact?
+            {
+              drawQRS = true; // signal that QRS should be drawn next
+            }
+          paceIt(atrium);
+          AAtimer=goalPacerMs;
+          }
+          else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
+          {
+            drawPacingSpike();
+          }
+    }
+    if (AAtimer<0)
+    {
+      AAtimer=goalPacerMs;
+    }
+    AAtimer -= 2; // run timer
+   
+  }
+
+ // VOO (asynchronous V pacing = no sensing)
+  
+  if (pacerMode == 'VOO')
+  {
+    if (VVtimer == 0 || VVtimer == 1) // when VVtimer runs out, pace
+    {
+          if (pacerCapturing(vent))
+          {
+          paceIt(vent);
+          }
+          else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
+          {
+            drawPacingSpike();
+          }
+          VVtimer=goalPacerMs
+    }
+    if (VVtimer<0)
+    {
+      VVtimer=goalPacerMs
+    }
+    VVtimer-=2;
+  }
+
 
 }
 var AVITimerFlag=false;
