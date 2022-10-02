@@ -19,15 +19,15 @@
     
     
         <p></p>
-        <input type="checkbox" id="atrialPacing" value="atrialPacing">
-        <label for="atrialPacing"> atrial pacing</label>
-        <input type="checkbox" id="ventPacing" value="ventPacing">
-        <label for="ventPacing"> ventricular pacing</label>
 
-        <input type="radio" id="radioDDD" name="pacingMode" value="DDD" checked=true>
-        <label for="radioDDD">DDD</label>
-        <input type="radio" id="radioDDI" name="pacingMode" value="DDI">
-        <label for="radioDDI">DDI</label>
+
+        <label for="pacingMode">Pacing mode:</label>
+        <select name="pacingMode" id="pacingMode">
+          <option value="listDDD">DDD</option>
+          <option value="listDDI">DDI</option>
+          <option value="listAAI">AAI</option>
+          <option value="listVVI">VVI</option>
+        </select>
 
         <input hidden=true type="checkbox" id="capturing" value="capturing">
         <label hidden=true for="capturing"> capture override</label><br>

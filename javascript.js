@@ -763,12 +763,13 @@ function pacingFunction()
   let timeSinceP = timeSinceLastSensedP();
   let timeSinceV = timeSinceLastSensedV();
   let goalPacerMs = (1/pacingRate)*60000; // goal how many ms between R waves
-  pacerMode = document.querySelector('input[name="pacingMode"]:checked').value;
-  //randomizeThresholds();
-
+  let element = document.getElementById("pacingMode")
+  pacerMode = element.options[element.selectedIndex].text;
+  
+ 
     // AAI (A pace, A sense (ignore V) )
 
-    if (atrialPacingChecked && !ventPacingChecked)
+    if (pacerMode=='AAI')
     {
       if (timeSinceLastSensedP() > goalPacerMs) // has it been long enough since last P?
       {
@@ -805,7 +806,7 @@ function pacingFunction()
     // intrinsic ventricular event. If an intrinsic QRS occurs, the LRL timer is started from that
     // point. A VRP begins with any sensed or paced ventricular activity   
     
-    if (ventPacingChecked && !atrialPacingChecked)
+    if (pacerMode == 'VVI')
     {
       if (timeSinceLastSensedV() > goalPacerMs)
       {
@@ -848,7 +849,7 @@ function pacingFunction()
     //
 
     
-    if (atrialPacingChecked && ventPacingChecked && pacerMode == 'DDI') 
+    if (pacerMode == 'DDI') 
     {
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
@@ -982,7 +983,7 @@ function pacingFunction()
     //  -- Basically, extend the VA interval based on sensed AR interval to ensure R-R equals goalMS
 
     
-    if (atrialPacingChecked && ventPacingChecked && pacerMode == 'DDD')
+    if (pacerMode == 'DDD')
     {
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
@@ -1068,66 +1069,6 @@ function pacingFunction()
         }
         
       
-      /*
-      // Atrial logic (works just like DDI; only tracks/paces A)
-      if (timeSinceLastSensedP() >= goalPacerMs && timeSinceLastSensedV() >= goalPacerMs - AVInterval)
-      { 
-        
-        if (aPacerSensitivity >= aOversenseThreshold) // is pacer not oversensing?
-        {
-          
-        if (atrialRefactoryPeriod <= 0) // if pacer fires, should have a timeout period (refractory period)
-      {
-        if (pacerCapturing(atrium))
-        {
-          paceIt(atrium);
-          if (!CHB) // is conduction intact?
-              {
-                drawQRS = true; // signal that QRS should be drawn next
-              }
-          timeSinceP=timeSinceLastSensedP();
-        }
-        if (!pacerCapturing(atrium))
-        {
-          drawPacingSpike();
-        }
-        atrialRefactoryPeriod = goalPacerMs; // with capture or not, start pacertimeout
-      }
-          }
-    }
-    if (atrialRefactoryPeriod>0)  // augment pacer timer if running
-    {
-      atrialRefactoryPeriod -= 2;
-    }
-
-    // vent logic (different than DDD; tracks A and paces at A (or at minimum, paces V at pacer rate))
-    timeSinceV=timeSinceLastSensedV();
-    timeSinceP=timeSinceLastSensedP();
-    //if (timeSinceLastSensedV() > goalPacerMs && timeSinceLastSensedP() >= AVInterval)
-    if (timeSinceLastSensedV() > goalPacerMs || (timeSinceLastSensedP() >= AVInterval)
-    {
-   
-      if (vPacerSensitivity >= vOversenseThreshold) // is pacer not oversensing?
-        {
-      //if (ventBlankingPeriod <= 0) // if pacer fires, should have a timeout period
-      //{
-        if (pacerCapturing(vent))
-        {
-        paceIt(vent);
-        }
-        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
-        {
-          drawPacingSpike();
-        }
-        //ventBlankingPeriod = goalPacerMs; // with capture or not, start pacertimeout
-      //}
-        }
-  }
-    if (ventBlankingPeriod>0)  // augment pacer timer if running
-    {
-      ventBlankingPeriod -= 2;
-    }
-    */
   }
 
 }
