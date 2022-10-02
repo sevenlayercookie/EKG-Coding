@@ -291,8 +291,11 @@ function drawPWave() {
     sensedPTimes.push(dataClock); // mark sensed A
   }
 
+  /*
   var tempArray=smoothP.slice();
-   for (let j = 0; j < smoothP.length; j++) 
+   for (let j = 0; j < smoothP.length; j++) */
+      var tempArray=shortP80.slice();
+      for (let j = 0; j < shortP80.length; j++)
       {
         dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
       }
@@ -395,6 +398,8 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         PRInterval = document.getElementById("PRbox").value;  // native PR interval
         setHR = document.getElementById("avgRateBox").value;
         HRadjustedPR = PRInterval - 0.5*setHR + 30;   // PR should decrease with increasing heart rates
+        if (HRadjustedPR<5){HRadjustedPR=5}
+        
         goalMS = (1/setHR)*60000
         adjustRatio = realtimeProcessSpeed/((1/dataHertz)*1000);
       }
