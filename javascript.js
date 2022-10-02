@@ -249,7 +249,9 @@ pacerate = document.getElementById('pacingRate');
 pacerate.onchange = function(){pacingRate=pacerate.value};
 
 document.getElementById("rhythmList").onchange = function() {
+ 
   const value = document.getElementById("rhythmList").value; 
+
   if (value) {
     currentRhythm=value;
   } else {
@@ -558,6 +560,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         PRtimer=-1;
       }
     }
+
       
 }
 
@@ -577,13 +580,13 @@ function NSRhythm()
   goalMS = (1/setHR)*60000
 
 }
-
+/*
 function ECGsyn() {
   clearRhythms();
 	dataFeed=synthECG.slice();
   
 }
-
+*/
 function showCHB() {
   document.getElementById("CHBbox").checked = true;
   clearRhythms();

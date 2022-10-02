@@ -53,7 +53,6 @@
           <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=60 size ="1">
         </div>
         <br>
-        <p></p>
 
         <label for="rhythmList">Rhythm:</label>
         <select name="rhythmList" id="rhythmList">
@@ -61,15 +60,16 @@
           <option value="flatline">Flatline</option>
           <option value="junctional">Junctional</option>
           <option value="ventEscape">Ventricular escape</option>
+          <!-- <option value="synthetic">Synthetic</option> -->
         </select>
 
         <div id="buttons" class="container">
-          <button class="buttonsStyle" onclick="clearRhythms()">Flatline</button>
+          <button class="buttonsStyle" onclick="clearRhythms()">clear rhythms</button>
           <button class="buttonsStyle" onclick="drawPWave()">P wave</button>
           <button class="buttonsStyle" onclick="drawQRST()">QRS</button>
-          <button class="buttonsStyle" onclick="NSRhythm()">NSR</button>
-          <button class="buttonsStyle" onclick="showCHB()">CHB</button>
-          <button class="buttonsStyle" onclick="ECGsyn()">Synthetic</button>
+          <!-- <button class="buttonsStyle" onclick="NSRhythm()">NSR</button> -->
+          <!-- <button class="buttonsStyle" onclick="showCHB()">CHB</button> -->
+          <!-- <button class="buttonsStyle" onclick="ECGsyn()">Synthetic</button> -->
         </div>
         
         
