@@ -152,6 +152,8 @@ function onload() {
     py = -parseInt(dataFeed.shift() * 1000) / compressHfactor + canvasBaseline;
     if (dataFeed.length < 1000) {
       dataFeed.push(0);
+      if (wanderingBaselineFlag)
+      {wanderingBaseline()}
     }
     j++;
     i++;
@@ -1320,5 +1322,9 @@ function drawPacemaker()
 
 function wanderingBaseline()
 {
-
+  //dataFeed[0] = dataFeed[0]*1.05 // 5% wander
+  if (dataClock%20==0)
+  {
+  dataFeed[0] = dataFeed[0]+(Math.random()-0.5)/5
+  }
 }
