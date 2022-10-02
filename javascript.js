@@ -66,7 +66,6 @@ var HRCanvas = document.getElementById("HRLayer");
 var HRctx = HRCanvas.getContext("2d");
 var HRchanged = false;
 var paceSpike=false;
-var ventPacingChecked=false;
 var px=0;
 h = tele.height
 var processingSpeed = 570;
@@ -249,29 +248,15 @@ input.onchange = function(){setHR=input.value;HRchanged=true;};
 pacerate = document.getElementById('pacingRate');
 pacerate.onchange = function(){pacingRate=pacerate.value};
 
-document.getElementById('atrialPacing').onchange = function () 
-  {
-  if (document.getElementById('atrialPacing').checked)
-  {
-    atrialPacingChecked=true;
-    
-  }
-  else
-  {
-    atrialPacingChecked=false;
+document.getElementById("rhythmList").onchange = function() {
+  const value = document.getElementById("rhythmList").value; 
+  if (value) {
+    currentRhythm=value;
+  } else {
+    currentRhythm='NSR';
   }
 }
-document.getElementById('ventPacing').onchange = function () 
-  {
-  if (document.getElementById('ventPacing').checked)
-  {
-    ventPacingChecked=true;
-  }
-  else
-  {
-    ventPacingChecked=false;
-  }
-}
+
 document.getElementById('capturing').onchange = function () 
   {
     if (document.getElementById('capturing').checked)
@@ -289,7 +274,6 @@ document.getElementById('capturing').onchange = function ()
 
 // --------------------- end onLoad() ------------------------------
 
-atrialPacingChecked=false;
 
 
 function drawPWave() {
@@ -383,9 +367,15 @@ var PRtimer=-1;
 function masterRhythmFunction()
 {
   if (document.getElementById("CHBbox").checked==true)
-    {currentRhythm='CHB'}
+    {
+      //currentRhythm='CHB'
+      CHB=true;
+    }
   if (document.getElementById("CHBbox").checked==false)
-    {currentRhythm='NSR'}
+    {
+      //currentRhythm='NSR'
+    CHB=false;
+    }
 
   if (currentRhythm=='flatline')
   {
@@ -395,59 +385,7 @@ function masterRhythmFunction()
       drawQRS=false;
     }
   }
-
-  /* old working NSR 
-  if (currentRhythm=='NSR')
-    {
-      if(dataClock%100 == 0)
-      {
-        PRInterval = document.getElementById("PRbox").value;
-        setHR = document.getElementById("avgRateBox").value;
-        HRadjustedPR = PRInterval - 0.5*setHR + 50;
-        goalMS = (1/setHR)*60000
-        adjustRatio = realtimeProcessSpeed/((1/dataHertz)*1000);
-      }
-        //let timeSinceV = timeSinceLastV();
-        let timeSinceP = timeSinceLastP();
-        let timeSinceV = timeSinceLastV();
-        
-        if (timeSinceP >= goalMS && timeSinceV >= goalMS - PRInterval)
-        {
-          drawPWave();
-          timeSinceP=timeSinceLastP();
-          if (!CHB)
-          {
-          drawQRS = true; // flag that QRS should come
-          }
-
-        }
-        testClock = dataClock;
-        timeSinceP=timeSinceLastP()
-        timeSinceV=timeSinceLastV()
-
-
-      // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
-      if (drawQRS && timeSinceLastP()>=HRadjustedPR && !CHB)  // !!! THIS PART CAUSING DOUBLE V-PACING
-      {
-          drawQRST();
-          drawQRS=false;
-          
-        }
-
-        if (CHB)
-          {
-            ventHeartRate = document.getElementById("ventRateBox").value;
-            let timeeeeee = timeSinceLastV()
-            if (timeeeeee >= 1/(ventHeartRate/60000))
-            {
-              drawQRST();
-            }
-          }
-        
-      }
-
-*/
-
+ 
 if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so that a V follows every P (paced or not) (unless CHB)
     {
       if(dataClock%100 == 0)
@@ -462,6 +400,8 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         let timeSinceP = timeSinceLastP();
         let timeSinceV = timeSinceLastV();
 
+        if (!CHB)
+        {
         //if (timeSinceP >= goalMS && timeSinceV >= goalMS - HRadjustedPR)   // this working 9/27
         if (timeSinceP >= goalMS && timeSinceV >= goalMS - HRadjustedPR && timeSinceLastV() > 200 )
         {
@@ -486,10 +426,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         {
           PRtimer+=2;
         }
-
-        if (timeSinceV == goalMS){
-          let test=0;
-        }   // data breakpoint
+ 
       // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
       if (drawQRS && PRtimer >= HRadjustedPR && !CHB && timeSinceLastSensedV() > 150)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
       {
@@ -502,18 +439,28 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         drawQRS=false;
         PRtimer=-1;
       }
+    }
       if (CHB)
         {
+          let timeSinceP = timeSinceLastP()
+          let timeSinceV = timeSinceLastV()
           ventHeartRate = document.getElementById("ventRateBox").value;
-          let timeeeeee = timeSinceLastV()
-          if (timeeeeee >= 1/(ventHeartRate/60000))
+          atrialHeartRate = document.getElementById("atrialRateBox").value;
+          let goalVentMs = 1/(ventHeartRate/60000)
+          let goalAtrialMs = 1/(atrialHeartRate/60000)
+          if (timeSinceLastP() >= 1/(atrialHeartRate/60000))
+          {
+            drawPWave();
+          }
+    
+          if (timeSinceLastV() >= 1/(ventHeartRate/60000))
           {
             drawQRST();
           }
         }
         
       }
-
+/*
     if (currentRhythm=='CHB')
     {
       let timeSinceP = timeSinceLastP()
@@ -530,6 +477,85 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       if (timeSinceLastV() >= 1/(ventHeartRate/60000))
       {
         drawQRST();
+      }
+    }
+    */
+
+    if (currentRhythm == "junctional")
+    {
+      // narrow QRS
+      let timeSinceV = timeSinceLastV()
+      ventHeartRate = document.getElementById("ventRateBox").value;
+      let goalVentMs = 1/(ventHeartRate/60000)
+      if (timeSinceLastV() >= 1/(ventHeartRate/60000))
+      {
+        drawQRST();
+      }
+
+      // if paced P appears, then QRS should follow (no block)
+
+      if (timeSinceLastP()==0 || timeSinceLastP() == 2)
+      {
+        PRtimer=0; //start timer
+        drawQRS=true;
+      }
+      if (PRtimer>=0)
+      {
+        PRtimer+=2;
+      }
+
+     
+      if (drawQRS && PRtimer >= HRadjustedPR && !CHB && timeSinceLastSensedV() > 150)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
+      {
+          drawQRST();
+          drawQRS=false;
+          PRtimer=-1; // stop PRtimer
+      }
+      else if (drawQRS && PRtimer >= HRadjustedPR && !CHB) // if above never runs, then clear QRS and PR timer
+      {
+        drawQRS=false;
+        PRtimer=-1;
+      }
+    }
+
+    if (currentRhythm == "ventEscape")    // escape rhythm means sinus node is too slow or has stopped, but conduction still present (e.g. paced P should make a qrs)
+    {
+      // wide QRS (ventricular origin)
+      
+
+      let timeSinceV = timeSinceLastV()
+      ventHeartRate = document.getElementById("ventRateBox").value;
+      let goalVentMs = 1/(ventHeartRate/60000)
+      if (timeSinceLastV() >= 1/(ventHeartRate/60000))
+      {
+        // *** insert wide QRS code here ***
+        drawQRST();
+      }
+
+      // if paced P appears, then *NARROW* QRS should follow (no block, should follow normal conduction)
+
+      if (timeSinceLastP()==0 || timeSinceLastP() == 2)
+      {
+        PRtimer=0; //start timer
+        drawQRS=true;
+      }
+      if (PRtimer>=0)
+      {
+        PRtimer+=2;
+      }
+
+     
+      if (drawQRS && PRtimer >= HRadjustedPR && !CHB && timeSinceLastSensedV() > 150)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
+      {
+          // *** insert *NARROW* QRS code here ***
+          drawQRST();
+          drawQRS=false;
+          PRtimer=-1; // stop PRtimer
+      }
+      else if (drawQRS && PRtimer >= HRadjustedPR && !CHB) // if above never runs, then clear QRS and PR timer
+      {
+        drawQRS=false;
+        PRtimer=-1;
       }
     }
       
@@ -1223,3 +1249,4 @@ function drawPacemaker()
   pacemakerWidth = pacemakerCanvas.width = document.getElementById("pacemakerDiv").offsetWidth
   pacemakerCtx.drawImage(pacemakerImg,0,0);
 }
+

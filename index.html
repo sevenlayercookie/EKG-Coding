@@ -13,8 +13,8 @@
       </div>
         <!--avg data points processed per second: --><span hidden=true id="demoTEXT3">0</span>
         
-        <label for="PRbox">native PR interval</label> <input id="PRbox" value=200>
-        <label for="avgRateBox">native rate:</label> <input id="avgRateBox" value=60>
+        <label for="PRbox">native PR interval</label> <input id="PRbox" value=200 size ="1">
+        <label for="avgRateBox">native rate:</label> <input id="avgRateBox" value=60 size ="1">
         <p></p>
     
     
@@ -29,30 +29,40 @@
           <option value="listVVI">VVI</option>
         </select>
 
+          <button id="paceButton" onclick="paceButtonClick()">Start Pacing</button>
         <input hidden=true type="checkbox" id="capturing" value="capturing">
         <label hidden=true for="capturing"> capture override</label><br>
         <label for="pacingRate">pacing rate:</label>
-        <input id="pacingRate" value=60>
+        <input id="pacingRate" value=60 size="1">
         <label for="AVInterval">pacer AV interval:</label>
-        <input id="AVInterval" value=200>
+        <input id="AVInterval" value=200 size="1">
         <label for="AVIntervalHRAdjustBox">auto AV interval (rate controlled)</label>
         <input id="AVIntervalHRAdjustBox" type="checkbox" checked=true>
-        <button id="paceButton" onclick="paceButtonClick()">Start Pacing</button>
+        
         <br>
         <label for="aOutputBox">atrial output:</label>
-        <input id="aOutputBox" value=10 onChange="onOutputChange('atrium')">mA <label for="aSensitivityBox">sensitivity:</label><input id="aSensitivityBox" value=4 onChange="onSensitivityChange('atrium')">mV
+        <input id="aOutputBox" size ="1" value=10 onChange="onOutputChange('atrium')">mA <label for="aSensitivityBox">sensitivity:</label><input id="aSensitivityBox" value=4 size ="1" onChange="onSensitivityChange('atrium')">mV
         <br>
         <label for="vOutputBox">ventricle output:</label>
-        <input id="vOutputBox" value=10 onChange="onOutputChange('ventricle')">mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" value=4 onChange="onSensitivityChange('ventricle')">mV
+        <input id="vOutputBox" size ="1"value=10 onChange="onOutputChange('ventricle')">mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" value=4 size ="1" onChange="onSensitivityChange('ventricle')">mV
         <br><br>
         <input type="checkbox" id="CHBbox" value="CHBbox" onchange="clickCHB()">
         <label for="CHBbox">complete heart block</label><br>
         <div id="CHBstuff" hidden=true>
-          <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40>
-          <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=60>
+          <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40 size ="1">
+          <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=60 size ="1">
         </div>
         <br>
         <p></p>
+
+        <label for="rhythmList">Rhythm:</label>
+        <select name="rhythmList" id="rhythmList">
+          <option value="NSR">Sinus rhythm</option>
+          <option value="flatline">Flatline</option>
+          <option value="junctional">Junctional</option>
+          <option value="ventEscape">Ventricular escape</option>
+        </select>
+
         <div id="buttons" class="container">
           <button class="buttonsStyle" onclick="clearRhythms()">Flatline</button>
           <button class="buttonsStyle" onclick="drawPWave()">P wave</button>
