@@ -39,6 +39,7 @@ var AVITimer = 200 // the set interval between a sensed/paced A and associated V
 var VAItimer = 1000 - 200 // the timer after sensed/paced V and next due A
 var AAtimer = 1000
 var VVtimer = 1000
+var wanderingBaselineFlag = false;
 var VRP // prevent ventricular sensing of immediate post-V noise (OPTIONAL)
 var PVARP // prevent atrial sensing of immediate post-V noise (OPTIONAL)
 var upperRateLimit //prevent atrial tracking of atrial tachyarrythmias (OPTIONAL)
@@ -1317,3 +1318,7 @@ function drawPacemaker()
   pacemakerCtx.drawImage(pacemakerImg,0,0);
 }
 
+function wanderingBaseline()
+{
+
+}
