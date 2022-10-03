@@ -41,6 +41,7 @@ var AAtimer = 1000
 var VVtimer = 1000
 var AVtimer = 200 //used by DOO logic (may be able to combine with AVITimer)
 var noiseFlag = false;
+var pacingFeedback=true;
 var VRP // prevent ventricular sensing of immediate post-V noise (OPTIONAL)
 var PVARP // prevent atrial sensing of immediate post-V noise (OPTIONAL)
 var upperRateLimit //prevent atrial tracking of atrial tachyarrythmias (OPTIONAL)
@@ -890,7 +891,9 @@ function pacingFunction()
     // if no intrinsic V, pace V after programmed A-V interval
     // if no paced P, no AV synchrony
 
+
     
+
     if (pacerMode == 'DDI') 
     {
       timeSinceV=timeSinceLastSensedV();
@@ -1041,7 +1044,7 @@ function pacingFunction()
     //  -- Basically, extend the VA interval based on sensed AR interval to ensure R-R equals goalMS
 
     
-    if (pacerMode == 'DDD')
+    if (pacerMode == 'DDD') // SENSITIVTY SETTINGS ARE BROKEN!
     {
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
@@ -1126,7 +1129,13 @@ function pacingFunction()
           VAItimer -= 2;
         }
         
-      
+      if (pacingFeedback)
+      {
+        if (dataClock%100 == 0)
+        {
+          feedbackFunction();
+        }
+      }
   }
 
 
@@ -1390,4 +1399,21 @@ function noiseFunction()
   {
   dataFeed[0] = dataFeed[0]+(Math.random()-0.5)/5
   }
+}
+
+function feedbackFunction() // provides feedback on settings
+{
+  if (aPacerSensitivity < aUndersenseThreshold && aPacerSensitivity > aOversenseThreshold && vPacerSensitivity < vUndersenseThreshold && vPacerSensitivity > vOversenseThreshold && aPacerOutput > aCaptureThreshold && vPacerOutput > vCaptureThreshold) // sensitivity settings
+  {
+    
+      settingsCorrect=true;
+      document.getElementById("feedbackBox").innerText = "CORRECT"
+    
+    
+  }
+  else
+    {
+      settingsCorrect=false;
+      document.getElementById("feedbackBox").innerText = "INCORRECT"
+    }
 }
