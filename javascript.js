@@ -39,7 +39,8 @@ var AVITimer = 200 // the set interval between a sensed/paced A and associated V
 var VAItimer = 1000 - 200 // the timer after sensed/paced V and next due A
 var AAtimer = 1000
 var VVtimer = 1000
-var wanderingBaselineFlag = false;
+var AVtimer = 200 //used by DOO logic (may be able to combine with AVITimer)
+var noiseFlag = false;
 var VRP // prevent ventricular sensing of immediate post-V noise (OPTIONAL)
 var PVARP // prevent atrial sensing of immediate post-V noise (OPTIONAL)
 var upperRateLimit //prevent atrial tracking of atrial tachyarrythmias (OPTIONAL)
@@ -152,8 +153,8 @@ function onload() {
     py = -parseInt(dataFeed.shift() * 1000) / compressHfactor + canvasBaseline;
     if (dataFeed.length < 1000) {
       dataFeed.push(0);
-      if (wanderingBaselineFlag)
-      {wanderingBaseline()}
+      if (noiseFlag)
+      {noiseFunction()}
     }
     j++;
     i++;
@@ -387,6 +388,17 @@ function masterRhythmFunction()
     CHB=false;
     }
 
+    if(dataClock%100 == 0)
+    {
+      PRInterval = document.getElementById("PRbox").value;  // native PR interval
+      setHR = document.getElementById("avgRateBox").value;
+      HRadjustedPR = PRInterval - 0.5*setHR + 30;   // PR should decrease with increasing heart rates
+      if (HRadjustedPR<5){HRadjustedPR=5}
+      
+      goalMS = (1/setHR)*60000
+      adjustRatio = realtimeProcessSpeed/((1/dataHertz)*1000);
+    }
+
   if (currentRhythm=='flatline')
   {
     if (!CHB && timeSinceLastP() >= PRInterval && drawQRS)
@@ -398,16 +410,7 @@ function masterRhythmFunction()
  
 if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so that a V follows every P (paced or not) (unless CHB)
     {
-      if(dataClock%100 == 0)
-      {
-        PRInterval = document.getElementById("PRbox").value;  // native PR interval
-        setHR = document.getElementById("avgRateBox").value;
-        HRadjustedPR = PRInterval - 0.5*setHR + 30;   // PR should decrease with increasing heart rates
-        if (HRadjustedPR<5){HRadjustedPR=5}
-        
-        goalMS = (1/setHR)*60000
-        adjustRatio = realtimeProcessSpeed/((1/dataHertz)*1000);
-      }
+
         //let timeSinceV = timeSinceLastV();
         let timeSinceP = timeSinceLastP();
         let timeSinceV = timeSinceLastV();
@@ -885,13 +888,29 @@ function pacingFunction()
     // 
     // if no intrinsic P, pace V after V-A interval which is equal to the programmed base RATE minus the programmed A-V INTERVAL. 
     // if no intrinsic V, pace V after programmed A-V interval
-    //
+    // if no paced P, no AV synchrony
 
     
     if (pacerMode == 'DDI') 
     {
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
+      var autoAV = AVIntervalHRAdjustBox.checked;
+      let lowerRateLimit = VAItimer + AVInterval
+      let VAinterval = goalPacerMs - AVInterval
+      let HRadjustedAV = 300 - (1.67 * pacingRate)
+      var usedAVinterval = HRadjustedAV
+      if (HRadjustedAV < 50) {HRadjustedAV = 50}
+      if (HRadjustedAV > 150) {HRadjustedAV = 150}
+
+      if (autoAV)
+      {
+        usedAVinterval = HRadjustedAV // auto AV 
+      }
+      else
+      {
+        usedAVinterval = AVInterval // use whatever is in the box
+      }
 
       // Atrial logic
       if (timeSinceLastSensedP() >= goalPacerMs && timeSinceLastSensedV() >= goalPacerMs - AVInterval)
@@ -1032,7 +1051,7 @@ function pacingFunction()
       let HRadjustedAV = 300 - (1.67 * pacingRate)
       var usedAVinterval = HRadjustedAV
       if (HRadjustedAV < 50) {HRadjustedAV = 50}
-      if (HRadjustedAV > 250) {HRadjustedAV = 250}
+      if (HRadjustedAV > 150) {HRadjustedAV = 150}
 
       if (autoAV)
       {
@@ -1166,6 +1185,47 @@ function pacingFunction()
     VVtimer-=2;
   }
 
+    // DOO (asynchronous A and V pacing; no sensing)
+    // A timer drives, followed by AV timer and V pace
+    if (pacerMode=='DOO')
+    {
+           
+      if (AAtimer == 0) // when AAtimer runs out, pace
+      {
+            if (pacerCapturing(atrium)) // is output high enough?
+            {
+            paceIt(atrium);
+            AAtimer=goalPacerMs;
+            }
+            else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
+            {
+              drawPacingSpike();
+            }
+            AVtimer=AVInterval
+      }
+      if (AAtimer<0)
+      {
+        AAtimer=goalPacerMs;
+      }
+      AAtimer -= 2; // run timer
+     
+      // vent logic; pace V after AV timer runs out
+      if (AVtimer == 0 || AVtimer == 1) // when VVtimer runs out, pace
+    {
+          if (pacerCapturing(vent))
+          {
+          paceIt(vent);
+          }
+          else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
+          {
+            drawPacingSpike();
+          }
+          AVtimer=goalPacerMs
+    }
+
+    AVtimer-=2;
+    
+  }
 
 }
 var AVITimerFlag=false;
@@ -1320,7 +1380,10 @@ function drawPacemaker()
   pacemakerCtx.drawImage(pacemakerImg,0,0);
 }
 
-function wanderingBaseline()
+function noiseToggle()
+{noiseFlag=!noiseFlag}
+
+function noiseFunction()
 {
   //dataFeed[0] = dataFeed[0]*1.05 // 5% wander
   if (dataClock%20==0)
