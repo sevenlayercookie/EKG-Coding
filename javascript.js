@@ -894,7 +894,7 @@ function pacingFunction()
 
     
 
-    if (pacerMode == 'DDI') 
+    if (pacerMode == 'DDI')  /// this is buggy, should rewrite in terms of timers
     {
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
@@ -1085,7 +1085,7 @@ function pacingFunction()
       {
       AVExtension = goalPacerMs - (rNEW - rOLD) // how far off was last effect pacing rate from goal rate?
       }
-      else {AVExtension =0}
+      else {AVExtension = 0}
       
       if (timeSinceLastSensedP() == 2)  // The second interval begins with an atrial sensed or paced event and extends to a ventricular event. This interval may be defined by a paced AV, PR, AR, or PV interval.
       {
@@ -1106,9 +1106,10 @@ function pacingFunction()
         {
           drawPacingSpike();
         }
+        VAITimerFlag = false; // turn off the VA timer
       }
 
-      if (AVITimer <= 0 && AVITimerFlag) // if atrium to vent timer runs out, pace vent
+      if (AVITimer <= 0 && AVITimerFlag) // if atrium-to-vent timer runs out, pace vent
       {
         if (pacerCapturing(vent))
         {
@@ -1118,6 +1119,7 @@ function pacingFunction()
         {
           drawPacingSpike();
         }
+        AVITimerFlag=false; // turn off the AV timer
       }
         // tick the timers down
         if (AVITimerFlag)
