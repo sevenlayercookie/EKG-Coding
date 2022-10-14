@@ -31,7 +31,7 @@ PHYSIOLOGY POINTS
 
 */
 
-// -------------------------- GLOABL DEFINITIONS -----------------------------
+// -------------------------- GLOBAL DEFINITIONS -----------------------------
 
 //pacing intervals
 var lowerRateLimitTimer // the rate of the pacemaker in ms
@@ -49,6 +49,12 @@ var rNEW=0
 var rOLD=0
 var AVExtension=0
 var PRInterval;
+// a fib
+var random = (1-((Math.random()-0.5)/1))
+var aFibMS = 1000
+var atrialAfibRate = 600;
+var conductedAtimer=Math.round((1/(atrialAfibRate/60000))/2)*2
+//
 var timeSincePGlobal=1;
 var timeSinceVGlobal=1;
 var timeSinceSensedPGlobal=1;
@@ -285,19 +291,21 @@ document.getElementById('capturing').onchange = function ()
 
 
 
-function drawPWave() {
+function drawPWave(morphOnly) {
   i = 0;
+  if (morphOnly!='morphOnly')
+{
   histPTimes.push(dataClock);
   if (histPTimes.length>10)
   {
     histPTimes.shift();
   }
-
+  
   if (aPacerSensitivity <= aUndersenseThreshold) // not undersensed
   {
     sensedPTimes.push(dataClock); // mark sensed A
   }
-
+}
   /*
   var tempArray=smoothP.slice();
    for (let j = 0; j < smoothP.length; j++) */
@@ -476,26 +484,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         }
         
       }
-/*
-    if (currentRhythm=='CHB')
-    {
-      let timeSinceP = timeSinceLastP()
-      let timeSinceV = timeSinceLastV()
-      ventHeartRate = document.getElementById("ventRateBox").value;
-      atrialHeartRate = document.getElementById("atrialRateBox").value;
-      let goalVentMs = 1/(ventHeartRate/60000)
-      let goalAtrialMs = 1/(atrialHeartRate/60000)
-      if (timeSinceLastP() >= 1/(atrialHeartRate/60000))
-      {
-        drawPWave();
-      }
 
-      if (timeSinceLastV() >= 1/(ventHeartRate/60000))
-      {
-        drawQRST();
-      }
-    }
-    */
 
     if (currentRhythm == "junctional")
     {
@@ -573,6 +562,65 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         drawQRS=false;
         PRtimer=-1;
       }
+    }
+
+    if (currentRhythm == "aFib")    // 
+    {
+      aCaptureThreshold=10000 // pacer should not be able to capture atrium
+      let timeSinceV = timeSinceLastV()
+      var afibVarianceFactor = 1; // the smaller the more varied
+      var morphoAtrialAfibRate = 1000;
+      var ratioConductedPs = .50  // 50% of P's will conduct to V
+      goalMS = Math.round((1/(setHR/60000))/2)*2
+
+      if (conductedAtimer == 0)
+      {
+        histPTimes.push(dataClock-AVInterval); // let a P "conduct" and be sensed
+        if (histPTimes.length>10)
+          {
+            histPTimes.shift();
+          }
+        coinToss = Math.random() // number between 0 and 1
+        if (coinToss>(1-ratioConductedPs))
+        {
+        PRtimer=AVInterval;
+        }
+        random = (1-((Math.random()-0.5)/afibVarianceFactor))
+        aFibMS = (goalMS)*random
+        conductedAtimer=Math.round(((1/(setHR/60000)*random)/ratioConductedPs)/2)*2
+      }
+      if (PRtimer==0)
+      {
+        drawQRST()
+      }
+      conductedAtimer -= 2;
+      PRtimer -= 2;
+
+      /*
+      if (timeSinceLastV() >= aFibMS)
+      {
+        drawQRST(); // this works, but maybe should allow for physiologic occasional V's capturing or being sensed
+        histPTimes.push(dataClock-AVInterval); // let a P "conduct" and be sensed
+          if (histPTimes.length>10)
+          {
+            histPTimes.shift();
+          }
+        random = (1-((Math.random()-0.5)/afibVarianceFactor))
+        aFibMS = (goalMS)*random
+      }
+      if (dataClock%goalMS==0)
+      {
+        random = (1-((Math.random()-0.5)/afibVarianceFactor))
+        aFibMS = (goalMS)*random
+      }
+*/
+      // draw p-wave at rate of 1000bpm
+
+      if (dataClock%(1/(morphoAtrialAfibRate/60000))==0)
+      {
+        drawPWave('morphOnly')
+      }
+
     }
 
       
@@ -735,10 +783,10 @@ function drawPacingSpike() {
 
 // ------------- TO DO -------------
 // [X] pacing capture algorithm
-//    [ ] pacing spike should inhibit if intrinsic P's or V's present (if paced rate exceeds intrinsic)    
+//    [x] pacing spike should inhibit if intrinsic P's or V's present (if paced rate exceeds intrinsic)    
 // [ ] pacing controls
 //    [x] rate
-//    [ ] AAI, VVI, DDI (dropdown box?)
+//    [x] AAI, VVI, DDI (dropdown box?)
 //    [ ]
 */
 
@@ -885,15 +933,32 @@ function pacingFunction()
     // DDI: only inhibits (so senses P -> inhibits P; senses V -> inhibits V)
     // "atrial tracking: ON" means DDD. "atrial tracking: OFF" means DDI.
     //
+    // DDI is like combining AAI and VVI modes
+    // 
     // -- FROM THE MANUAL --
     // 
     // if no intrinsic P, pace V after V-A interval which is equal to the programmed base RATE minus the programmed A-V INTERVAL. 
     // if no intrinsic V, pace V after programmed A-V interval
-    // if no paced P, no AV synchrony
+    // if no paced P, no AV synchrony, and V only paces if R-waves less than set rate
+
+    // When A. Tracking is off (DDI pacing mode), an atrial sense will inhibit an atrial pace, but it
+    // does not trigger an A-V Interval (see Figure 45). The ventricle is paced at the selected
+    // RATE.
+
+    // from another website
+    // -----------------
+    // The DDI pacing mode uses a ventricular timing base. It breaks the pacing interval 
+    // into two parts: the atrial pacing interval and the ventricular pacing interval, which are spaced by the 
+    // atrioventricular delay. For example, if the basic rate is set to 60 and the AV delay to 200 ms, 
+    // the atrial pacing interval VA is equal to 1 000 ms - 200 ms = 800 ms, 
+    // the ventricular pacing VV interval is equal to 1000 ms.
+    // If no spontaneous activity is sensed, it paces the atria and ventricles at the basic rate or 
+    // sensor indicated rate, respecting the programmed AV delay (first 2 cycles). If atrial activity is sensed, 
+    // it inhibits atrial pacing, without changing the ventricular pacing rate (cycles 3, 4 and 5). 
+    // If spontaneous activity is sensed in the ventricle, it inhibits both stimuli (subsequent cycles).
 
 
-    
-
+    /* OLD DDI function
     if (pacerMode == 'DDI')  /// this is buggy, should rewrite in terms of timers
     {
       timeSinceV=timeSinceLastSensedV();
@@ -973,6 +1038,79 @@ function pacingFunction()
       ventBlankingPeriod -= 2;
     }
   }
+
+  */
+
+  if (pacerMode == 'DDI')  /// this is buggy, should rewrite in terms of timers
+  {
+    var autoAV = AVIntervalHRAdjustBox.checked;
+    let HRadjustedAV = 300 - (1.67 * pacingRate)
+    var usedAVinterval = HRadjustedAV
+    if (HRadjustedAV < 50) {HRadjustedAV = 50}
+    if (HRadjustedAV > 150) {HRadjustedAV = 150}
+
+    if (autoAV)
+    {
+      usedAVinterval = HRadjustedAV // auto AV 
+    }
+    else
+    {
+      usedAVinterval = AVInterval // use whatever is in the box
+    }
+
+    if (timeSinceLastSensedV() == 2)
+    {
+      VAItimer=goalPacerMs - usedAVinterval
+      VVtimer=goalPacerMs
+      VAITimerFlag=true;
+    }
+
+    if (timeSinceLastSensedP() == 2)
+    {
+      AAtimer=goalPacerMs
+      VAITimerFlag=false;
+    }
+
+    if (VVtimer == 0)
+    {
+      if (pacerCapturing(vent))
+        {
+        paceIt(vent);
+        }
+        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
+        {
+          drawPacingSpike();
+        }
+      VVtimer = goalPacerMs
+      VAItimer = goalPacerMs - usedAVinterval
+    }
+
+    if (VAItimer==0)
+    {
+      if (pacerCapturing(atrium)) // is output high enough?
+        {
+        paceIt(atrium);
+        }
+      else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
+      {
+        drawPacingSpike();
+      }
+      VAITimerFlag=false;
+      VAItimer=goalPacerMs-usedAVinterval
+    }
+
+     // tick the timers down
+     if (AVITimerFlag)
+     {
+       AVITimer -= 2; 
+     }
+     if (VAITimerFlag)
+     {
+       VAItimer -= 2;
+     }
+     VVtimer -= 2;
+}
+
 
   // DDD (pace A and V; track A (if native A rate > pacer rate, pace V at native A rate))
     // DDD vs DDI
@@ -1067,6 +1205,7 @@ function pacingFunction()
 
       if (timeSinceLastSensedV() == 2) // The first is the interval from a ventricular sensed or paced event to an atrial paced event and is known as the AEI, or VAI.
       {
+        VVtimer = 0;
         rOLD = rNEW
         rNEW = dataClock
         if (autoAV)
@@ -1086,7 +1225,7 @@ function pacingFunction()
       AVExtension = goalPacerMs - (rNEW - rOLD) // how far off was last effect pacing rate from goal rate?
       }
       else {AVExtension = 0}
-      
+      timeSinceP = timeSinceLastSensedP()
       if (timeSinceLastSensedP() == 2)  // The second interval begins with an atrial sensed or paced event and extends to a ventricular event. This interval may be defined by a paced AV, PR, AR, or PV interval.
       {
         //VAItimer = goalPacerMs - AVInterval // start the VAI/AEI timer (interval from vent to next P)
@@ -1109,7 +1248,7 @@ function pacingFunction()
         VAITimerFlag = false; // turn off the VA timer
       }
 
-      if (AVITimer <= 0 && AVITimerFlag) // if atrium-to-vent timer runs out, pace vent
+      if ((AVITimer <= 0 && AVITimerFlag) || VVtimer >= goalPacerMs) // if atrium-to-vent timer runs out, pace vent
       {
         if (pacerCapturing(vent))
         {
@@ -1130,7 +1269,7 @@ function pacingFunction()
         {
           VAItimer -= 2;
         }
-        
+        VVtimer+=2;
       if (pacingFeedback)
       {
         if (dataClock%100 == 0)
