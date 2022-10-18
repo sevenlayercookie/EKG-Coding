@@ -33,8 +33,11 @@ PHYSIOLOGY POINTS
 
 // -------------------------- GLOBAL DEFINITIONS -----------------------------
 var pacedBeatFlag = false;
+var ventRefractoryTimer = 9999
+var atrialRefractoryTimer = 9999
 //pacing intervals
 var lowerRateLimitTimer // the rate of the pacemaker in ms
+var maxTrackingRate = 150 // the highest rate pacer will pace V in response to sensed A's
 var AVITimer = 200 // the set interval between a sensed/paced A and associated V (artificial PR interval)
 var VAItimer = 1000 - 200 // the timer after sensed/paced V and next due A
 var AAtimer = 1000
@@ -171,7 +174,15 @@ function onload() {
     if (i%100==0) // every 100 data points (200 ms), calc realtime Hz
     {
       randomizeThresholds();
-    avgProcessSpeed = calcRealtimeProcessingSpeed();
+      if (vPacerSensitivity < vOversenseThreshold) // is pacer oversensing?
+      {
+        sensedVentTimes.push(dataClock)
+      }
+      if (aPacerSensitivity < aOversenseThreshold)
+      {
+        sensedPTimes.push(dataClock)
+      }
+      avgProcessSpeed = calcRealtimeProcessingSpeed();
       if (avgProcessSpeed<2)
       {
         y-=1;
@@ -182,7 +193,7 @@ function onload() {
       }
     }
     
-
+    tickTimers()  // advance all timers
     masterRhythmFunction()
     if (pacingState)
     {
@@ -292,29 +303,32 @@ document.getElementById('capturing').onchange = function ()
 
 
 function drawPWave(morphOnly) {
-  
-  // RECORD KEEPING
-  if (morphOnly!='morphOnly') // not morphology only, so normal behaviour
-{
-  histPTimes.push(dataClock);  // add to absolute record of all P activity
-  if (histPTimes.length>10)
+  if (atrialRefractoryTimer > 100) // when atrium is depolarized, should be completely refractory for 100 ms (need to adjust?)
   {
-    histPTimes.shift();
+    atrialRefractoryTimer = 0 // make atrium refractory
+
+    // RECORD KEEPING
+    if (morphOnly!='morphOnly') // not morphology only, so normal behaviour
+    {
+      histPTimes.push(dataClock);  // add to absolute record of all P activity
+      if (histPTimes.length>10)
+      {
+        histPTimes.shift();
+      }
+      
+      if (aPacerSensitivity <= aUndersenseThreshold || pacedBeatFlag) // not undersensed OR if a known paced  beat
+      {
+        sensedPTimes.push(dataClock); // add to record of all sensed P activity
+      }
+    }
+    // MORPHOLOGY PORTION of draw function
+    i = 0;
+    var tempArray=shortP80.slice();
+    for (let j = 0; j < shortP80.length; j++)
+    {
+      dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
+    }
   }
-  
-  if (aPacerSensitivity <= aUndersenseThreshold || pacedBeatFlag) // not undersensed OR if a known paced  beat
-  {
-    sensedPTimes.push(dataClock); // add to record of all sensed P activity
-  }
-}
-   // MORPHOLOGY PORTION of draw function
-  i = 0;
-  var tempArray=shortP80.slice();
-  for (let j = 0; j < shortP80.length; j++)
-  {
-    dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
-  }
-    
 }
 
 function QRSClick() {
@@ -356,29 +370,34 @@ var vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.
 function drawQRST() {
   i = 0;
   j = 0;
-    // mark event according to data clock
-  histVentTimes.push(dataClock);
-  if (histVentTimes.length>10)
+  if (ventRefractoryTimer > 100) // when vent is depolarized, should be completely refractory for 100 ms (need to adjust?)
   {
-  histVentTimes.shift();
-  }
+    ventRefractoryTimer = 0 // make ventricle refractory
 
-  if (vPacerSensitivity <= vUndersenseThreshold || pacedBeatFlag) // not undersensing OR known paced beat-> mark real V
-  {
-    sensedVentTimes.push(dataClock); //mark sensed V
+    // mark event according to data clock
+    histVentTimes.push(dataClock);
+    if (histVentTimes.length>10)
+    {
+    histVentTimes.shift();
+    }
+
+    if (vPacerSensitivity <= vUndersenseThreshold || pacedBeatFlag) // not undersensing OR known paced beat-> mark real V
+    {
+      sensedVentTimes.push(dataClock); //mark sensed V
+    }
+    
+    var tempArray=cleanQRS.slice();
+        for (j = 0; j < cleanQRS.length; j++) 
+        {
+          dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
+        }
+        tempArray=cleanT.slice();
+        for (let i = 0; i < cleanT.length; i++) 
+        {
+          dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
+          j++;
+        }
   }
-  
-  var tempArray=cleanQRS.slice();
-      for (j = 0; j < cleanQRS.length; j++) 
-      {
-        dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
-      }
-      tempArray=cleanT.slice();
-      for (let i = 0; i < cleanT.length; i++) 
-      {
-        dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
-        j++;
-      }
 }
  
 var currentRhythm = "NSR";
@@ -450,9 +469,9 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
           {
             PRtimer+=2;
           }
-  
+        
         // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
-        if (drawQRS && PRtimer >= HRadjustedPR && !CHB && timeSinceLastSensedV() > 150)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
+        if (drawQRS && PRtimer >= HRadjustedPR && !CHB && timeSinceLastV() > 150)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
         {
             drawQRST();
             drawQRS=false;
@@ -959,90 +978,7 @@ function pacingFunction()
     // If spontaneous activity is sensed in the ventricle, it inhibits both stimuli (subsequent cycles).
 
 
-    /* OLD DDI function
-    if (pacerMode == 'DDI')  /// this is buggy, should rewrite in terms of timers
-    {
-      timeSinceV=timeSinceLastSensedV();
-      timeSinceP=timeSinceLastSensedP();
-      var autoAV = AVIntervalHRAdjustBox.checked;
-      let lowerRateLimit = VAItimer + AVInterval
-      let VAinterval = goalPacerMs - AVInterval
-      let HRadjustedAV = 300 - (1.67 * pacingRate)
-      var usedAVinterval = HRadjustedAV
-      if (HRadjustedAV < 50) {HRadjustedAV = 50}
-      if (HRadjustedAV > 150) {HRadjustedAV = 150}
-
-      if (autoAV)
-      {
-        usedAVinterval = HRadjustedAV // auto AV 
-      }
-      else
-      {
-        usedAVinterval = AVInterval // use whatever is in the box
-      }
-
-      // Atrial logic
-      if (timeSinceLastSensedP() >= goalPacerMs && timeSinceLastSensedV() >= goalPacerMs - AVInterval)
-      { 
-        
-        if (aPacerSensitivity >= aOversenseThreshold) // is pacer not oversensing?
-        {
-          
-        if (atrialRefactoryPeriod <= 0) // if pacer fires, should have a timeout period (refractory period)
-      {
-        if (pacerCapturing(atrium))
-        {
-          paceIt(atrium);
-          if (!CHB) // is conduction intact?
-              {
-                drawQRS = true; // signal that QRS should be drawn next
-              }
-          timeSinceP=timeSinceLastSensedP();
-        }
-        if (!pacerCapturing(atrium))
-        {
-          drawPacingSpike();
-        }
-        atrialRefactoryPeriod = goalPacerMs; // with capture or not, start pacertimeout
-      }
-          }
-    }
-    if (atrialRefactoryPeriod>0)  // augment pacer timer if running
-    {
-      atrialRefactoryPeriod -= 2;
-    }
-
-    // vent logic
-    timeSinceV=timeSinceLastSensedV();
-    timeSinceP=timeSinceLastSensedP();
-    if (timeSinceLastSensedV() > goalPacerMs && timeSinceLastSensedP() >= AVInterval)
-    {
-   
-      if (vPacerSensitivity >= vOversenseThreshold) // is pacer not oversensing?
-        {
-      if (ventBlankingPeriod <= 0) // if pacer fires, should have a timeout period
-      {
-        if (pacerCapturing(vent))
-        {
-        paceIt(vent);
-        }
-        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
-        {
-          drawPacingSpike();
-        }
-        ventBlankingPeriod = goalPacerMs; // with capture or not, start pacertimeout
-      }
-    }
-  }
-    if (ventBlankingPeriod>0)  // augment pacer timer if running
-    {
-      ventBlankingPeriod -= 2;
-    }
-  }
-
-  */
-
-  if (pacerMode == 'DDI')  /// this is buggy, should rewrite in terms of timers
+  if (pacerMode == 'DDI')  // sensing fixed
   {
     var autoAV = AVIntervalHRAdjustBox.checked;
     let HRadjustedAV = 300 - (1.67 * pacingRate)
@@ -1058,7 +994,7 @@ function pacingFunction()
     {
       usedAVinterval = AVInterval // use whatever is in the box
     }
-
+    var debug = timeSinceLastSensedV()
     if (timeSinceLastSensedV() == 2)
     {
       VAItimer=goalPacerMs - usedAVinterval
@@ -1183,7 +1119,7 @@ function pacingFunction()
     //  -- Basically, extend the VA interval based on sensed AR interval to ensure R-R equals goalMS
 
     
-    if (pacerMode == 'DDD') // UNDERSENSING SETTINGS ARE BROKEN!
+    if (pacerMode == 'DDD') // sensing fixed
     {
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
@@ -1203,6 +1139,9 @@ function pacingFunction()
       {
         usedAVinterval = AVInterval // use whatever is in the box
       }
+
+      // once pacer is turned on, timers should start immediately regardless of sensing or anything else
+      
 
       if (timeSinceLastSensedV() == 2) // The first is the interval from a ventricular sensed or paced event to an atrial paced event and is known as the AEI, or VAI.
       {
@@ -1251,23 +1190,17 @@ function pacingFunction()
         }
         VAITimerFlag = false; // turn off the VA timer
       }
-      /* backup if timers fail? shouldn't be necessary
+      // backup reset timers if timers fail for some reason (undersensing?)
       if (timeSinceLastSensedP() > goalPacerMs+50)    // backup to pace P if timers fail
       {
-        if (pacerCapturing(atrium))
-        {
-        paceIt(atrium);
-        }
-        else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
-        {
-          drawPacingSpike();
-        }
-        VAITimerFlag = false; // turn off the VA timer
+        VAITimerFlag=true
       }
-      */
+      
 
       // ventricular pacing (after timers expire)
-      if ((AVITimer <= 0 && AVITimerFlag) || VVtimer >= goalPacerMs) // if atrium-to-vent timer runs out, pace vent
+      //if ((AVITimer <= 0 && AVITimerFlag) || VVtimer >= goalPacerMs) // if atrium-to-vent timer runs out, pace vent (VVtimer shouldn't be necessary?)
+      var maxTrackingMS = 1/(maxTrackingRate/60000)
+      if ((AVITimer <= 0 && AVITimerFlag && VVtimer > maxTrackingMS)) // if atrium-to-vent timer runs out, pace vent
       {
         if (pacerCapturing(vent))
         {
@@ -1571,4 +1504,11 @@ function feedbackFunction() // provides feedback on settings
       settingsCorrect=false;
       document.getElementById("feedbackBox").innerText = "INCORRECT"
     }
+}
+
+
+function tickTimers() // advance all timers every time dataClock is advanced
+{
+  ventRefractoryTimer += 2 
+  atrialRefractoryTimer += 2 
 }
