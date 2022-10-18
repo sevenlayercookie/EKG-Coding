@@ -367,9 +367,13 @@ var vOversenseThreshold = 1.5 // threhsold below which pacer will oversense (e.g
 var vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
 
 
-function drawQRST(width) {
+function drawQRST(width, invertT, invertQRS) {   // width: 0=normal, 1=double, 2=triple, etc.)  invertT: 0=upright, 1=invert)  invertQRS: 0=upright, 1=invert
   if (typeof width == 'undefined')
   {width=0;}
+  if (typeof invertT == 'undefined')
+  {invertT=0;}
+  if (typeof invertQRS == 'undefined')
+  {invertQRS=0;}
 
   i = 0;
   j = 0;
@@ -401,16 +405,23 @@ function drawQRST(width) {
 
     for (j = 0; j < ogLength; j++) 
     {
+      if (invertQRS==0)
+      {
       dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
+      }
+      else if (invertQRS>0)
+      {
+        dataFeed[j] = dataFeed[j]-tempArray.shift(); // invert QRS
+      }
     }
     tempArray=cleanT.slice();
     for (let i = 0; i < cleanT.length; i++) 
     {
-      if (width==0)
+      if (invertT==0)
       {
       dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
       }
-      else if (width>0)
+      else if (invertT>0)
       {
         dataFeed[j] = dataFeed[j]-tempArray.shift(); // invert T wave if widened QRS
       }
@@ -503,7 +514,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
           PRtimer=-1;
         }
     }
-      if (CHB)
+      if (CHB) // complete heart block code
         {
           let timeSinceP = timeSinceLastP()
           let timeSinceV = timeSinceLastV()
@@ -518,7 +529,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
     
           if (timeSinceLastV() >= 1/(ventHeartRate/60000))
           {
-            drawQRST();
+            drawQRST(1,1);  //wide QRS due to idioventricular escape rhythm
           }
         }
         
@@ -573,7 +584,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       if (timeSinceLastV() >= 1/(ventHeartRate/60000))
       {
         // *** insert wide QRS code here ***
-        drawQRST(1); // draw wide QRS
+        drawQRST(1,1); // draw wide QRS
       }
 
       // if paced P appears, then *NARROW* QRS should follow (no block, should follow normal conduction)
@@ -823,7 +834,7 @@ function paceIt(target) // target : atrium = 1, vent = 2
       }
       else if (target==vent)
       {
-        drawQRST(1); // draw a widend QRS
+        drawQRST(1,0,1); // wide QRS, upright T, invert QRS
       }
   }
   else // if not capturing
