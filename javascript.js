@@ -35,6 +35,16 @@ PHYSIOLOGY POINTS
 var pacedBeatFlag = false;
 var ventRefractoryTimer = 9999
 var atrialRefractoryTimer = 9999
+var afibPSenseTimer = 9999
+// a flutter vars
+  var baselineFlutterConductionRatio = 4; // default 4:1 conduction ratio
+  var currentFlutterConductionRatio = baselineFlutterConductionRatio; // this one can be varied for irregularity
+  var flutterAtrialRate = 300   // most flutters are around 300 atrial rate
+  var flutterAtrialMS = 1/(flutterAtrialRate/60000)
+  var flutterConductionIrregularity = 1.5    // 0=regular, up to 2=twice as many frequent blocks
+  var flutterVentRate = flutterAtrialRate/baselineFlutterConductionRatio
+  var flutterVentMS = 1/(flutterVentRate/60000)
+  var flutterAtrialTimer = 10000
 //pacing intervals
 var lowerRateLimitTimer // the rate of the pacemaker in ms
 var maxTrackingRate = 150 // the highest rate pacer will pace V in response to sensed A's
@@ -302,7 +312,11 @@ document.getElementById('capturing').onchange = function ()
 
 
 
-function drawPWave(morphOnly) {
+function drawPWave(morphOnly,width,height,invert) { // morphOnly='morphOnly' or not,   width:2x,3x etc. (integer only),  height:1.5x, 2.8xm etc, (floatOK),   invert:true or false
+  if (typeof width == 'undefined') {width = 0} // 0 means normal width
+  if (typeof height == 'undefined') {height = 1} // 1 means normal height
+  if (typeof invert == 'undefined') {invert = 0} // 1 means normal height
+
   if (atrialRefractoryTimer > 100) // when atrium is depolarized, should be completely refractory for 100 ms (need to adjust?)
   {
     atrialRefractoryTimer = 0 // make atrium refractory
@@ -323,10 +337,18 @@ function drawPWave(morphOnly) {
     }
     // MORPHOLOGY PORTION of draw function
     i = 0;
-    var tempArray=shortP80.slice();
-    for (let j = 0; j < shortP80.length; j++)
+    var tempArray = widenWave(shortP80.slice(),width) // width 0 = normal, width 1 = double
+    var ogLength = tempArray.length
+    for (let j = 0; j < ogLength; j++)
     {
-      dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
+      if (invert==false)
+      {
+      dataFeed[j] = dataFeed[j]+tempArray.shift()*height; // add the voltages at each point (in case beats overlap)
+      }
+      if (invert==true)
+      {
+        dataFeed[j] = dataFeed[j]-tempArray.shift()*height; // add the voltages at each point (in case beats overlap)
+      }
     }
   }
 }
@@ -615,13 +637,15 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
     }
     
     // I'll let the pacer oversensing function handle the sensing portion of this, so I just need to work on letting QRS's through
-    if (currentRhythm == "aFib")    // BROKEN! too slow....
+    if (currentRhythm == "aFib")    
     {
       aCaptureThreshold=10000 // pacer should never be able to capture atrium in atrial fib
       let timeSinceV = timeSinceLastV()
       var afibVarianceFactor = 1; // the smaller the more varied
       var morphoAtrialAfibRate = 2000;
-      var ratioConductedPs = .50  // 50% of P's will conduct to V
+      var ratioSensedPs = .50  // 50% of P's will be sensed by pacemaker
+      let afibPsensing = true;
+
       goalMS = Math.round((1/(setHR/60000))/2)*2
 
       if (timeSinceLastV() >= aFibMS)
@@ -641,6 +665,18 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         aFibMS = (goalMS)*random
       }
 
+      // throw in some sensed A's for the pacemaker to fuck with
+      if (afibPsensing && aPacerSensitivity < aOversenseThreshold*2) // raise the pacer oversense threshold while in afib
+      {
+        let senseMS = goalMS*ratioSensedPs*random
+        if (afibPSenseTimer > senseMS)
+        {
+          sensedPTimes.push(dataClock)
+          afibPSenseTimer = 0;
+        }
+        afibPSenseTimer += 2;
+      }
+
       // draw p-wave at rate of 1000bpm
       /*
       if (dataClock%(1/(morphoAtrialAfibRate/60000))==0)
@@ -650,6 +686,38 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       */
       noiseFlag=true;
       document.getElementById('noise').checked=true;
+    }
+
+    if (currentRhythm == "aFlutter")    
+    {
+      // show flutter options on page
+      document.getElementById("flutterStuff").hidden=false;
+      flutterAtrialRate = document.getElementById("flutterAtrialRate").value;
+      baselineFlutterConductionRatio = parseInt(document.getElementById("flutterConductionRatio").value);
+      let flutterVariableAV = document.getElementById("flutterVariableAV").checked;
+      let timeSinceV = timeSinceLastV()
+      //goalMS = Math.round((1/(setHR/60000))/2)*2
+      flutterAtrialMS = 1/(flutterAtrialRate/60000)
+      flutterVentMS=flutterAtrialMS*currentFlutterConductionRatio
+      
+      if (timeSinceLastV() >= flutterVentMS)
+      {
+        drawQRST(); // this works, but maybe should allow for physiologic occasional V's capturing or being sensed
+        //random = (1-((Math.random()-0.5)/afibVarianceFactor))
+        let random = 0;
+        if (flutterVariableAV)
+        {
+         random = Math.random()*flutterConductionIrregularity
+        }
+        currentFlutterConductionRatio = baselineFlutterConductionRatio + Math.round(random)
+      }
+
+      if (flutterAtrialTimer >= flutterAtrialMS)
+      {
+        drawPWave('no',1,1,false) // not morphonly, width, height, no invert
+        flutterAtrialTimer=0;
+      }
+      flutterAtrialTimer +=2;
     }
 
       
@@ -1504,19 +1572,40 @@ function noiseFunction()
 
 function feedbackFunction() // provides feedback on settings
 {
-  if (aPacerSensitivity < aUndersenseThreshold && aPacerSensitivity > aOversenseThreshold && vPacerSensitivity < vUndersenseThreshold && vPacerSensitivity > vOversenseThreshold && aPacerOutput > aCaptureThreshold && vPacerOutput > vCaptureThreshold) // sensitivity settings
+  if (currentRhythm != 'aFib' && currentRhythm != 'aFlutter')
+  {
+    if (aPacerSensitivity < aUndersenseThreshold && aPacerSensitivity > aOversenseThreshold && vPacerSensitivity < vUndersenseThreshold && vPacerSensitivity > vOversenseThreshold && aPacerOutput > aCaptureThreshold && vPacerOutput > vCaptureThreshold) // sensitivity settings
+    {
+      
+        settingsCorrect=true;
+        document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
+      
+      
+    }
+    else
+      {
+        settingsCorrect=false;
+        document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
+      }
+  }
+  else if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter')
   {
     
-      settingsCorrect=true;
-      document.getElementById("feedbackBox").innerText = "CORRECT"
-    
-    
-  }
-  else
+    if (aPacerSensitivity < aUndersenseThreshold && aPacerSensitivity > aOversenseThreshold && vPacerSensitivity < vUndersenseThreshold && vPacerSensitivity > vOversenseThreshold && vPacerOutput > vCaptureThreshold) // sensitivity settings
     {
-      settingsCorrect=false;
-      document.getElementById("feedbackBox").innerText = "INCORRECT"
+        settingsCorrect=true;
+        document.getElementById("feedbackBox").innerText = "CORRECT" 
     }
+    else
+      {
+        settingsCorrect=false;
+        document.getElementById("feedbackBox").innerText = "INCORRECT"
+      }
+      if (pacerMode=='DDD')
+        {
+          document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nBe careful of A-tracking supraventricular arrhythmias while in DDD mode")
+        }
+  }
 }
 
 

@@ -64,8 +64,16 @@
           <option value="junctional">Junctional</option>
           <option value="ventEscape">Ventricular escape</option>
           <option value="aFib">Atrial fibrillation</option>
+          <option value="aFlutter">Atrial flutter</option>
           <!-- <option value="synthetic">Synthetic</option> -->
         </select>
+        <br>
+        <div id="flutterStuff" hidden=true>
+          <label for="flutterAtrialRate">flutter, atrial rate:</label> <input id="flutterAtrialRate" value=300 size ="2">
+          <label for="flutterConductionRatio">conduction ratio (A:V) :</label> <input id="flutterConductionRatio" value=4 size ="2">
+          <input type="checkbox" id="flutterVariableAV" value="flutterVariableAV">
+          <label for="flutterVariableAV"> variable AV conduction</label><br>
+        </div>
 <br>
 <input type="checkbox" id="noise" value="noise" onclick="noiseToggle()">
 <label for="noise"> noise</label><br>
