@@ -367,7 +367,10 @@ var vOversenseThreshold = 1.5 // threhsold below which pacer will oversense (e.g
 var vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
 
 
-function drawQRST() {
+function drawQRST(width) {
+  if (typeof width == 'undefined')
+  {width=0;}
+
   i = 0;
   j = 0;
   if (ventRefractoryTimer > 100) // when vent is depolarized, should be completely refractory for 100 ms (need to adjust?)
@@ -386,17 +389,34 @@ function drawQRST() {
       sensedVentTimes.push(dataClock); //mark sensed V
     }
     
-    var tempArray=cleanQRS.slice();
-        for (j = 0; j < cleanQRS.length; j++) 
-        {
-          dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
-        }
-        tempArray=cleanT.slice();
-        for (let i = 0; i < cleanT.length; i++) 
-        {
-          dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
-          j++;
-        }
+    
+    var tempArray=widenWave(cleanQRS,width).slice(); // widen the QRS with a factor of 1 (double the width)
+    /*
+    else
+    {
+      var tempArray=cleanQRS.slice();
+    }
+    */
+    var ogLength = tempArray.length
+
+    for (j = 0; j < ogLength; j++) 
+    {
+      dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
+    }
+    tempArray=cleanT.slice();
+    for (let i = 0; i < cleanT.length; i++) 
+    {
+      if (width==0)
+      {
+      dataFeed[j] = dataFeed[j]+tempArray.shift(); // add the voltages at each point (in case beats overlap)
+      }
+      else if (width>0)
+      {
+        dataFeed[j] = dataFeed[j]-tempArray.shift(); // invert T wave if widened QRS
+      }
+      j++;
+    }
+    
   }
 }
  
@@ -553,7 +573,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       if (timeSinceLastV() >= 1/(ventHeartRate/60000))
       {
         // *** insert wide QRS code here ***
-        drawQRST();
+        drawQRST(1); // draw wide QRS
       }
 
       // if paced P appears, then *NARROW* QRS should follow (no block, should follow normal conduction)
@@ -582,40 +602,17 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         PRtimer=-1;
       }
     }
-
-    if (currentRhythm == "aFib")    // 
+    
+    // I'll let the pacer oversensing function handle the sensing portion of this, so I just need to work on letting QRS's through
+    if (currentRhythm == "aFib")    // BROKEN! too slow....
     {
-      aCaptureThreshold=10000 // pacer should not be able to capture atrium
+      aCaptureThreshold=10000 // pacer should never be able to capture atrium in atrial fib
       let timeSinceV = timeSinceLastV()
       var afibVarianceFactor = 1; // the smaller the more varied
-      var morphoAtrialAfibRate = 1000;
+      var morphoAtrialAfibRate = 2000;
       var ratioConductedPs = .50  // 50% of P's will conduct to V
       goalMS = Math.round((1/(setHR/60000))/2)*2
 
-      if (conductedAtimer == 0)
-      {
-        histPTimes.push(dataClock-AVInterval); // let a P "conduct" and be sensed
-        if (histPTimes.length>10)
-          {
-            histPTimes.shift();
-          }
-        coinToss = Math.random() // number between 0 and 1
-        if (coinToss>(1-ratioConductedPs))
-        {
-        PRtimer=AVInterval;
-        }
-        random = (1-((Math.random()-0.5)/afibVarianceFactor))
-        aFibMS = (goalMS)*random
-        conductedAtimer=Math.round(((1/(setHR/60000)*random)/ratioConductedPs)/2)*2
-      }
-      if (PRtimer==0)
-      {
-        drawQRST()
-      }
-      conductedAtimer -= 2;
-      PRtimer -= 2;
-
-      /*
       if (timeSinceLastV() >= aFibMS)
       {
         drawQRST(); // this works, but maybe should allow for physiologic occasional V's capturing or being sensed
@@ -632,14 +629,16 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         random = (1-((Math.random()-0.5)/afibVarianceFactor))
         aFibMS = (goalMS)*random
       }
-*/
-      // draw p-wave at rate of 1000bpm
 
+      // draw p-wave at rate of 1000bpm
+      /*
       if (dataClock%(1/(morphoAtrialAfibRate/60000))==0)
       {
         drawPWave('morphOnly')
       }
-
+      */
+      noiseFlag=true;
+      document.getElementById('noise').checked=true;
     }
 
       
@@ -824,12 +823,21 @@ function paceIt(target) // target : atrium = 1, vent = 2
       }
       else if (target==vent)
       {
-        drawQRST();
+        drawQRST(1); // draw a widend QRS
       }
   }
   else // if not capturing
   {
     drawPacingSpike();
+    if (target==atrium)
+      {
+        sensedPTimes.push(dataClock)
+      }
+      else if (target==vent)
+      {
+        sensedVentTimes.push(dataClock)
+      }
+    
   }
 
 pacedBeatFlag=false;
@@ -981,7 +989,7 @@ function pacingFunction()
   if (pacerMode == 'DDI')  // sensing fixed
   {
     var autoAV = AVIntervalHRAdjustBox.checked;
-    let HRadjustedAV = 300 - (1.67 * pacingRate)
+    let HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/2)*2
     var usedAVinterval = HRadjustedAV
     if (HRadjustedAV < 50) {HRadjustedAV = 50}
     if (HRadjustedAV > 150) {HRadjustedAV = 150}
@@ -1010,28 +1018,17 @@ function pacingFunction()
 
     if (VVtimer == 0)
     {
-      if (pacerCapturing(vent))
-        {
-        paceIt(vent);
-        }
-        else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
-        {
-          drawPacingSpike();
-        }
+      paceIt(vent);
+        
       VVtimer = goalPacerMs
       VAItimer = goalPacerMs - usedAVinterval
     }
 
     if (VAItimer==0)
     {
-      if (pacerCapturing(atrium)) // is output high enough?
-        {
+      
         paceIt(atrium);
-        }
-      else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
-      {
-        drawPacingSpike();
-      }
+       
       VAITimerFlag=false;
       VAItimer=goalPacerMs-usedAVinterval
     }
@@ -1179,15 +1176,17 @@ function pacingFunction()
 
       if (VAItimer <= 0 && VAITimerFlag)  // if vent to atri timer runs out, pace atrium
       {
-        if (pacerCapturing(atrium))
-        {
+        //if (pacerCapturing(atrium))
+        //{
         
         paceIt(atrium);
-        }
+        //}
+        /*
         else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
+        */
         VAITimerFlag = false; // turn off the VA timer
       }
       // backup reset timers if timers fail for some reason (undersensing?)
@@ -1202,14 +1201,16 @@ function pacingFunction()
       var maxTrackingMS = 1/(maxTrackingRate/60000)
       if ((AVITimer <= 0 && AVITimerFlag && VVtimer > maxTrackingMS)) // if atrium-to-vent timer runs out, pace vent
       {
-        if (pacerCapturing(vent))
-        {
+        //if (pacerCapturing(vent))
+        //{
         paceIt(vent);
-        }
+        //}
+        /*
         else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
         {
           drawPacingSpike();
         }
+        */
         AVITimerFlag=false; // turn off the AV timer
       }
         // tick the timers down
@@ -1222,13 +1223,7 @@ function pacingFunction()
           VAItimer -= 2;
         }
         VVtimer+=2;
-      if (pacingFeedback)
-      {
-        if (dataClock%100 == 0)
-        {
-          feedbackFunction();
-        }
-      }
+      
   }
 
 
@@ -1327,6 +1322,13 @@ function pacingFunction()
 
     AVtimer-=2;
     
+  }
+  if (pacingFeedback) // is learning feedback mode enabled?
+  {
+    if (dataClock%100 == 0)
+    {
+      feedbackFunction();
+    }
   }
 
 }
@@ -1511,4 +1513,30 @@ function tickTimers() // advance all timers every time dataClock is advanced
 {
   ventRefractoryTimer += 2 
   atrialRefractoryTimer += 2 
+}
+
+
+function widenWave(inputWave,factor)
+{
+  if (factor==0) {return inputWave}
+
+  let widenedArray = [];
+  for (let i = 0; i < factor; i++)
+  {
+    widenedArray = []
+    for (let j = 0; j < inputWave.length; j++) 
+    {
+      
+      widenedArray.push(inputWave[j])
+      if (j == inputWave.length)
+      {}
+      else
+      {
+      widenedArray.push((inputWave[j+1]+inputWave[j])/2)
+      }
+    }
+    inputWave=widenedArray.slice()
+  }
+
+  return widenedArray;
 }
