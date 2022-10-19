@@ -34,7 +34,7 @@
     z-index: 1;
     top: 0;
     overflow-x: hidden;
-    overflow-y: hidden;
+    /*overflow-y: hidden;*/
     padding-top: 20px;
   }
   
@@ -50,7 +50,7 @@
     width: 30%;    
     height:100%;
     margin-bottom: 100px;
-
+    overflow-y: hidden;
   }
 
   img {

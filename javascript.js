@@ -730,7 +730,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
     // Four key elements of Wenkebach rhythm 
     // (if I want to be perfectly accurate, I should incororate this stuff)
     // [ ] incorporate the principles below to make more realistic (pretty insignificant though)
-    // 
+    //
     // 1. Progressive lengthening of each successive PR interval.
     // 2. The pause produced by the non-conducted P wave is equal to the increment between the last PR interval (preceding the pause) and the first PR interval following the pause (shortest) subtracted from twice the PP interval.
     //    = 2(PP) - (PR4-PR1)
