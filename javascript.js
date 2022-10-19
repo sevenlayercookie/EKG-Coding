@@ -36,6 +36,12 @@ var pacedBeatFlag = false;
 var ventRefractoryTimer = 9999
 var atrialRefractoryTimer = 9999
 var afibPSenseTimer = 9999
+// Wenkebach
+var baseWenkPR = 150
+var currentWenkPR = baseWenkPR
+var wenkDegree = 3 // # of conducted beats before drop
+var wenkCount = 0 // current count of conducted beats
+var wenkPRincreaseAmount  = 100 // by how much should PR interval increase?
 // a flutter vars
   var baselineFlutterConductionRatio = 4; // default 4:1 conduction ratio
   var currentFlutterConductionRatio = baselineFlutterConductionRatio; // this one can be varied for irregularity
@@ -118,7 +124,7 @@ function onload() {
   dataFeed.fill(0,0,1000);
   document.getElementById("tele").width = window.innerWidth;
   document.getElementById("HRLayer").width = window.innerWidth;
-  PRInterval = document.getElementById("PRbox").value;
+  PRInterval = parseInt(document.getElementById("PRbox").value)
   var w = tele.width,
     
     l = 0,
@@ -471,7 +477,7 @@ function masterRhythmFunction()
 
     if(dataClock%100 == 0)
     {
-      PRInterval = document.getElementById("PRbox").value;  // native PR interval
+      PRInterval = parseInt(document.getElementById("PRbox").value)  // native PR interval
       setHR = document.getElementById("avgRateBox").value;
       HRadjustedPR = PRInterval - 0.5*setHR + 30;   // PR should decrease with increasing heart rates
       if (HRadjustedPR<5){HRadjustedPR=5}
@@ -687,7 +693,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       noiseFlag=true;
       document.getElementById('noise').checked=true;
     }
-
+    if (currentRhythm != "aFlutter") {document.getElementById("flutterStuff").hidden=true;}
     if (currentRhythm == "aFlutter")    
     {
       // show flutter options on page
@@ -720,7 +726,153 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       flutterAtrialTimer +=2;
     }
 
-      
+    //  ------------------ WENKEBACH ------------------
+    // Four key elements of Wenkebach rhythm 
+    // (if I want to be perfectly accurate, I should incororate this stuff)
+    // [ ] incorporate the principles below to make more realistic (pretty insignificant though)
+    // 
+    // 1. Progressive lengthening of each successive PR interval.
+    // 2. The pause produced by the non-conducted P wave is equal to the increment between the last PR interval (preceding the pause) and the first PR interval following the pause (shortest) subtracted from twice the PP interval.
+    //    = 2(PP) - (PR4-PR1)
+    // 3. The RR interval between the first and second conducted beats is the largest and between the last conducted beats, the shortest.
+    // 4. There is progressive shortening of the RR intervals.
+
+    if (currentRhythm!='2ndtypeI' || currentRhythm!='2ndtypeII') {document.getElementById("wenckStuff").hidden=true}
+    if (currentRhythm=='2ndtypeI') // Wenckebach/Wenkebach
+    {
+        // show wenck options
+        document.getElementById("wenckStuff").hidden=false
+        wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value - 1) // if wenkDegree is 2, then there are 2 P waves per 1 QRS. if wenkDegree is 5, then there are 5 Ps per QRS
+        // update AV block label
+        document.getElementById("AVblockLabel").innerText = (wenkDegree+1).toString() + ":" + (wenkDegree).toString()
+        //let timeSinceV = timeSinceLastV();
+        let timeSinceP = timeSinceLastP();
+        let timeSinceV = timeSinceLastV();
+        
+        if (wenkCount == 0)
+        {
+          currentWenkPR = PRInterval
+        }
+        
+
+          if (timeSinceP >= goalMS && timeSinceV >= goalMS - currentWenkPR && timeSinceLastV() > 200 )
+          {
+            if (wenkCount < wenkDegree)
+              {
+                currentWenkPR+=wenkPRincreaseAmount
+              }
+            drawPWave();
+            timeSinceP=timeSinceLastP();
+            if (wenkCount < wenkDegree)
+            {
+              drawQRS = true; // flag that QRS should come follow sinus P
+              wenkCount++
+            }
+            else
+            {
+             //drawQRS=false;
+             currentWenkPR = PRInterval
+             wenkCount=0
+            }
+          }
+
+          testClock = dataClock;
+          timeSinceP=timeSinceLastP()
+          timeSinceV=timeSinceLastV()
+
+          if (timeSinceP==0 || timeSinceP == 2)
+          {
+            PRtimer=0; // start P-R timer (QRS should follow a P wave, whether P is intrinsic or paced)
+            drawQRS=true;
+          }
+          if (PRtimer>=0)
+          {
+            PRtimer+=2;
+          }
+        
+        // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
+        if (drawQRS && PRtimer >= currentWenkPR && timeSinceLastV() > 150 && wenkCount < wenkDegree)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
+        {
+            drawQRST();
+            drawQRS=false;
+            PRtimer=-1; // stop PRtimer
+        }
+        else if (drawQRS && PRtimer >= currentWenkPR) // if above never runs, then clear QRS and PR timer
+        {
+          drawQRS=false;
+          PRtimer=-1;
+        }
+        
+    }
+
+    if (currentRhythm=='2ndtypeII') // Wenckebach/Wenkebach
+
+    // 1 or more sequential P waves do not conduct
+    // rated as P:QRS degree block (e.g. 2:1, 3:1, 4:1, etc.)
+    {
+        // show wenck options
+        document.getElementById("wenckStuff").hidden=false
+        wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value)
+        // update AV block label
+        document.getElementById("AVblockLabel").innerText = (wenkDegree).toString() + ":" + 1
+
+        //let timeSinceV = timeSinceLastV();
+        let timeSinceP = timeSinceLastP();
+        let timeSinceV = timeSinceLastV();
+        wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value)
+        if (wenkCount == 0)
+        {
+          currentWenkPR = PRInterval
+        }
+        
+
+          if (timeSinceP >= goalMS && timeSinceV >= goalMS - currentWenkPR && timeSinceLastV() > 200 )
+          {
+            drawPWave();
+            timeSinceP=timeSinceLastP();
+            if (wenkCount < wenkDegree)
+            {
+              drawQRS = true; // flag that QRS should come follow sinus P
+              wenkCount++
+            }
+            else
+            {
+             //drawQRS=false;
+             currentWenkPR = PRInterval
+             wenkCount=0
+            }
+          }
+
+          testClock = dataClock;
+          timeSinceP=timeSinceLastP()
+          timeSinceV=timeSinceLastV()
+
+          if (timeSinceP==0 || timeSinceP == 2)
+          {
+            PRtimer=0; // start P-R timer (QRS should follow a P wave, whether P is intrinsic or paced)
+            drawQRS=true;
+          }
+          if (PRtimer>=0)
+          {
+            PRtimer+=2;
+          }
+        
+        // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
+        if (drawQRS && PRtimer >= currentWenkPR && timeSinceLastV() > 150 && wenkCount == wenkDegree)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
+        {
+            drawQRST();
+            drawQRS=false;
+            PRtimer=-1; // stop PRtimer
+            wenkCount=0
+        }
+        else if (drawQRS && PRtimer >= currentWenkPR) // if above never runs, then clear QRS and PR timer
+        {
+          drawQRS=false;
+          PRtimer=-1;
+        }
+        
+    }
+
 }
 
 
@@ -728,7 +880,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
 var currentRhythmID = [0,0];
 function NSRhythm() 
 {
-  PRInterval = document.getElementById("PRbox").value;
+  PRInterval = parseInt(document.getElementById("PRbox").value)
 	clearRhythms();
   currentRhythm = 'NSR';
   CHB = false;
@@ -947,6 +1099,19 @@ function startPacing() {
 	pacingRate = document.getElementById("pacingRate").value;
   
   pacingState = true;  
+}
+
+function pacingModeBoxChange()
+{
+  let element = document.getElementById("pacingMode")
+  if (element.options[element.selectedIndex].text == "DDD")
+  {
+    document.getElementById("URLdiv").hidden=false
+  }
+  if (element.options[element.selectedIndex].text != "DDD")
+  {
+    document.getElementById("URLdiv").hidden=true
+  }
 }
 
 var AVInterval = 120; // pacemaker interval between atrial and v pace
@@ -1194,11 +1359,12 @@ function pacingFunction()
     // equal to, but does not exceed, the desired MSR.
     //  -- Basically, extend the VA interval based on sensed AR interval to ensure R-R equals goalMS
 
-    
     if (pacerMode == 'DDD') // sensing fixed
     {
+      // vars
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
+      maxTrackingRate = document.getElementById('URLbox').value;
       var autoAV = AVIntervalHRAdjustBox.checked;
       let lowerRateLimit = VAItimer + AVInterval
       let VAinterval = goalPacerMs - AVInterval
@@ -1594,12 +1760,12 @@ function feedbackFunction() // provides feedback on settings
     if (aPacerSensitivity < aUndersenseThreshold && aPacerSensitivity > aOversenseThreshold && vPacerSensitivity < vUndersenseThreshold && vPacerSensitivity > vOversenseThreshold && vPacerOutput > vCaptureThreshold) // sensitivity settings
     {
         settingsCorrect=true;
-        document.getElementById("feedbackBox").innerText = "CORRECT" 
+        document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT" 
     }
     else
       {
         settingsCorrect=false;
-        document.getElementById("feedbackBox").innerText = "INCORRECT"
+        document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
       }
       if (pacerMode=='DDD')
         {
