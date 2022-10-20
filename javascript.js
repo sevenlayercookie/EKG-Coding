@@ -1628,6 +1628,7 @@ function pacingFunction()
         if (autoAV)
         {
         VAItimer = goalPacerMs - usedAVinterval + AVExtension // start the VAI/AEI timer (interval from vent to next P)
+        // AVExtension attempts to modify the VAI interval with goal of more closely achieving goal heart rate
         }
         else
         {
