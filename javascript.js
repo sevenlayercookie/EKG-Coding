@@ -55,6 +55,12 @@ var ratioBlockedPs = .20 // 20% of P's will be blocked
   var flutterVentRate = flutterAtrialRate/baselineFlutterConductionRatio
   var flutterVentMS = 1/(flutterVentRate/60000)
   var flutterAtrialTimer = 10000
+// geminy vars
+  var geminyRatio = 1   //  1=bigeminy (one normal, one PVC), 2=trigeminy (one normal, two PVC)
+  var geminyCount = 0
+  var PVCtimer = -1
+  var drawNormalQRS = false
+  var PPtimer=0
 //pacing intervals
 var lowerRateLimitTimer // the rate of the pacemaker in ms
 var maxTrackingRate = 150 // the highest rate pacer will pace V in response to sensed A's
@@ -617,12 +623,19 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       
 
       let timeSinceV = timeSinceLastV()
-      ventHeartRate = document.getElementById("ventRateBox").value;
+      ventHeartRate = document.getElementById("avgRateBox").value;
       let goalVentMs = 1/(ventHeartRate/60000)
-      if (timeSinceLastV() >= 1/(ventHeartRate/60000))
+      if (timeSinceLastV() >= goalVentMs)
       {
         // *** insert wide QRS code here ***
-        drawQRST(1,1); // draw wide QRS
+        if (ventHeartRate<120)
+        {
+          drawQRST(1,1); // draw wide QRS, inverted T
+        }
+        else (ventHeartRate >= 120) // v-tach
+        {
+        drawQRST(1,0); // draw wide QRS, upright T (looks more like true V-tach)
+        }
       }
 
       // if paced P appears, then *NARROW* QRS should follow (no block, should follow normal conduction)
@@ -652,7 +665,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       }
     }
     
-    // I'll let the pacer oversensing function handle the sensing portion of this, so I just need to work on letting QRS's through
+    //   -----------    ATRIAL FIBRILLATION ---------------
     if (currentRhythm == "aFib")    
     {
       aCaptureThreshold=10000 // pacer should never be able to capture atrium in atrial fib
@@ -707,7 +720,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       
       // noiseFlag=true;
 
-      document.getElementById('noise').checked=true;
+      // document.getElementById('noise').checked=true;
     }
 
     if (currentRhythm != "aFlutter") {document.getElementById("flutterStuff").hidden=true;}
@@ -1011,6 +1024,88 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       drawQRST(1,1);  //wide QRS due to idioventricular escape rhythm
     }
   }
+
+  if (currentRhythm!='geminies')
+  {
+    document.getElementById("geminiStuff").hidden=true
+  }
+  if (currentRhythm=='geminies') // bigeminy, trigeminy, of PVCs
+    {
+        let timeSinceP = timeSinceLastP();
+        let timeSinceV = timeSinceLastV();     
+      document.getElementById("geminiStuff").hidden=false
+        
+        geminyRatio = parseInt(document.getElementById("geminiRatioBox").value)
+
+          if (timeSinceP >= goalMS && timeSinceV >= goalMS - HRadjustedPR && timeSinceLastV() > 200 && geminyCount<geminyRatio && PPtimer%goalMS==0)
+          {
+            drawPWave();
+            PPtimer = 0
+            timeSinceP=timeSinceLastP();
+      
+            drawNormalQRS = true; // flag that QRS should come follow sinus P
+            PVCtimer = 0
+             //drawNormalQRS=false;
+          }
+
+          if (geminyCount==geminyRatio && PVCtimer > goalMS/1.5)
+          {
+            drawQRST(1,1) // wide QRS, inverted T (a PVC)
+            PVCtimer=0
+            geminyCount = 0
+          }
+
+          if (geminyCount>geminyRatio)
+          {
+            PVCtimer = -1 // disable timer
+            geminyCount = 0
+          }
+
+          if (PVCtimer >= 0)
+          {
+            PVCtimer += 2 // increment timer
+          }
+
+          if (PPtimer >= 0)
+          {
+            PPtimer += 2
+          }
+
+          testClock = dataClock;
+          timeSinceP=timeSinceLastP()
+          timeSinceV=timeSinceLastV()
+
+          if (timeSinceP==0 || timeSinceP == 2)
+          {
+            PRtimer=0; // start P-R timer (QRS should follow a P wave, whether P is intrinsic or paced)
+            drawNormalQRS=true;
+          }
+          if (PRtimer>=0)
+          {
+            PRtimer+=2;
+          }
+        
+        // QRS should respond to any P's (intrinsic or paced) after a PR interval
+        if (drawNormalQRS && PRtimer >= HRadjustedPR && timeSinceLastV() > 150)
+        {
+          
+            drawQRST();
+            drawNormalQRS=false;
+            PRtimer=-1; // stop PRtimer
+            geminyCount++
+        }
+        else if (drawNormalQRS && PRtimer >= HRadjustedPR) // if above never runs, then clear QRS and PR timer
+        {
+          drawNormalQRS=false;
+          PRtimer=-1;
+        }
+/*
+        if (timeSinceV>goalMS+HRadjustedPR+30)  // backup reset
+        {
+          geminyCount = 0
+        }
+        */
+    }
 
 
 }
@@ -1542,7 +1637,7 @@ function pacingFunction()
         VAITimerFlag = true;  // turn on V-A timer
         AVITimerFlag = false; // turn off A-V timer
       }
-      if (goalPacerMs - (rNEW - rOLD) > 0 )
+      if (goalPacerMs - (rNEW - rOLD) > 0 && goalPacerMs - (rNEW - rOLD) <= usedAVinterval)
       {
       AVExtension = goalPacerMs - (rNEW - rOLD) // how far off was last effect pacing rate from goal rate?
       }

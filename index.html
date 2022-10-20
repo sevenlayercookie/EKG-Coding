@@ -71,6 +71,8 @@
           <option value="intermAVBlock">Second-degree, Type II (Mobitz II, intermittent)</option>
           <option value="highDegreeBlock">Second-degree, Type II (high grade, fixed ratios)</option>
           <option value="completeBlock">Complete heart block</option>
+          <option value="geminies">Geminies</option>
+          
           <!-- <option value="synthetic">Synthetic</option> -->
         </select>
         <br>
@@ -91,6 +93,10 @@
         <div id="CHBstuff" hidden=true>
           <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40 size ="2" type="number" min="0" max ="1000">
           <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=90 size ="2" type="number" min="0" max ="1000">
+        </div>
+        <div id="geminiStuff" hidden=true>
+          <label for="geminiRatioBox">ratio normal QRS to PVC </label> <input id="geminiRatioBox" value=1 size ="2" type="number" min="1" max ="10" step="1">
+          <!-- <label id='blockedRatioLabel'>20% blocked</label> -->
         </div>
 
 <input type="checkbox" id="noise" value="noise" onclick="noiseToggle()">
