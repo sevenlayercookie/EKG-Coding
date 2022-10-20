@@ -42,6 +42,10 @@ var currentWenkPR = baseWenkPR
 var wenkDegree = 3 // # of conducted beats before drop
 var wenkCount = 0 // current count of conducted beats
 var wenkPRincreaseAmount  = 100 // by how much should PR interval increase?
+var intermittentAVblock = false;
+var AVBlockRandom = 1 // random factor of AV block
+var lastBlocked = false;
+var ratioBlockedPs = .20 // 20% of P's will be blocked
 // a flutter vars
   var baselineFlutterConductionRatio = 4; // default 4:1 conduction ratio
   var currentFlutterConductionRatio = baselineFlutterConductionRatio; // this one can be varied for irregularity
@@ -73,6 +77,7 @@ var random = (1-((Math.random()-0.5)/1))
 var aFibMS = 1000
 var atrialAfibRate = 600;
 var conductedAtimer=Math.round((1/(atrialAfibRate/60000))/2)*2
+var afibRandomPtime = 1 
 //
 var timeSincePGlobal=1;
 var timeSinceVGlobal=1;
@@ -464,6 +469,7 @@ var drawQRS=false;
 var PRtimer=-1;
 function masterRhythmFunction()
 {
+  /*
   if (document.getElementById("CHBbox").checked==true)
     {
       //currentRhythm='CHB'
@@ -476,6 +482,7 @@ function masterRhythmFunction()
     CHB=false;
     document.getElementById("CHBstuff").hidden = true;
     }
+    */
 
     if(dataClock%100 == 0)
     {
@@ -544,7 +551,8 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
           PRtimer=-1;
         }
     }
-      if (CHB) // complete heart block code
+      /*
+    if (CHB) // complete heart block code
         {
           let timeSinceP = timeSinceLastP()
           let timeSinceV = timeSinceLastV()
@@ -562,7 +570,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
             drawQRST(1,1);  //wide QRS due to idioventricular escape rhythm
           }
         }
-        
+        */
       }
 
 
@@ -650,7 +658,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
       aCaptureThreshold=10000 // pacer should never be able to capture atrium in atrial fib
       let timeSinceV = timeSinceLastV()
       var afibVarianceFactor = 1; // the smaller the more varied
-      var morphoAtrialAfibRate = 2000;
+      var morphoAtrialAfibRate = 800;
       var ratioSensedPs = .50  // 50% of P's will be sensed by pacemaker
       let afibPsensing = true;
 
@@ -685,16 +693,23 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         afibPSenseTimer += 2;
       }
 
-      // draw p-wave at rate of 1000bpm
-      /*
-      if (dataClock%(1/(morphoAtrialAfibRate/60000))==0)
+      // draw p-wave at varying rate with varying amplitude
+      let morphoMSbaseline = 1/(morphoAtrialAfibRate/60000)
+      if (dataClock%parseInt((morphoMSbaseline/afibRandomPtime))==0)
       {
-        drawPWave('morphOnly')
+        drawPWave('morphOnly',1,(Math.random()*1.10))
+        afibRandomPtime = Math.random()/2+1
+        let testMS = morphoMSbaseline/afibRandomPtime
+        let testRate  = (1/testMS)*60000
+        let blank = 0;
+
       }
-      */
-      noiseFlag=true;
+      
+      // noiseFlag=true;
+
       document.getElementById('noise').checked=true;
     }
+
     if (currentRhythm != "aFlutter") {document.getElementById("flutterStuff").hidden=true;}
     if (currentRhythm == "aFlutter")    
     {
@@ -742,7 +757,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
     if (currentRhythm!='2ndtypeI' || currentRhythm!='2ndtypeII') 
     {
       document.getElementById("wenckStuff").hidden=true
-      document.getElementById("CHBbox").disabled=false
+      //document.getElementById("CHBbox").disabled=false
     }
     if (currentRhythm=='2ndtypeI') // Wenckebach/Wenkebach
     {
@@ -752,8 +767,8 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         // update AV block label
         document.getElementById("AVblockLabel").innerText = (wenkDegree+1).toString() + ":" + (wenkDegree).toString()
         // turn off CHB options
-        document.getElementById("CHBbox").disabled=true
-        document.getElementById("CHBbox").checked=false
+        //document.getElementById("CHBbox").disabled=true
+        //document.getElementById("CHBbox").checked=false
         //let timeSinceV = timeSinceLastV();
         let timeSinceP = timeSinceLastP();
         let timeSinceV = timeSinceLastV();
@@ -814,10 +829,12 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         
     }
 
-    if (currentRhythm=='2ndtypeII') // Mobitz II
+    if (currentRhythm=='highDegreeBlock') // high degree AV block (fixed ratios )
 
-    // 1 or more sequential P waves do not conduct
+    // fixed ratio blocks (anything 3:1 or higher is "high degree")
+    // 2:1 could possibly be a Wenkbach
     // rated as P:QRS degree block (e.g. 2:1, 3:1, 4:1, etc.)
+    // initially presents as just occasional dropped QRS (intermittent 2:1)
     {
         // show wenck options
         document.getElementById("wenckStuff").hidden=false
@@ -825,12 +842,14 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         // update AV block label
         document.getElementById("AVblockLabel").innerText = (wenkDegree).toString() + ":" + 1
         // turn off CHB options
-        document.getElementById("CHBbox").disabled=true
-        document.getElementById("CHBbox").checked=false
+        //document.getElementById("CHBbox").disabled=true
+        //document.getElementById("CHBbox").checked=false
         //let timeSinceV = timeSinceLastV();
         let timeSinceP = timeSinceLastP();
         let timeSinceV = timeSinceLastV();
         wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value)
+        // intermittent block
+
         if (wenkCount == 0)
         {
           currentWenkPR = PRInterval
@@ -852,6 +871,8 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
              currentWenkPR = PRInterval
              wenkCount=0
             }
+
+            
           }
 
           testClock = dataClock;
@@ -871,6 +892,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
         if (drawQRS && PRtimer >= currentWenkPR && timeSinceLastV() > 150 && wenkCount == wenkDegree)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
         {
+          
             drawQRST();
             drawQRS=false;
             PRtimer=-1; // stop PRtimer
@@ -884,6 +906,113 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         
     }
 
+    if (currentRhythm!='intermAVBlock')
+    {
+      document.getElementById("intermAVBlockStuff").hidden=true
+    }
+    if (currentRhythm=='intermAVBlock') // Mobitz II
+
+    // 1 or more sequential P waves do not conduct
+    // rated as P:QRS degree block (e.g. 2:1, 3:1, 4:1, etc.)
+    // initially presents as just occasional dropped QRS (intermittent 2:1)
+    {
+        // show intermittent block options
+        document.getElementById("intermAVBlockStuff").hidden=false
+        ratioBlockedPs = parseFloat(document.getElementById("blockFreqBox").value)
+        document.getElementById("blockedRatioLabel").innerText = (ratioBlockedPs*100).toString() + "% blocked P's"
+        // turn off CHB options
+        //document.getElementById("CHBbox").disabled=true
+        //document.getElementById("CHBbox").checked=false
+        
+  //let timeSinceV = timeSinceLastV();
+  let timeSinceP = timeSinceLastP();
+  let timeSinceV = timeSinceLastV();
+
+  
+    //if (timeSinceP >= goalMS && timeSinceV >= goalMS - HRadjustedPR)   // this working 9/27
+    if (timeSinceP >= goalMS && timeSinceV >= goalMS - HRadjustedPR && timeSinceLastV() > 200 )
+    {
+      drawPWave();
+      timeSinceP=timeSinceLastP();
+      drawQRS = true; // flag that QRS should come follow sinus P
+      if (lastBlocked) // if last P was blocked
+      {
+        AVBlockRandom = 1 // force next P to conduct
+        lastBlocked = false
+      }
+      else // if it wasn't blocked, keep generating new
+      {
+      AVBlockRandom = Math.random();
+      }
+
+    }
+    testClock = dataClock;
+    timeSinceP=timeSinceLastP()
+    timeSinceV=timeSinceLastV()
+
+    if (timeSinceP==0 || timeSinceP == 2)
+    {
+      PRtimer=0; // start P-R timer (QRS should follow a P wave, whether P is intrinsic or paced)
+      drawQRS=true;
+    }
+    if (PRtimer>=0)
+    {
+      PRtimer+=2;
+    }
+  
+    // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
+    if (drawQRS && PRtimer >= HRadjustedPR && !CHB && timeSinceLastV() > 150)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
+    {
+      if (AVBlockRandom > ratioBlockedPs) // 20% of time, drop a QRS
+      {
+      drawQRST();
+      drawQRS=false;
+      lastBlocked=false
+      }
+      else
+      {
+        lastBlocked=true
+      }
+      
+        PRtimer=-1; // stop PRtimer
+    }
+    else if (drawQRS && PRtimer >= HRadjustedPR && !CHB) // if above never runs, then clear QRS and PR timer
+    {
+      drawQRS=false;
+      PRtimer=-1;
+    }
+  }
+
+  if (currentRhythm!="copmleteBlock")
+  {
+    document.getElementById("CHBstuff").hidden=true;
+    CHB=false;
+  }
+  if (currentRhythm=="completeBlock") // complete heart block
+  {
+    let timeSinceP = timeSinceLastP()
+    let timeSinceV = timeSinceLastV()
+   // document.getElementById("CHBbox").checked = true;
+    
+    
+  //  CHB = true;
+    document.getElementById("CHBstuff").hidden=false;
+    ventHeartRate = document.getElementById("ventRateBox").value;
+    atrialHeartRate = document.getElementById("atrialRateBox").value;
+    let goalVentMs = 1/(ventHeartRate/60000)
+    let goalAtrialMs = 1/(atrialHeartRate/60000)
+    if (timeSinceLastP() >= goalAtrialMs)
+    {
+      drawPWave();
+    }
+
+    if (timeSinceLastV() >= goalVentMs)
+    {
+      drawQRST(1,1);  //wide QRS due to idioventricular escape rhythm
+    }
+  }
+
+
 }
 
 
@@ -895,7 +1024,7 @@ function NSRhythm()
 	clearRhythms();
   currentRhythm = 'NSR';
   CHB = false;
-  document.getElementById("CHBbox").checked = false;
+  //document.getElementById("CHBbox").checked = false;
   document.getElementById("CHBstuff").hidden = true;
 	setHR = document.getElementById("avgRateBox").value;
 
