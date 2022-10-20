@@ -53,14 +53,14 @@
           <label for="URLbox">upper rate limit (DDD):</label>
           <input id="URLbox" value=150 size="2" type="number" min="0" max ="1000">
           </div>
-        <br>
+        
         <input type="checkbox" id="CHBbox" value="CHBbox" onchange="clickCHB()">
         <label for="CHBbox">complete heart block</label><br>
         <div id="CHBstuff" hidden=true>
           <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40 size ="2" type="number" min="0" max ="1000">
           <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=60 size ="2" type="number" min="0" max ="1000">
         </div>
-        <br>
+        
 
         <label for="rhythmList">Rhythm:</label>
         <select name="rhythmList" id="rhythmList">
@@ -85,19 +85,20 @@
           <label for="wenckeDegreeBox">degree of block:</label> <input id="wenckeDegreeBox" value=3 size ="2" type="number" min="2" max ="10">
           <label id='AVblockLabel'>4:3</label>
         </div>
-<br>
-<input type="checkbox" id="noise" value="noise" onclick="noiseToggle()">
-<label for="noise"> noise</label><br>
 
+<input type="checkbox" id="noise" value="noise" onclick="noiseToggle()">
+<label for="noise"> noise</label>
+<!--
         <div id="buttons" class="container">
           <button class="buttonsStyle" onclick="clearRhythms()">clear rhythms</button>
           <button class="buttonsStyle" onclick="drawPWave()">P wave</button>
           <button class="buttonsStyle" onclick="drawQRST()">QRS</button>
-          <!-- <button class="buttonsStyle" onclick="NSRhythm()">NSR</button> -->
-          <!-- <button class="buttonsStyle" onclick="showCHB()">CHB</button> -->
-          <!-- <button class="buttonsStyle" onclick="ECGsyn()">Synthetic</button> -->
+           <button class="buttonsStyle" onclick="NSRhythm()">NSR</button> 
+           <button class="buttonsStyle" onclick="showCHB()">CHB</button> 
+          <!-- <button class="buttonsStyle" onclick="ECGsyn()">Synthetic</button> 
         </div>
-        <br>
+      -->
+        
         <div id="feedbackBox"></div>
         
         <div id="canvasesdiv" style="position:relative; width:100%; height:200px">
