@@ -468,11 +468,13 @@ function masterRhythmFunction()
     {
       //currentRhythm='CHB'
       CHB=true;
+      document.getElementById("CHBstuff").hidden = false;
     }
   if (document.getElementById("CHBbox").checked==false)
     {
       //currentRhythm='NSR'
     CHB=false;
+    document.getElementById("CHBstuff").hidden = true;
     }
 
     if(dataClock%100 == 0)
@@ -737,7 +739,11 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
     // 3. The RR interval between the first and second conducted beats is the largest and between the last conducted beats, the shortest.
     // 4. There is progressive shortening of the RR intervals.
 
-    if (currentRhythm!='2ndtypeI' || currentRhythm!='2ndtypeII') {document.getElementById("wenckStuff").hidden=true}
+    if (currentRhythm!='2ndtypeI' || currentRhythm!='2ndtypeII') 
+    {
+      document.getElementById("wenckStuff").hidden=true
+      document.getElementById("CHBbox").disabled=false
+    }
     if (currentRhythm=='2ndtypeI') // Wenckebach/Wenkebach
     {
         // show wenck options
@@ -745,6 +751,9 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value - 1) // if wenkDegree is 2, then there are 2 P waves per 1 QRS. if wenkDegree is 5, then there are 5 Ps per QRS
         // update AV block label
         document.getElementById("AVblockLabel").innerText = (wenkDegree+1).toString() + ":" + (wenkDegree).toString()
+        // turn off CHB options
+        document.getElementById("CHBbox").disabled=true
+        document.getElementById("CHBbox").checked=false
         //let timeSinceV = timeSinceLastV();
         let timeSinceP = timeSinceLastP();
         let timeSinceV = timeSinceLastV();
@@ -805,7 +814,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         
     }
 
-    if (currentRhythm=='2ndtypeII') // Wenckebach/Wenkebach
+    if (currentRhythm=='2ndtypeII') // Mobitz II
 
     // 1 or more sequential P waves do not conduct
     // rated as P:QRS degree block (e.g. 2:1, 3:1, 4:1, etc.)
@@ -815,7 +824,9 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value)
         // update AV block label
         document.getElementById("AVblockLabel").innerText = (wenkDegree).toString() + ":" + 1
-
+        // turn off CHB options
+        document.getElementById("CHBbox").disabled=true
+        document.getElementById("CHBbox").checked=false
         //let timeSinceV = timeSinceLastV();
         let timeSinceP = timeSinceLastP();
         let timeSinceV = timeSinceLastV();
