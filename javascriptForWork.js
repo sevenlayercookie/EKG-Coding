@@ -135,8 +135,8 @@ function onload() {
   dataFeed.fill(0,0,1000);
   //document.getElementById("tele").width = window.innerWidth;
   //document.getElementById("HRLayer").width = window.innerWidth;
-  document.getElementById("tele").width = document.getElementById("divider1").offsetWidth
-  document.getElementById("HRLayer").width = document.getElementById("divider1").offsetWidth
+  document.getElementById("tele").width = document.getElementById("tele").parentElement.offsetWidth
+  document.getElementById("HRLayer").width = document.getElementById("tele").parentElement.offsetWidth
 
   PRInterval = parseInt(document.getElementById("PRbox").value)
   var w = tele.width,
