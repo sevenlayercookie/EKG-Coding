@@ -302,6 +302,7 @@ input.onchange = function(){setHR=input.value;HRchanged=true;};
 pacerate = document.getElementById('pacingRate');
 pacerate.onchange = function(){pacingRate=pacerate.value};
 
+/*
 document.getElementById("rhythmList").onchange = function() {
  
   const value = document.getElementById("rhythmList").value; 
@@ -326,6 +327,8 @@ document.getElementById('capturing').onchange = function ()
 
   
 }   
+*/
+
 }
 
 // --------------------- end onLoad() ------------------------------
@@ -493,8 +496,11 @@ function masterRhythmFunction()
     }
     */
 
+
+
     if(dataClock%100 == 0)
     {
+      currentRhythm = document.getElementById("rhythmList").value
       PRInterval = parseInt(document.getElementById("PRbox").value)  // native PR interval
       setHR = document.getElementById("avgRateBox").value;
       HRadjustedPR = PRInterval - 0.5*setHR + 30;   // PR should decrease with increasing heart rates
