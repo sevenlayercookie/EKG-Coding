@@ -1,0 +1,162 @@
+<head>
+    <script type="text/javascript" src="data.js"></script>
+    <link rel="stylesheet" href="css.css" />
+    <meta name="viewport" content="width=device-width" />
+  </head>
+  <body>
+  
+    <div class="split left">
+      
+        <div hidden="true" style="text-align: right;width:100%">fps: <span id="demoTEXT">0</span>
+          <p></p>
+          i: <span id="demoTEXT2">0</span>
+        </div>
+          <!--avg data points processed per second: --><span hidden=true id="demoTEXT3">0</span>
+          
+          <label for="PRbox">native PR interval</label> <input type="number" id="PRbox" value=150 size ="2" max="1000" min="0" >
+          <label for="avgRateBox">native rate:</label> <input type="number" id="avgRateBox" value=60 size ="2" max="1000" min="0">
+          <p></p>
+      
+      
+          <p></p>
+  
+  
+          <label for="pacingMode">Pacing mode:</label>
+          <select name="pacingMode" id="pacingMode" onchange=pacingModeBoxChange()>
+            <option value="listDDD">DDD</option>
+            <option value="listDDI">DDI</option>
+            <option value="listAAI">AAI</option>
+            <option value="listVVI">VVI</option>
+            <option value="listAOO">AOO</option>
+            <option value="listVOO">VOO</option>
+            <option value="listDOO">DOO</option>
+          </select>
+  
+            <button id="paceButton" onclick="paceButtonClick()">Start Pacing</button>
+            
+          <input hidden=true type="checkbox" id="capturing" value="capturing">
+          <label hidden=true for="capturing"> capture override</label><br>
+          <label for="pacingRate">pacing rate:</label>
+          <input id="pacingRate" value=60 size="2" type="number" min="0" max ="1000">
+          <label for="AVInterval">pacer AV interval:</label>
+          <input id="AVInterval" value=170 size="2"  type="number" min="0" max ="1000">
+          <label for="AVIntervalHRAdjustBox">auto AV interval (rate controlled)</label>
+          <input id="AVIntervalHRAdjustBox" type="checkbox" checked=true>
+          
+          <br>
+          <label for="aOutputBox">atrial output:</label>
+          <input id="aOutputBox" size ="1" value=10 type="number" min="0" max ="1000" onChange="onOutputChange('atrium')">mA <label for="aSensitivityBox">sensitivity:</label><input id="aSensitivityBox" value=4 size ="2" onChange="onSensitivityChange()">mV
+          <br>
+          <label for="vOutputBox">ventricle output:</label>
+          <input id="vOutputBox" size ="1" value=10 type="number" min="0" max ="1000" onChange="onOutputChange('ventricle')">mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" value=4 size ="2" onChange="onSensitivityChange()">mV
+          <div id="URLdiv">
+            <label for="URLbox">upper rate limit (DDD):</label>
+            <input id="URLbox" value=150 size="2" type="number" min="0" max ="1000">
+            </div>
+          
+          <!-- <input type="checkbox" id="CHBbox" value="CHBbox" onchange="clickCHB()">
+          <label for="CHBbox">complete heart block</label><br> -->
+  
+          
+  
+          <label for="rhythmList">Rhythm:</label>
+          <select id="rhythmList">
+            <option value="NSR">Sinus rhythm</option>
+            <option value="flatline">Flatline</option>
+            <option value="junctional">Junctional escape</option>
+            <option value="ventEscape">Ventricular escape</option>
+            <option value="aFib">Atrial fibrillation</option>
+            <option value="aFlutter">Atrial flutter</option>
+            <option value="2ndtypeI">Second-degree, Type I (Mobitz I, Wenckebach)</option>
+            <option value="intermAVBlock">Second-degree, Type II (Mobitz II, intermittent)</option>
+            <option value="highDegreeBlock">Second-degree, Type II (high grade, fixed ratios)</option>
+            <option value="completeBlock">Complete heart block</option>
+            <option value="geminies">Geminies</option>
+            
+            <!-- <option value="synthetic">Synthetic</option> -->
+          </select>
+          <br>
+          <div id="flutterStuff" hidden=true>
+            <label for="flutterAtrialRate">flutter, atrial rate:</label> <input id="flutterAtrialRate" value=300 size ="2" type="number" min="0" max ="1000">
+            <label for="flutterConductionRatio">conduction ratio (A:V) :</label> <input id="flutterConductionRatio" value=4 size ="2" type="number" min="0" max ="20">
+            <input type="checkbox" id="flutterVariableAV" value="flutterVariableAV">
+            <label for="flutterVariableAV"> variable AV conduction</label><br>
+          </div>
+          <div id="wenckStuff" hidden=true>
+            <label for="wenckeDegreeBox">degree of block:</label> <input id="wenckeDegreeBox" value=3 size ="2" type="number" min="2" max ="10">
+            <label id='AVblockLabel'>4:3</label>
+          </div>
+          <div id="intermAVBlockStuff" hidden=true>
+            <label for="blockFreqBox">frequency of block: </label> <input id="blockFreqBox" value=.20 size ="2" type="number" min="0" max ="1" step="0.1">
+            <label id='blockedRatioLabel'>20% blocked</label>
+          </div>
+          <div id="CHBstuff" hidden=true>
+            <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40 size ="2" type="number" min="0" max ="1000">
+            <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=90 size ="2" type="number" min="0" max ="1000">
+          </div>
+          <div id="geminiStuff" hidden=true>
+            <label for="geminiRatioBox">ratio normal QRS to PVC </label> <input id="geminiRatioBox" value=1 size ="2" type="number" min="1" max ="10" step="1">
+            <!-- <label id='blockedRatioLabel'>20% blocked</label> -->
+          </div>
+  
+  <input type="checkbox" id="noise" value="noise" onclick="noiseToggle()">
+  <label for="noise"> noise</label>
+  <!--
+          <div id="buttons" class="container">
+            <button class="buttonsStyle" onclick="clearRhythms()">clear rhythms</button>
+            <button class="buttonsStyle" onclick="drawPWave()">P wave</button>
+            <button class="buttonsStyle" onclick="drawQRST()">QRS</button>
+             <button class="buttonsStyle" onclick="NSRhythm()">NSR</button> 
+             <button class="buttonsStyle" onclick="showCHB()">CHB</button> 
+             <button class="buttonsStyle" onclick="ECGsyn()">Synthetic</button> 
+          </div>
+        -->
+          
+          <div id="feedbackBox"></div>
+          
+          <div id="canvasesdiv" style="position:relative; width:100%; height:200px">
+              <canvas class="leftSideCanvas" id="tele" style="position:absolute; left:0px; top:0px;" width=100% height=200px></canvas>
+              <canvas class="leftSideCanvas" id="HRLayer" style="position:absolute; left:0px; top:0px; background-color: transparent;" width=100% height="200"></canvas>
+          </div>
+  
+      
+    </div>
+    
+  <div class="split right">
+    <img id="pacemakerImg" src="assets/pacemaker.svg" hidden="true">
+      <div id="pacemakerDiv" style="position:relative; width:100%; height: 50%">
+        <canvas class ="rightSideCanvas" id="pacemakerCanvas"></canvas>
+      </div>
+  
+      <div class="wholeBox">
+        <div class="topButtons">
+          TOP BUTTONS
+        </div>
+  
+        <div class ="topHalf">
+          <div class = "topScreen">
+            TOP SCREEN
+          </div>
+          
+          <div class = "topKnobs">
+            TOP KNOBS
+          </div>
+        
+        </div>
+        <div class ="bottomHalf">
+          <div class = "bottomScreen">
+            BOTTOM SCREEN
+          </div>
+          
+          <div class = "bottomKnobs">
+            BOTTOM KNOBS
+          </div>
+        
+        </div>
+  
+      </div>
+  
+    </div>
+  
+      <script type="text/javascript" src="javascriptForWork.js"></script>
+  </body>

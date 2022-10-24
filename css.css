@@ -1,58 +1,113 @@
 .leftSideCanvas {
-    background:#000;
-    cursor:crosshair;
-}
-
-.rightSideCanvas {
-  background: #fff;
+  background:#000;
   cursor:crosshair;
 }
 
+.rightSideCanvas {
+background: #fff;
+cursor:crosshair;
+}
+
 .buttons {
-    display: flex;
-    justify-content: space-between;
-  }
+  display: flex;
+  justify-content: space-between;
+}
 
 .container {
-    display: flex;
-    justify-content: space-between;
-    width:50%;
+  display: flex;
+  justify-content: space-between;
+  width:50%;
 }
 
 .buttonsStyle {
-    width: 50%;
-    height: 100px;
+  width: 50%;
+  height: 100px;
 
 }
 
 
 /* Split the screen in half */
 .split {
-    height: 100%;
-    
-    position: fixed;
-    z-index: 1;
-    top: 0;
-    overflow-x: hidden;
-    /*overflow-y: hidden;*/
-    padding-top: 20px;
-  }
+  height: 100%;
   
-  /* Control the left side */
-  .left {
-    left: 0;
-    width: 70%;
-  }
-  
-  /* Control the right side */
-  .right {
-    right: 0;
-    width: 30%;    
-    height:100%;
-    margin-bottom: 100px;
-    overflow-y: hidden;
-  }
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+  /*overflow-y: hidden;*/
+  padding-top: 20px;
+}
 
-  img {
-    max-height: 95%;
-   }
+/* Control the left side */
+.left {
+  left: 0;
+  width: 70%;
+}
+
+/* Control the right side */
+.right {
+  right: 0;
+  width: 30%;    
+  height:100%;
+  margin-bottom: 100px;
+  overflow-y: hidden;
+}
+
+img {
+  max-height: 95%;
+ }
+
+
+ /* Pacer Box */
+
+ .wholeBox  {
+  position:static;
+  height: 50%;
+  aspect-ratio: 1/2;
+  background-color: #000;
+ }
+ 
+ .topButtons {
+  position:relative;
+  width:100%;
+  height: 10%;
+  background-color:aqua
+ }
+
+ .topHalf {
+  position:static;
+  height: 50%;
+ } 
+
+ .topScreen {
+  position:static;
+  width:75%;
+  height: 100%;
+  background-color:green
+ }
+
+ .topKnobs {
+  position:static;
+  width:25%;
+  height: 100%;
+  background-color:yellow
+ }
+
+ .bottomHalf {
+  position:relative;
+  height: 40%;
+ }
+ 
+ .bottomScreen {
+  position:relative;
+  width:75%;
+  height:100%;
+  background-color:hotpink;
+ }
+
+.bottomKnobs {
+  width:25%;
+  height: 100%;
+  background-color:red;
+}
+ 
