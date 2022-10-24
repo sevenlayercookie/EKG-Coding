@@ -75,6 +75,7 @@ img {
  }
 
  .topHalf {
+  display: flex;
   position:static;
   height: 50%;
  } 
@@ -94,6 +95,7 @@ img {
  }
 
  .bottomHalf {
+  display: flex;
   position:relative;
   height: 40%;
  }
