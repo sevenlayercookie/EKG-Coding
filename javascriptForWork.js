@@ -225,7 +225,7 @@ function onload() {
     
     tickTimers()  // advance all timers
     masterRhythmFunction()
-    if (pacingState)
+    if (pacerOn)
     {
       pacingFunction();
     }
@@ -1334,7 +1334,7 @@ function paceButtonClick() {
 var aPacerInterval;
 var vPacerInterval;
 var pacerInterval;
-var pacingState = false;
+var pacerOn = false;
 var pacingRate = 60;
 var atrialRefactoryPeriod = 0;
 var ventBlankingPeriod = 0;
@@ -1342,7 +1342,7 @@ function startPacing() {
 	
 	pacingRate = document.getElementById("pacingRate").value;
   
-  pacingState = true;  
+  pacerOn = true;  
 }
 
 function pacingModeBoxChange()
@@ -1830,7 +1830,7 @@ var pacerMode = 'DDD';
 var pacedFlag=false;
 
 function stopPacing() {
-  pacingState=false;
+  pacerOn=false;
 }
 
 

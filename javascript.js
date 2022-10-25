@@ -203,11 +203,11 @@ function onload() {
       randomizeThresholds();
       if (vPacerSensitivity < vOversenseThreshold) // is pacer oversensing?
       {
-        sensedVentTimes.push(dataClock)
+        senseV()
       }
       if (aPacerSensitivity < aOversenseThreshold)
       {
-        sensedPTimes.push(dataClock)
+        senseP()   // add occasional sensed P's if pacer oversensing
       }
       avgProcessSpeed = calcRealtimeProcessingSpeed();
       if (avgProcessSpeed<2)
@@ -222,7 +222,7 @@ function onload() {
     
     tickTimers()  // advance all timers
     masterRhythmFunction()
-    if (pacingState)
+    if (pacerOn)
     {
       pacingFunction();
     }
@@ -297,7 +297,12 @@ function onload() {
 input = document.getElementById('avgRateBox');
 input.onchange = function(){setHR=input.value;HRchanged=true;};
 pacerate = document.getElementById('pacingRate');
-pacerate.onchange = function(){pacingRate=pacerate.value};
+pacerate.onchange = function()
+{
+  pacingRate=pacerate.value
+  document.getElementById("pacingBoxRate").innerText=pacerate.value;
+};
+
 
 document.getElementById("rhythmList").onchange = function() {
  
@@ -327,7 +332,45 @@ document.getElementById('capturing').onchange = function ()
 
 // --------------------- end onLoad() ------------------------------
 
+function senseP(inhibitSenseLight) // if inhibitSenseLight = 'inhibitSenseLight', don't sense the beat
+{
+  let testvar = typeof inhibitSenseLight
+  if (typeof inhibitSenseLight == undefined || inhibitSenseLight != 'inhibitSenseLight')
+  {
+    inhibitSenseLight = false; // sense light should turn on
+  }
+  else if (inhibitSenseLight=='inhibitSenseLight')
+  {
+    inhibitSenseLight = true; // sense light should NOT turn on (e.g. a paced beat)
+  }
 
+  sensedPTimes.push(dataClock); // add to record of all sensed P activity
+
+  if (pacerOn && !inhibitSenseLight) // if sense light should turn on
+  {
+  document.getElementById("aSenseLight").src = "/assets/senseLightOn.svg" // turn sense light on
+    setTimeout(function(){document.getElementById("aSenseLight").src = "/assets/senseLightOff.svg"},"250") // turn light off after time period
+  }
+ }
+
+function senseV(inhibitSenseLight)
+{
+  if (typeof inhibitSenseLight == undefined || inhibitSenseLight != 'inhibitSenseLight')
+  {
+    inhibitSenseLight = false; // sense light should turn on
+  }
+  else if (inhibitSenseLight=='inhibitSenseLight')
+  {
+    inhibitSenseLight = true; // sense light should NOT turn on (e.g. a paced beat)
+  }
+
+  sensedVentTimes.push(dataClock); // add to record of all sensed V activity
+  if (pacerOn && !inhibitSenseLight)
+  {
+  document.getElementById("vSenseLight").src = "/assets/senseLightOn.svg" // turn sense light on
+    setTimeout(function(){document.getElementById("vSenseLight").src = "/assets/senseLightOff.svg"},"250") // turn light off after time period
+  }
+}
 
 function drawPWave(morphOnly,width,height,invert) { // morphOnly='morphOnly' or not,   width:2x,3x etc. (integer only),  height:1.5x, 2.8xm etc, (floatOK),   invert:true or false
   if (typeof width == 'undefined') {width = 0} // 0 means normal width
@@ -347,9 +390,17 @@ function drawPWave(morphOnly,width,height,invert) { // morphOnly='morphOnly' or 
         histPTimes.shift();
       }
       
-      if (aPacerSensitivity <= aUndersenseThreshold || pacedBeatFlag) // not undersensed OR if a known paced  beat
+      if (pacerOn && aPacerSensitivity <= aUndersenseThreshold || pacedBeatFlag) // not undersensed OR if a known paced  beat
       {
-        sensedPTimes.push(dataClock); // add to record of all sensed P activity
+          if (pacedBeatFlag)
+          {
+            senseP('inhibitSenseLight'); // add to record of all sensed P activity
+          }
+          else
+          {
+            senseP(); // add to record of all sensed P activity
+          }
+        
       }
     }
     // MORPHOLOGY PORTION of draw function
@@ -429,7 +480,14 @@ function drawQRST(width, invertT, invertQRS) {   // width: 0=normal, 1=double, 2
 
     if (vPacerSensitivity <= vUndersenseThreshold || pacedBeatFlag) // not undersensing OR known paced beat-> mark real V
     {
-      sensedVentTimes.push(dataClock); //mark sensed V
+      if (pacedBeatFlag)
+      {
+        senseV('inhibitSenseLight')
+      }
+      else 
+      {
+      senseV(); //mark sensed V
+      }
     }
     
     
@@ -700,7 +758,7 @@ if (currentRhythm=='NSR') // with this version, will incorporate a PR timer so t
         let senseMS = goalMS*ratioSensedPs*random
         if (afibPSenseTimer > senseMS)
         {
-          sensedPTimes.push(dataClock)
+          senseP()
           afibPSenseTimer = 0;
         }
         afibPSenseTimer += 2;
@@ -1277,8 +1335,19 @@ function drawPacingSpike() {
 const atrium = "atrium";
 const vent = "vent";
 
-function paceIt(target) // target : atrium = 1, vent = 2
+function paceIt(target) // target : atrium, or vent
 {
+  // VISUAL PACING INDICATOR PACER BOX
+  if (target==atrium)
+  {
+    document.getElementById("aPaceLight").src = "/assets/paceLightOn.svg" // turn pace light on
+    setTimeout(function(){document.getElementById("aPaceLight").src = "/assets/paceLightOff.svg"},"250") // turn light off after time period
+  }
+  else if (target==vent)
+  { 
+    document.getElementById("vPaceLight").src = "/assets/paceLightOn.svg" // turn pace light on
+    setTimeout(function(){document.getElementById("vPaceLight").src = "/assets/paceLightOff.svg"},"250") // turn light off after time period
+  }
   pacedBeatFlag=true;
   if (pacerCapturing(target))
   {
@@ -1297,11 +1366,11 @@ function paceIt(target) // target : atrium = 1, vent = 2
     drawPacingSpike();
     if (target==atrium)
       {
-        sensedPTimes.push(dataClock)
+        senseP('inhibitSenseLight')
       }
       else if (target==vent)
       {
-        sensedVentTimes.push(dataClock)
+        senseV('inhibitSenseLight')
       }
     
   }
@@ -1325,7 +1394,7 @@ function paceButtonClick() {
 var aPacerInterval;
 var vPacerInterval;
 var pacerInterval;
-var pacingState = false;
+var pacerOn = false;
 var pacingRate = 60;
 var atrialRefactoryPeriod = 0;
 var ventBlankingPeriod = 0;
@@ -1333,12 +1402,13 @@ function startPacing() {
 	
 	pacingRate = document.getElementById("pacingRate").value;
   
-  pacingState = true;  
+  pacerOn = true;  
 }
 
 function pacingModeBoxChange()
 {
   let element = document.getElementById("pacingMode")
+  document.getElementById("pacingBoxMode").innerText=element.options[element.selectedIndex].text;
   if (element.options[element.selectedIndex].text == "DDD")
   {
     document.getElementById("URLdiv").hidden=false
@@ -1363,6 +1433,7 @@ function pacingFunction()
   let goalPacerMs = Math.round(((1/pacingRate)*60000)/2)*2; // goal how many ms between R waves
   let element = document.getElementById("pacingMode")
   pacerMode = element.options[element.selectedIndex].text;
+  document.getElementById("pacingBoxRate").innerText=pacerate.value;
   
  
     // AAI (A pace, A sense (ignore V) )
@@ -1821,7 +1892,7 @@ var pacerMode = 'DDD';
 var pacedFlag=false;
 
 function stopPacing() {
-  pacingState=false;
+  pacerOn=false;
 }
 
 
@@ -1893,14 +1964,12 @@ function pacerCapturing(chamber) {
 }
 
 function onOutputChange(chamber) {
-  if (chamber == "atrium")
-  {
+  
     aPacerOutput = document.getElementById("aOutputBox").value;
-  }
-  if (chamber == "ventricle")
-  {
+    document.getElementById("pacingBoxAOutput").innerText=aPacerOutput;
     vPacerOutput = document.getElementById("vOutputBox").value;
-  }
+    document.getElementById("pacingBoxVOutput").innerText=vPacerOutput;
+    document.getElementById("pacingBoxMode").innerText=pacerMode;
 }
 
 function onSensitivityChange() {
