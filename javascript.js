@@ -2011,6 +2011,7 @@ function randomizeThresholds() // randomize a bit capture, oversense, undersense
 
 
 // ------- PACEMAKER CANVAS ---------
+/*
 var pacemakerCanvas = document.getElementById("pacemakerCanvas");
 var pacemakerHeight = pacemakerCanvas.height = document.getElementById("pacemakerDiv").offsetHeight
 var pacemakerWidth = pacemakerCanvas.width = document.getElementById("pacemakerDiv").offsetWidth
@@ -2028,6 +2029,7 @@ function drawPacemaker()
   pacemakerWidth = pacemakerCanvas.width = document.getElementById("pacemakerDiv").offsetWidth
   pacemakerCtx.drawImage(pacemakerImg,0,0);
 }
+*/
 
 function noiseToggle()
 {noiseFlag=!noiseFlag}
