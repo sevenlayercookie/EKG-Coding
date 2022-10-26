@@ -131,12 +131,13 @@
     <div class="pacemakerGraphic">
       <div class="wholeBox">
         <div class="topButtons">
-          <img src="/assets/DOObutton-red-whitetext.svg">
-          <img src="/assets/powerButton-white-blackback.svg">
+          <img src="/assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick()">
+          <img src="/assets/powerButton-white-blackback.svg"  onclick="paceButtonClick()">
         </div>
   
         <div class ="topHalf">
           <div class = "topScreen">
+            <div id = "topScreenHide">
             <div class = "activityLights">
               <img id="aPaceLight" src="/assets/paceLightOff.svg">
               A
@@ -189,6 +190,8 @@
               <img src="assets/lockIndicator.svg">
             </div>
           </div>
+          </div>
+          
           
           <div class = "topRightSide">
             <div class = "topKnobsBlank">
@@ -210,7 +213,9 @@
         </div>
         <div class ="bottomHalf">
           <div class = "bottomScreen">
+            <div id = "bottomScreenHide">
             BOTTOM SCREEN
+          </div>
           </div>
           
           <div class = "bottomKnobs">

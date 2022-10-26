@@ -1378,16 +1378,32 @@ function paceIt(target) // target : atrium, or vent
 pacedBeatFlag=false;
 }
 
+function DOObuttonClick() {
+  let element = document.getElementById("pacingMode")
+  document.getElementById("pacingBoxMode").innerText= "DOO"
+  element.selectedIndex = 6;
+  aPacerOutput = document.getElementById("aOutputBox").value = 20;
+  document.getElementById("pacingBoxAOutput").innerText=aPacerOutput;
+  vPacerOutput = document.getElementById("vOutputBox").value = 25;
+  document.getElementById("pacingBoxVOutput").innerText=vPacerOutput;
+  pacingModeBoxChange();
+}
+
 function paceButtonClick() {
   let paceButton = document.getElementById("paceButton");
   if (paceButton.innerText == "Start Pacing")
   {
     startPacing();
+    document.getElementById('topScreenHide').hidden=false;
+    document.getElementById('bottomScreenHide').hidden=false;
     paceButton.innerText = "Stop Pacing";
   }
   else
   {
     stopPacing();
+    document.getElementById('topScreenHide').hidden=true;
+    document.getElementById('bottomScreenHide').hidden=true;
+
     paceButton.innerText = "Start Pacing";
   }
 }
@@ -1940,7 +1956,7 @@ function windowSizeChange() {
   teleCtx.clearRect(px, 0, scanBarWidth, h); 
   paintHR();
   //ctx1.clearRect(0,0,canvas1.width,canvas1.height); //clears previous HR 
-  drawPacemaker();
+  //drawPacemaker();
 
 }
 

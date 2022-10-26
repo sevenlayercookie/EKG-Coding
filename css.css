@@ -62,9 +62,14 @@ img {
 
  .pacemakerGraphic {
   background-image: url(/assets/pacemakerOutline.svg);
-  background-repeat: no-repeat;
-  height: 50%;
-  aspect-ratio: 3/7;
+    background-repeat: no-repeat;
+    /* height: 90%; */
+    /* width: 90%; */
+    aspect-ratio: 3/7;
+    max-height: 90%;
+    margin-left: 1%;
+    margin-right: 2%;
+    margin-left: 1%;
  }
  .wholeBox  {
   border-radius: 20px;
