@@ -132,7 +132,7 @@
       <div class="wholeBox">
         <div class="topButtons">
           <img src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick(this)">
-          <img src="assets/powerButton-white-blackback.svg"  onclick="onPacerButtonClick(this); paceButtonClick()">
+          <img src="assets/powerButton-white-blackback.svg"  onclick="animateButton(this); paceButtonClick()">
         </div>
   
         <div class ="topHalf">
@@ -203,7 +203,7 @@
               <img src="assets/knob-full-gradient.svg"> 
             </div>
             <div class = "lockButton">
-              <img src="assets/lockButton-white-blackback.svg" onclick="onPacerButtonClick(this)"> 
+              <img src="assets/lockButton-white-blackback.svg" onclick="animateButton(this)"> 
             </div>
           </div>
         
@@ -213,17 +213,52 @@
         </div>
         <div class ="bottomHalf">
           <div class = "bottomScreen">
-            <div id = "bottomScreenHide">
-            
-          </div>
+            <div id = "bottomScreenHide" class = "bottomScreenHide">
+              <div class = "modeTitle">Mode Selection</div>
+              <div class = "modeContent" id="modeContent">
+                <div class = "modeRow" id ="rowDDD" data-rownum = 0 style="border-style:solid;">
+                  <div class = "modeRadio">O </div>
+                  <div class = "modeName">DDD</div>
+                </div>
+                <div class = "modeRow" id ="rowDDI" data-rownum = 1>
+                  <div class = "modeRadio">O </div>
+                  <div class = "modeName">DDI</div>
+                </div>
+                <div class = "modeRow" id ="rowDOO" data-rownum = 2>
+                  <div class = "modeRadio">O </div>
+                  <div class = "modeName">DOO</div>
+                </div>
+                <div class = "modeRow" id ="rowAAI" data-rownum = 3>
+                  <div class = "modeRadio">O </div>
+                  <div class = "modeName">AAI</div>
+                </div>
+                <div class = "modeRow" id ="rowAOO" data-rownum = 4>
+                  <div class = "modeRadio">O </div>
+                  <div class = "modeName">AOO</div>
+                </div>
+                <div class = "modeRow" id ="rowVVI" data-rownum = 5>
+                  <div class = "modeRadio">O </div>
+                  <div class = "modeName">VVI</div>
+                </div>
+                <div class = "modeRow" id ="rowVOO" data-rownum = 6>
+                  <div class = "modeRadio">O </div>
+                  <div class = "modeName">VOO</div>
+                </div>
+                <div class = "modeRow" id ="rowOOO" data-rownum = 7>
+                  <div class = "modeRadio">O </div>
+                  <div class = "modeName">OOO</div>
+                </div>
+              </div>
+              <div class = "backOption" data-rownum = 8>Back</div>
+            </div>
           </div>
           
           <div class = "bottomKnobs">
-            <img src="assets/enterButton-white-black.svg" onclick="onPacerButtonClick(this)">
-            <img src="assets/uparrow-white-black.svg" onclick="onPacerButtonClick(this)">
-            <img src="assets/downarrow-white-black.svg" onclick="onPacerButtonClick(this)">
+            <img src="assets/enterButton-white-black.svg" onclick="animateButton(this)">
+            <img src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()">
+            <img src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()">
             <img src="assets/knob-full-gradient.svg">
-            <img src="assets/pauseButton-white-black.svg" onclick="onPacerButtonClick(this)">
+            <img src="assets/pauseButton-white-black.svg" onclick="animateButton(this)">
           </div>
         
         </div>

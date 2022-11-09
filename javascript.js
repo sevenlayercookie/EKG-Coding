@@ -78,6 +78,9 @@ var rNEW=0
 var rOLD=0
 var AVExtension=0
 var PRInterval;
+// pacemaker button related variables
+var currentlySelectedRowNumber = 0;
+var maxRowNumber = 8;
 // a fib
 var random = (1-((Math.random()-0.5)/1))
 var aFibMS = 1000
@@ -1389,7 +1392,7 @@ function DOObuttonClick(DOObutton) {
   aPacerSensitivity = document.getElementById("aSensitivityBox").value = 10;
   vPacerSensitivity = document.getElementById("vSensitivityBox").value = 20;
   pacingModeBoxChange();
-  onPacerButtonClick(DOObutton)
+  animateButton(DOObutton)
 }
 
 function paceButtonClick() {
@@ -2133,8 +2136,58 @@ function widenWave(inputWave,factor)
   return widenedArray;
 }
 
-function onPacerButtonClick(clickedButton)
+function animateButton(clickedButton)
 {
   clickedButton.style.transform = 'scale(85%)';
   setTimeout(function(){clickedButton.style.transform = 'scale(100%)';},"150");
+}
+
+function downArrowClick()
+{
+  if (currentlySelectedRowNumber < maxRowNumber)
+  {
+  currentlySelectedRowNumber+=1;
+  }
+  var ancestor = document.getElementById('bottomScreenHide');
+  var descendents = ancestor.getElementsByTagName('*');
+    // gets all rows
+
+    var i, e, d;
+    for (i = 0; i < descendents.length; ++i) {
+    e = descendents[i];
+    if (e.dataset.rownum == currentlySelectedRowNumber)
+    {
+    e.style.border = 'solid';
+    }
+    else
+    {
+      e.style.border = 'none';
+    }
+  }
+
+}
+
+function upArrowClick()
+{
+  if (currentlySelectedRowNumber > 0)
+  {
+  currentlySelectedRowNumber-=1;
+  }
+  var ancestor = document.getElementById('bottomScreenHide');
+  var descendents = ancestor.getElementsByTagName('*');
+    // gets all rows
+
+    var i, e, d;
+    for (i = 0; i < descendents.length; ++i) {
+    e = descendents[i];
+    if (e.dataset.rownum == currentlySelectedRowNumber)
+    {
+    e.style.border = 'solid';
+    }
+    else
+    {
+      e.style.border = 'none';
+    }
+  }
+
 }
