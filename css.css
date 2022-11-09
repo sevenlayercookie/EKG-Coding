@@ -66,6 +66,7 @@ img {
     /* height: 90%; */
     /* width: 90%; */
     aspect-ratio: 3/7;
+    min-height: 0;
     max-height: 90%;
     margin-left: 1%;
     margin-right: 2%;
