@@ -72,7 +72,7 @@ img {
     margin-left: 1%;
  }
  .wholeBox  {
-  border-radius: 20px;
+  border-radius: 2vw;
   position:relative;
   /*aspect-ratio: 3/7;*/
   background-color:#34422f;
