@@ -109,7 +109,7 @@ img {
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;
-  font-size: 50%;
+  font-size: 1.5vw;
 }
 .spacer {
   width: 10%;
@@ -140,13 +140,13 @@ img {
  }
 
  .rightLabel {
-  font-size: 60%;
+  font-size: 1.5vw;
   white-space: nowrap;
 
  }
 
  .numMeter {
-  font-size: 200%;
+  font-size: 5vw;
 
  }
 
