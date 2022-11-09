@@ -61,8 +61,6 @@ img {
  /* Pacer Box */
 
  .pacemakerGraphic {
-  background-image: url(/assets/pacemakerOutline.svg);
-  background-repeat: no-repeat;
   height: 68vmin;
   width: 29vmin;
   aspect-ratio: 3/7;
@@ -140,7 +138,7 @@ img {
  }
 
  .rightLabel {
-  font-size: clamp(0px, 1.5vw, 2.0vh);
+  font-size: clamp(0px, 1.5vw, 1.7vh);
   white-space: nowrap;
 
  }
@@ -156,7 +154,7 @@ img {
   justify-content: space-evenly;
   font-family: 'Courier New', Courier, monospace;
   font-weight: bold;
-  font-size: clamp(0px, 3vw, 4vh);
+  font-size: clamp(0px, 3vw, 3vh);
  }
  
  .topRightSide {
