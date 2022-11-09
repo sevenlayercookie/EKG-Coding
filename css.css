@@ -109,7 +109,7 @@ img {
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;
-  font-size: 1.5vw;
+  font-size: clamp(0px, 1.5vw, 2.0vh);
 }
 .spacer {
   width: 10%;
@@ -140,13 +140,13 @@ img {
  }
 
  .rightLabel {
-  font-size: 1.5vw;
+  font-size: clamp(0px, 1.5vw, 2.0vh);
   white-space: nowrap;
 
  }
 
  .numMeter {
-  font-size: 5vw;
+  font-size: clamp(0px, 5vw, 6vh);
 
  }
 
@@ -156,7 +156,7 @@ img {
   justify-content: space-evenly;
   font-family: 'Courier New', Courier, monospace;
   font-weight: bold;
-  font-size: 3vw;
+  font-size: clamp(0px, 3vw, 4vh);
  }
  
  .topRightSide {

@@ -1378,7 +1378,7 @@ function paceIt(target) // target : atrium, or vent
 pacedBeatFlag=false;
 }
 
-function DOObuttonClick() {
+function DOObuttonClick(DOObutton) {
   let element = document.getElementById("pacingMode")
   document.getElementById("pacingBoxMode").innerText= "DOO"
   element.selectedIndex = 6;
@@ -1389,6 +1389,7 @@ function DOObuttonClick() {
   aPacerSensitivity = document.getElementById("aSensitivityBox").value = 10;
   vPacerSensitivity = document.getElementById("vSensitivityBox").value = 20;
   pacingModeBoxChange();
+  onPacerButtonClick(DOObutton)
 }
 
 function paceButtonClick() {
@@ -2130,4 +2131,10 @@ function widenWave(inputWave,factor)
   }
 
   return widenedArray;
+}
+
+function onPacerButtonClick(clickedButton)
+{
+  clickedButton.style.transform = 'scale(85%)';
+  setTimeout(function(){clickedButton.style.transform = 'scale(100%)';},"150");
 }

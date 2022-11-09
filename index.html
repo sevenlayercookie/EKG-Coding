@@ -131,8 +131,8 @@
     <div class="pacemakerGraphic">
       <div class="wholeBox">
         <div class="topButtons">
-          <img src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick()">
-          <img src="assets/powerButton-white-blackback.svg"  onclick="paceButtonClick()">
+          <img src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick(this)">
+          <img src="assets/powerButton-white-blackback.svg"  onclick="onPacerButtonClick(this); paceButtonClick()">
         </div>
   
         <div class ="topHalf">
@@ -203,7 +203,7 @@
               <img src="assets/knob-full-gradient.svg"> 
             </div>
             <div class = "lockButton">
-              <img src="assets/lockButton-white-blackback.svg"> 
+              <img src="assets/lockButton-white-blackback.svg" onclick="onPacerButtonClick(this)"> 
             </div>
           </div>
         
@@ -219,11 +219,11 @@
           </div>
           
           <div class = "bottomKnobs">
-            <img src="assets/enterButton-white-black.svg">
-            <img src="assets/uparrow-white-black.svg">
-            <img src="assets/downarrow-white-black.svg">
+            <img src="assets/enterButton-white-black.svg" onclick="onPacerButtonClick(this)">
+            <img src="assets/uparrow-white-black.svg" onclick="onPacerButtonClick(this)">
+            <img src="assets/downarrow-white-black.svg" onclick="onPacerButtonClick(this)">
             <img src="assets/knob-full-gradient.svg">
-            <img src="assets/pauseButton-white-black.svg">
+            <img src="assets/pauseButton-white-black.svg" onclick="onPacerButtonClick(this)">
           </div>
         
         </div>
