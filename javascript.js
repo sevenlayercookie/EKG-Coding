@@ -348,8 +348,8 @@ function senseP(inhibitSenseLight) // if inhibitSenseLight = 'inhibitSenseLight'
 
   if (pacerOn && !inhibitSenseLight) // if sense light should turn on
   {
-  document.getElementById("aSenseLight").src = "/assets/senseLightOn.svg" // turn sense light on
-    setTimeout(function(){document.getElementById("aSenseLight").src = "/assets/senseLightOff.svg"},"250") // turn light off after time period
+  document.getElementById("aSenseLight").src = "assets/senseLightOn.svg" // turn sense light on
+    setTimeout(function(){document.getElementById("aSenseLight").src = "assets/senseLightOff.svg"},"250") // turn light off after time period
   }
  }
 
@@ -367,8 +367,8 @@ function senseV(inhibitSenseLight)
   sensedVentTimes.push(dataClock); // add to record of all sensed V activity
   if (pacerOn && !inhibitSenseLight)
   {
-  document.getElementById("vSenseLight").src = "/assets/senseLightOn.svg" // turn sense light on
-    setTimeout(function(){document.getElementById("vSenseLight").src = "/assets/senseLightOff.svg"},"250") // turn light off after time period
+  document.getElementById("vSenseLight").src = "assets/senseLightOn.svg" // turn sense light on
+    setTimeout(function(){document.getElementById("vSenseLight").src = "assets/senseLightOff.svg"},"250") // turn light off after time period
   }
 }
 
@@ -1340,13 +1340,13 @@ function paceIt(target) // target : atrium, or vent
   // VISUAL PACING INDICATOR PACER BOX
   if (target==atrium)
   {
-    document.getElementById("aPaceLight").src = "/assets/paceLightOn.svg" // turn pace light on
-    setTimeout(function(){document.getElementById("aPaceLight").src = "/assets/paceLightOff.svg"},"250") // turn light off after time period
+    document.getElementById("aPaceLight").src = "assets/paceLightOn.svg" // turn pace light on
+    setTimeout(function(){document.getElementById("aPaceLight").src = "assets/paceLightOff.svg"},"250") // turn light off after time period
   }
   else if (target==vent)
   { 
-    document.getElementById("vPaceLight").src = "/assets/paceLightOn.svg" // turn pace light on
-    setTimeout(function(){document.getElementById("vPaceLight").src = "/assets/paceLightOff.svg"},"250") // turn light off after time period
+    document.getElementById("vPaceLight").src = "assets/paceLightOn.svg" // turn pace light on
+    setTimeout(function(){document.getElementById("vPaceLight").src = "assets/paceLightOff.svg"},"250") // turn light off after time period
   }
   pacedBeatFlag=true;
   if (pacerCapturing(target))
