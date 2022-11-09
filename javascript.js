@@ -1386,6 +1386,8 @@ function DOObuttonClick() {
   document.getElementById("pacingBoxAOutput").innerText=aPacerOutput;
   vPacerOutput = document.getElementById("vOutputBox").value = 25;
   document.getElementById("pacingBoxVOutput").innerText=vPacerOutput;
+  aPacerSensitivity = document.getElementById("aSensitivityBox").value = 25;
+  vPacerSensitivity = document.getElementById("vSensitivityBox").value = 25;
   pacingModeBoxChange();
 }
 
