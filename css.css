@@ -222,10 +222,12 @@ img {
 
 .modeRow {
   display: flex;
+  border: solid transparent;
 }
 
 .modeRadio {
-  width: 20%;
+  width: 10%;
+  padding-right: 10%;
 }
 
 .bottomScreenHide {
@@ -233,4 +235,8 @@ img {
   flex-direction: column;
   height: 100%;
   justify-content: space-between;
+}
+
+.backOption {
+  border: solid transparent;
 }

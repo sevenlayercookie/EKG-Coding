@@ -1384,7 +1384,7 @@ pacedBeatFlag=false;
 function DOObuttonClick(DOObutton) {
   let element = document.getElementById("pacingMode")
   document.getElementById("pacingBoxMode").innerText= "DOO"
-  element.selectedIndex = 6;
+  element.selectedIndex = 2;
   aPacerOutput = document.getElementById("aOutputBox").value = 20;
   document.getElementById("pacingBoxAOutput").innerText=aPacerOutput;
   vPacerOutput = document.getElementById("vOutputBox").value = 25;
@@ -2157,11 +2157,11 @@ function downArrowClick()
     e = descendents[i];
     if (e.dataset.rownum == currentlySelectedRowNumber)
     {
-    e.style.border = 'solid';
+      e.style.border = 'solid';
     }
-    else
+    else if (e.dataset.rownum != undefined)
     {
-      e.style.border = 'none';
+      e.style.border = 'solid transparent';
     }
   }
 
@@ -2184,10 +2184,33 @@ function upArrowClick()
     {
     e.style.border = 'solid';
     }
-    else
+    else if (e.dataset.rownum != undefined)
     {
-      e.style.border = 'none';
+      e.style.border = 'solid transparent';
     }
   }
 
+}
+
+function enterClick()
+{
+  var ancestor = document.getElementById('bottomScreenHide');
+  var descendents = ancestor.getElementsByTagName('*');
+    // gets all rows
+
+    var i, e, d;
+    for (i = 0; i < descendents.length; ++i) {
+    e = descendents[i];
+    if (e.dataset.rownum == currentlySelectedRowNumber)
+    {
+    e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
+    document.getElementById("pacingBoxMode").innerText = e.lastElementChild.innerText
+    let element = document.getElementById("pacingMode")
+    element.selectedIndex = currentlySelectedRowNumber
+  }
+    else if (e.dataset.rownum != undefined && e.id != "backOption")
+    {
+      e.firstElementChild.firstElementChild.src = "assets/radio-circle.svg"
+    }
+  }
 }
