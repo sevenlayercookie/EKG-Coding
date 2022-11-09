@@ -45,10 +45,10 @@
         
         <br>
         <label for="aOutputBox">atrial output:</label>
-        <input id="aOutputBox" size ="1" value=10 type="number" min="0" max ="1000" onChange="onOutputChange('atrium')">mA <label for="aSensitivityBox">sensitivity:</label><input id="aSensitivityBox" value=4 size ="2" onChange="onSensitivityChange()">mV
+        <input id="aOutputBox" size ="1" value=10 type="number" min="0" max ="1000" onChange="onOutputChange('atrium')">mA <label for="aSensitivityBox">sensitivity:</label><input id="aSensitivityBox" value=4 size ="2" min="0" max ="10" onChange="onSensitivityChange()">mV
         <br>
         <label for="vOutputBox">ventricle output:</label>
-        <input id="vOutputBox" size ="1" value=10 type="number" min="0" max ="1000" onChange="onOutputChange('ventricle')">mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" value=4 size ="2" onChange="onSensitivityChange()">mV
+        <input id="vOutputBox" size ="1" value=10 type="number" min="0" max ="1000" onChange="onOutputChange('ventricle')">mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" value=4 size ="2" min="0" max ="20" onChange="onSensitivityChange()">mV
         <div id="URLdiv">
           <label for="URLbox">upper rate limit (DDD):</label>
           <input id="URLbox" value=150 size="2" type="number" min="0" max ="1000">
