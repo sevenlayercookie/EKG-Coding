@@ -81,6 +81,12 @@ var PRInterval;
 // pacemaker button related variables
 var currentlySelectedRowNumber = 0;
 var maxRowNumber = 8;
+var divNode = document.createElement("div")
+  divNode.className = "arrow"
+  divNode.id = "arrow"
+  divNode.style = "height: 100%; display: flex;"
+  var imgNode = document.createElement("img")
+  imgNode.src = "assets/arrowEnter.svg"
 // a fib
 var random = (1-((Math.random()-0.5)/1))
 var aFibMS = 1000
@@ -132,6 +138,7 @@ var aCaptureThreshold = 2; // default A capture threshold (mA)
 
 // ------------------------- onload () ---------------------------------------
 onload();
+drawMainMenu();
 function onload() {
   // --------------------- LOCAL DEFINITIONS ---------------------------------
   dataFeed.length = 1000;
@@ -1994,10 +2001,18 @@ function onOutputChange(chamber) {
     document.getElementById("pacingBoxMode").innerText=pacerMode;
 }
 
-function onSensitivityChange() {
- 
-    aPacerSensitivity = document.getElementById("aSensitivityBox").value;
-    vPacerSensitivity = document.getElementById("vSensitivityBox").value;
+function onParameterChange() {
+  aPacerSensitivity = document.getElementById("aSensitivityBox").value;
+  vPacerSensitivity = document.getElementById("vSensitivityBox").value;
+  AVInterval = document.getElementById("AVInterval").value;
+
+  // update pacer display
+  document.getElementById("aSenseMeter").value = -10.4167*aPacerSensitivity + 104.17
+  document.getElementById("vSenseMeter").value = -5.2083*vPacerSensitivity + 104.17
+  document.getElementById("boxAsenseValue").innerText = aPacerSensitivity + " mV"
+  document.getElementById("boxVsenseValue").innerText = vPacerSensitivity + " mV"
+  document.getElementById("boxAVInterval").innerText = AVInterval + " ms"
+  document.getElementById("AVMeter").value = AVInterval
 }
 
 function clickCHB() {
@@ -2146,25 +2161,14 @@ function downArrowClick()
 {
   if (currentlySelectedRowNumber < maxRowNumber)
   {
-  currentlySelectedRowNumber+=1;
+    currentlySelectedRowNumber+=1;
   }
-  var ancestor = document.getElementById('bottomScreenHide');
-  var descendents = ancestor.getElementsByTagName('*');
-    // gets all rows
-
-    var i, e, d;
-    for (i = 0; i < descendents.length; ++i) {
-    e = descendents[i];
-    if (e.dataset.rownum == currentlySelectedRowNumber)
-    {
-      e.style.border = 'solid';
-    }
-    else if (e.dataset.rownum != undefined)
-    {
-      e.style.border = 'solid transparent';
-    }
+  else
+  {
+    currentlySelectedRowNumber=0;
   }
-
+  
+  drawBordersAndArrow()
 }
 
 function upArrowClick()
@@ -2173,6 +2177,16 @@ function upArrowClick()
   {
   currentlySelectedRowNumber-=1;
   }
+  else
+  {
+    currentlySelectedRowNumber=maxRowNumber
+  }
+  drawBordersAndArrow()
+
+}
+
+function drawBordersAndArrow()
+{
   var ancestor = document.getElementById('bottomScreenHide');
   var descendents = ancestor.getElementsByTagName('*');
     // gets all rows
@@ -2182,14 +2196,25 @@ function upArrowClick()
     e = descendents[i];
     if (e.dataset.rownum == currentlySelectedRowNumber)
     {
-    e.style.border = 'solid';
+      if (e.id=="radio" || e.className == "bottomRows")
+      {
+
+        divNode.appendChild(imgNode)
+        e.appendChild(divNode)
+      }
+      else
+      {
+        divNode.remove();
+      }
+      e.classList.add('rowSelected')
+      
     }
     else if (e.dataset.rownum != undefined)
     {
-      e.style.border = 'solid transparent';
+      e.classList.remove('rowSelected')
+
     }
   }
-
 }
 
 function enterClick()
@@ -2199,18 +2224,206 @@ function enterClick()
     // gets all rows
 
     var i, e, d;
-    for (i = 0; i < descendents.length; ++i) {
-    e = descendents[i];
-    if (e.dataset.rownum == currentlySelectedRowNumber)
+    for (i = 0; i < descendents.length; ++i) 
     {
-    e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
-    document.getElementById("pacingBoxMode").innerText = e.lastElementChild.innerText
-    let element = document.getElementById("pacingMode")
-    element.selectedIndex = currentlySelectedRowNumber
-  }
-    else if (e.dataset.rownum != undefined && e.id != "backOption")
-    {
-      e.firstElementChild.firstElementChild.src = "assets/radio-circle.svg"
+      e = descendents[i];
+      if (e.dataset.rownum == currentlySelectedRowNumber)
+      {
+        if (e.id == "radio")
+        {
+        e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
+        document.getElementById("pacingBoxMode").innerText = e.firstElementChild.nextElementSibling.innerText
+        let element = document.getElementById("pacingMode")
+        element.selectedIndex = currentlySelectedRowNumber
+        
+        }
+        else if (e.id == "backOption")
+        {
+        backClick()
+        break
+        }
+        else if (e.id == "modeSelection")
+        {
+        modeSelectionClick()
+        break
+        }
+        else if (e.id == "aTracking")
+        {
+          if (e.lastElementChild.lastElementChild.innerHTML == "On")
+          {
+            e.lastElementChild.lastElementChild.innerHTML = 'Off'
+            let element = document.getElementById("pacingMode")
+            element.selectedIndex = 1;
+            document.getElementById("pacingBoxMode").innerText = 'DDI'
+          }
+          else if (e.lastElementChild.lastElementChild.innerHTML == "Off")
+          {
+            e.lastElementChild.lastElementChild.innerHTML = 'On'
+            let element = document.getElementById("pacingMode")
+            element.selectedIndex = 0;
+            document.getElementById("pacingBoxMode").innerText = 'DDD'
+          }
+        break
+        }
+        else if (e.id == "settings")
+        {
+          if (e.lastElementChild.lastElementChild.innerHTML == "Automatic")
+          {
+            e.lastElementChild.lastElementChild.innerHTML = 'Manual'
+          }
+          else if (e.lastElementChild.lastElementChild.innerHTML == "Manual")
+          {
+            e.lastElementChild.lastElementChild.innerHTML = 'Automatic'
+          }
+        break
+        }
+      }
+      else if (e.dataset.rownum != undefined && e.id == "radio")
+      {
+        e.firstElementChild.firstElementChild.src = "assets/radio-circle.svg"
+        
+      }
+  
     }
-  }
+}
+
+function backClick()
+{
+  // write new HTML
+  drawMainMenu()  
+}
+
+function drawMainMenu()
+{
+  currentlySelectedRowNumber = 0;
+  maxRowNumber = 7;
+  
+  document.getElementById("bottomScreenHide").innerHTML = `
+  <div class = "mainScreen">
+    <div class = "modeContent" id="modeContent">
+    
+    <div class = "barRow" data-rownum = 0>
+      <div class = "labelRow">
+        <div class = "rowName">A Sensitivity</div>
+        <div class = "value" id = "boxAsenseValue">0.5 mV</div>
+      </div>
+      <div class = "bar"><meter class = "meterBar" id = "aSenseMeter" value="30" min="0" max="100">
+      </meter></div>
+    </div>
+    <div class = "barRow" data-rownum = 1>
+      <div class = "labelRow">
+        <div class = "rowName">V Sensitivity</div>
+        <div class = "value" id = "boxVsenseValue">2.0 mV</div>
+      </div>
+      <div class = "bar"><meter class = "meterBar" id = "vSenseMeter" value="20" min="0" max="100">
+      </meter></div>
+    </div>
+    <div class = "barRow" data-rownum = 2>
+      <div class = "labelRow">
+        <div class = "rowName">A-V Interval</div>
+        <div class = "value" id = "boxAVInterval" >170 ms</div>
+      </div>
+      <div class = "bar"><meter class = "meterBar" id = "AVMeter" value="170" min="20" max="300">
+      </meter></div>
+    </div>
+    <div class = "barRow" data-rownum = 3>
+      <div class = "labelRow">
+        <div class = "rowName">PVARP</div>
+        <div class = "value" id = "boxPVARPValue" >300 ms</div>
+      </div>
+      <div class = "bar"><meter class = "meterBar" id = "PVARPMeter" value="300" min ="150" max="500">
+      </meter></div>
+    </div>
+    <div class = "barRow" id = "aTracking" data-rownum = 4>
+      <div class = "labelRow">
+        <div class = "rowName">A. Tracking</div>
+        <div class = "value">On</div>
+      </div>
+    </div>
+    <div class = "barRow" id = "settings" data-rownum = 5>
+      <div class = "labelRow">
+        <div class = "rowName">Settings</div>
+        <div class = "value">Automatic</div>
+      </div>
+    </div>
+    
+    </div>
+    <div class = "bottomRows" id = "RAP" data-rownum = 6>Rapid Atrial Pacing</div>
+    <div class = "bottomRows"  id = "modeSelection"  data-rownum = 7>Mode Selection</div>
+  </div>
+  `
+
+ drawBordersAndArrow()
+}
+
+function modeSelectionClick()
+{
+  currentlySelectedRowNumber = 0;
+  maxRowNumber = 8;
+  // write new HTML
+  document.getElementById("bottomScreenHide").innerHTML = `
+  <div class = "modeScreen">
+    <div class = "modeTitle">Mode Selection</div>
+    <div class = "modeContent" id="modeContent">
+      <div class = "row" id ="radio" data-rownum = 0>
+        <div class = "modeRadio"><img src="assets/radio-circle-marked.svg"></div>
+        <div class = "modeName">DDD</div>
+      </div>
+      <div class = "row" id ="radio" data-rownum = 1>
+        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+        <div class = "modeName">DDI</div>
+      </div>
+      <div class = "row" id ="radio" data-rownum = 2>
+        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+        <div class = "modeName">DOO</div>
+      </div>
+      <div class = "row" id ="radio" data-rownum = 3>
+        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+        <div class = "modeName">AAI</div>
+      </div>
+      <div class = "row" id ="radio" data-rownum = 4>
+        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+        <div class = "modeName">AOO</div>
+      </div>
+      <div class = "row" id ="radio" data-rownum = 5>
+        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+        <div class = "modeName">VVI</div>
+      </div>
+      <div class = "row" id ="radio" data-rownum = 6>
+        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+        <div class = "modeName">VOO</div>
+      </div>
+      <div class = "row" id ="radio" data-rownum = 7>
+        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+        <div class = "modeName">OOO</div>
+      </div>
+    </div>
+    <div class = "bottomRows" id = "backOption" data-rownum = 8>Back</div>
+  </div>
+  `
+  drawBordersAndArrow()
+
+  // select current mode
+
+  var ancestor = document.getElementById('modeContent');
+  var descendents = ancestor.getElementsByTagName('*');
+    // gets all rows
+    let element = document.getElementById("pacingMode")
+    
+    var i, e, d;
+    for (i = 0; i < descendents.length; ++i) 
+    {
+      e = descendents[i];
+      if (e.dataset.rownum == element.selectedIndex)
+      {
+        e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
+        break
+      }
+      else if (e.id == "radio")
+      {
+        e.firstElementChild.firstElementChild.src = "assets/radio-circle.svg"
+        
+      }
+  
+    }
 }
