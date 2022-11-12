@@ -32,6 +32,24 @@ PHYSIOLOGY POINTS
 */
 
 // -------------------------- GLOBAL DEFINITIONS -----------------------------
+// JogDial intialization
+var el = document.getElementById('rateDial');
+var options = {debug: false, wheelSize: '100%', knobSize: '50%', touchMode: 'wheel', degreeStartAt: 80, };
+var currentRotation
+var dial = JogDial(el, options)
+.on('mousemove', function(evt){
+  var rotationToHR = Math.round(80+evt.target.rotation/30)
+  if (rotationToHR >= 0)
+  {
+  var temp = document.getElementById('pacingRate').value = document.getElementById('pacingBoxRate').innerText = Math.round(80+evt.target.rotation/30)
+  }
+  else {
+    document.getElementById('pacingRate').value = document.getElementById('pacingBoxRate').innerText = 0;
+    dial.angle(20); 
+  }
+  currentRotation=evt.target.rotation
+});
+//
 var pacedBeatFlag = false;
 var ventRefractoryTimer = 9999
 var atrialRefractoryTimer = 9999
