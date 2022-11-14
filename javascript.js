@@ -2499,9 +2499,14 @@ function knobClick (clickEvent)
         clickEvent.target.revolutions -= 1
       }
     }
+      if (clickEvent.target.revolutions*360 + deg <= maxDegree)
+      {
       clickEvent.target.cumulativeDegrees = clickEvent.target.revolutions*360 + deg
+      }
+      else {clickEvent.target.cumulativeDegrees = maxDegree+1}
       clickEvent.target.lastDeg = deg
       console.log(clickEvent.target.cumulativeDegrees)
+      console.log('revolutions: ' + clickEvent.target.revolutions)
       rotationToHR = Math.round(dialToRateB+clickEvent.target.cumulativeDegrees*dialToRateFactor)
       if (rotationToHR >= 0)
       {
