@@ -41,6 +41,7 @@ var rotationToHR = dialToRateB = 80 // default heart rate on dial
 var currentRotation = 0
 var minDegree = (1/dialToRateFactor)*(minPaceRate) - (dialToRateB/dialToRateFactor)
 var maxDegree = (1/dialToRateFactor)*(maxPaceRate) - (dialToRateB/dialToRateFactor)
+/*
 var el = document.getElementById('rateDial');
 var options = {debug: false, wheelSize: '100%', knobSize: '50%', touchMode: 'wheel', degreeStartAt: 0, minDegree: minDegree, maxDegree: maxDegree};
 
@@ -56,6 +57,7 @@ var dial = JogDial(el, options)
   maxDegree = dial.opt.maxDegree = (1/dialToRateFactor)*(maxPaceRate) - (dialToRateB/dialToRateFactor)
   onParameterChange()
 });
+*/
 //
 
 //
@@ -2444,29 +2446,85 @@ function modeSelectionClick()
 }
 
 // Harrison Knob
+function knobClick (clickEvent)
+{
+  clickEvent.target.knobRect = clickEvent.target.getBoundingClientRect()
+  clickEvent.target.centerPos = [clickEvent.target.knobRect.left + (clickEvent.target.knobRect.width / 2), clickEvent.target.knobRect.top + (clickEvent.target.knobRect.height / 2)]
+  clickEvent.target.lastDeg = 0
 
-function knobClick (event){
-var knobRect = event.target.getBoundingClientRect()
+  if (isNaN(clickEvent.target.revolutions)) {clickEvent.target.revolutions=0}
+  function mousemove(dragEvent){
+    clickEvent.target.mouseRelativetoKnobCenter = [dragEvent.pageX - clickEvent.target.centerPos[0], clickEvent.target.centerPos[1]- dragEvent.pageY]
 
-var center = [knobRect.left + (knobRect.width / 2), knobRect.top + (knobRect.height / 2)]
+    //console.log(clickEvent.target.mouseRelativetoKnobCenter[0] + ', ' + clickEvent.target.mouseRelativetoKnobCenter[1])
+    var deg = Math.round(Math.atan2(clickEvent.target.mouseRelativetoKnobCenter[0], clickEvent.target.mouseRelativetoKnobCenter[1]) * (180/Math.PI)); // x,y -> rad -> degree
+    if (deg<0){deg+=360}
+    console.log(deg)
 
-function mousemove(event){
-  console.log("pageX: ",event.pageX, 
-  "pageY: ", event.pageY, 
-  "clientX: ", event.clientX, 
-  "clientY:", event.clientY)
+    function turn(image, deg) 
+    {
+      image.setAttribute('style', 'transform: rotate(' + deg + 'deg)');
+    }
+    turn(clickEvent.target, deg)
+
+    if (clickEvent.target.cumulativeDegrees <= maxDegree && clickEvent.target.cumulativeDegrees >= minDegree) // if within bounds
+    {
+
+      if (clickEvent.target.lastDeg-deg > 50)
+      {
+        clickEvent.target.revolutions += 1
+      }
+      if (clickEvent.target.lastDeg-deg < -50)
+      {
+        clickEvent.target.revolutions -= 1
+      }
+
+      //clickEvent.target.cumulativeDegrees = clickEvent.target.revolutions*360 + deg
+      //clickEvent.target.lastDeg = deg
+      //console.log(clickEvent.target.cumulativeDegrees)
+    }
+    else if (clickEvent.target.cumulativeDegrees < minDegree) // if below bounds
+    {
+      //clickEvent.target.cumulativeDegrees = minDegree
+      if (clickEvent.target.lastDeg-deg > 50)
+      {
+        clickEvent.target.revolutions += 1
+      }
+    }
+    else if (clickEvent.target.cumulativeDegrees > maxDegree) // if above bounds
+    {
+      //clickEvent.target.cumulativeDegrees = maxDegree
+      if (clickEvent.target.lastDeg-deg < -50)
+      {
+        clickEvent.target.revolutions -= 1
+      }
+    }
+      clickEvent.target.cumulativeDegrees = clickEvent.target.revolutions*360 + deg
+      clickEvent.target.lastDeg = deg
+      console.log(clickEvent.target.cumulativeDegrees)
+      rotationToHR = Math.round(dialToRateB+clickEvent.target.cumulativeDegrees*dialToRateFactor)
+      if (rotationToHR >= 0)
+      {
+      var temp = document.getElementById('pacingRate').value = document.getElementById('pacingBoxRate').innerText = rotationToHR
+      }
+
+  }
+
+  function knobOff(event){
+    window.removeEventListener('mousemove',mousemove)
+  }
+
+  window.addEventListener('mousemove', mousemove);
+  window.addEventListener('mouseup', knobOff);
 }
 
-function knobOff(event){
-  window.removeEventListener('mousemove',mousemove)
-}
+// initialze knob parameters
+document.getElementById('rateDialImg').maxDegree = maxDegree
+document.getElementById('rateDialImg').maxDegree = minDegree
+document.getElementById('rateDialImg').cumulativeDegrees = 0;
 
-window.addEventListener('mousemove', mousemove);
-
-window.addEventListener('mouseup', knobOff);
-}
-
-
-
+document.getElementById('rateDial').addEventListener('mousedown', knobClick);
 document.getElementById('vOutputDialDiv').addEventListener('mousedown', knobClick);
+document.getElementById('aOutputDialDiv').addEventListener('mousedown', knobClick);
+document.getElementById('bottomKnob').addEventListener('mousedown', knobClick);
 

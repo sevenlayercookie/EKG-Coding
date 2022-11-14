@@ -1,6 +1,6 @@
 <head>
   <script type="text/javascript" src="data.js"></script>
-  <script type="text/javascript" src="JogDial\jogDial.js"></script>
+  <!-- <script type="text/javascript" src="JogDial\jogDial.js"></script> -->
   <link rel="stylesheet" href="css.css" />
   <meta name="viewport" content="width=device-width" />
 </head>
@@ -200,13 +200,14 @@
 
             </div>
             <div class = "topKnobs">
-              <div id="rateDial"></div>
-              <!-- <img src="assets/knob-full-gradient.svg"> -->
+              <div class = 'knobClass' id="rateDial">
+                <img draggable="false" id="rateDialImg" src="assets/knob-full-gradient.svg">
+              </div>
               <div class = 'knobClass' id="vOutputDialDiv">
-                <img draggable="false" src="assets/knob-full-gradient.svg"> 
+                <img draggable="false" id="vOutputDialImg" src="assets/knob-full-gradient.svg"> 
               </div>
               <div class = 'knobClass' id="aOutputDialDiv">
-                <img draggable="false" src="assets/knob-full-gradient.svg"> 
+                <img draggable="false" id="aOutputDialImg"src="assets/knob-full-gradient.svg"> 
               </div>
             </div>
             <div class = "lockButton">
@@ -229,7 +230,9 @@
             <img src="assets/enterButton-white-black.svg" onclick="animateButton(this); enterClick()">
             <img src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()">
             <img src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()">
-            <img src="assets/knob-full-gradient.svg">
+            <div class="knobClass" id = "bottomKnob" draggable="false">
+              <img draggable="false" src="assets/knob-full-gradient.svg">
+            </div>
             <img src="assets/pauseButton-white-black.svg" onclick="animateButton(this)">
           </div>
         

@@ -287,20 +287,6 @@ img {
   width: 100%;
 }
 
-#rateDial {
-  width: 100%;
-  padding-bottom: 100%;
-  background: url('assets/base_one_bg.png');
-  background-repeat: no-repeat;
-  background-size: contain;
-}
-
-#rateDial_knob {
-  background: url('assets/base_one_knob.png');
-  background-repeat: no-repeat;
-  background-size: contain;
-}
-
 .topScreenHide {
   background-color:#85d385;
   height: 100%;
@@ -315,4 +301,5 @@ img {
 
 .knobClass {
   cursor:grab;
+  padding:3%;
 }
