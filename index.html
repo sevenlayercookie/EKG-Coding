@@ -139,7 +139,7 @@
   
         <div class ="topHalf">
           <div class = "topScreen">
-            <div id = "topScreenHide">
+            <div class = "topScreenHide" id = "topScreenHide">
             <div class = "activityLights">
               <img id="aPaceLight" src="assets/paceLightOff.svg">
               A
@@ -202,8 +202,12 @@
             <div class = "topKnobs">
               <div id="rateDial"></div>
               <!-- <img src="assets/knob-full-gradient.svg"> -->
-              <img src="assets/knob-full-gradient.svg"> 
-              <img src="assets/knob-full-gradient.svg"> 
+              <div class = 'knobClass' id="vOutputDialDiv">
+                <img draggable="false" src="assets/knob-full-gradient.svg"> 
+              </div>
+              <div class = 'knobClass' id="aOutputDialDiv">
+                <img draggable="false" src="assets/knob-full-gradient.svg"> 
+              </div>
             </div>
             <div class = "lockButton">
               <img src="assets/lockButton-white-blackback.svg" onclick="animateButton(this)"> 

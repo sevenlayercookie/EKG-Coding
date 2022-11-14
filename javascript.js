@@ -33,22 +33,31 @@ PHYSIOLOGY POINTS
 
 // -------------------------- GLOBAL DEFINITIONS -----------------------------
 // JogDial intialization
+var minPaceRate = 0
+var maxPaceRate = 200
+var dialToRateFactor = 1/36 // how fast does the dial change the heart rate (e.g 1/36 = 36 degrees to 1 bpm, one rotation = 10 bpm)
+var dialToRateB
+var rotationToHR = dialToRateB = 80 // default heart rate on dial
+var currentRotation = 0
+var minDegree = (1/dialToRateFactor)*(minPaceRate) - (dialToRateB/dialToRateFactor)
+var maxDegree = (1/dialToRateFactor)*(maxPaceRate) - (dialToRateB/dialToRateFactor)
 var el = document.getElementById('rateDial');
-var options = {debug: false, wheelSize: '100%', knobSize: '50%', touchMode: 'wheel', degreeStartAt: 80, };
-var currentRotation
+var options = {debug: false, wheelSize: '100%', knobSize: '50%', touchMode: 'wheel', degreeStartAt: 0, minDegree: minDegree, maxDegree: maxDegree};
+
 var dial = JogDial(el, options)
 .on('mousemove', function(evt){
-  var rotationToHR = Math.round(80+evt.target.rotation/30)
+  rotationToHR = Math.round(dialToRateB+evt.target.rotation*dialToRateFactor)
   if (rotationToHR >= 0)
   {
-  var temp = document.getElementById('pacingRate').value = document.getElementById('pacingBoxRate').innerText = Math.round(80+evt.target.rotation/30)
-  }
-  else {
-    document.getElementById('pacingRate').value = document.getElementById('pacingBoxRate').innerText = 0;
-    dial.angle(20); 
+  var temp = document.getElementById('pacingRate').value = document.getElementById('pacingBoxRate').innerText = rotationToHR
   }
   currentRotation=evt.target.rotation
+  minDegree = dial.opt.minDegree = (1/dialToRateFactor)*(minPaceRate) - (dialToRateB/dialToRateFactor)
+  maxDegree = dial.opt.maxDegree = (1/dialToRateFactor)*(maxPaceRate) - (dialToRateB/dialToRateFactor)
+  onParameterChange()
 });
+//
+
 //
 var pacedBeatFlag = false;
 var ventRefractoryTimer = 9999
@@ -561,21 +570,7 @@ var drawQRS=false;
 var PRtimer=-1;
 function masterRhythmFunction()
 {
-  /*
-  if (document.getElementById("CHBbox").checked==true)
-    {
-      //currentRhythm='CHB'
-      CHB=true;
-      document.getElementById("CHBstuff").hidden = false;
-    }
-  if (document.getElementById("CHBbox").checked==false)
-    {
-      //currentRhythm='NSR'
-    CHB=false;
-    document.getElementById("CHBstuff").hidden = true;
-    }
-    */
-
+ 
     if(dataClock%100 == 0)
     {
       PRInterval = parseInt(document.getElementById("PRbox").value)  // native PR interval
@@ -1464,6 +1459,7 @@ function pacingModeBoxChange()
   {
     document.getElementById("URLdiv").hidden=true
   }
+  onParameterChange()
 }
 
 var AVInterval = 120; // pacemaker interval between atrial and v pace
@@ -2031,6 +2027,7 @@ function onParameterChange() {
   document.getElementById("boxVsenseValue").innerText = vPacerSensitivity + " mV"
   document.getElementById("boxAVInterval").innerText = AVInterval + " ms"
   document.getElementById("AVMeter").value = AVInterval
+  pacingRate = document.getElementById('pacingBoxRate').innerText
 }
 
 function clickCHB() {
@@ -2445,3 +2442,31 @@ function modeSelectionClick()
   
     }
 }
+
+// Harrison Knob
+
+function knobClick (event){
+var knobRect = event.target.getBoundingClientRect()
+
+var center = [knobRect.left + (knobRect.width / 2), knobRect.top + (knobRect.height / 2)]
+
+function mousemove(event){
+  console.log("pageX: ",event.pageX, 
+  "pageY: ", event.pageY, 
+  "clientX: ", event.clientX, 
+  "clientY:", event.clientY)
+}
+
+function knobOff(event){
+  window.removeEventListener('mousemove',mousemove)
+}
+
+window.addEventListener('mousemove', mousemove);
+
+window.addEventListener('mouseup', knobOff);
+}
+
+
+
+document.getElementById('vOutputDialDiv').addEventListener('mousedown', knobClick);
+
