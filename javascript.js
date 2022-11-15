@@ -2507,11 +2507,36 @@ function knobClick (clickEvent)
       clickEvent.target.lastDeg = deg
       console.log(clickEvent.target.cumulativeDegrees)
       console.log('revolutions: ' + clickEvent.target.revolutions)
-      rotationToHR = Math.round(dialToRateB+clickEvent.target.cumulativeDegrees*dialToRateFactor)
-      if (rotationToHR >= 0)
+
+      if (clickEvent.target.id=="rateDialImg")
       {
-      var temp = document.getElementById('pacingRate').value = document.getElementById('pacingBoxRate').innerText = rotationToHR
+        rotationToHR = Math.round(dialToRateB+clickEvent.target.cumulativeDegrees*dialToRateFactor)
+        if (rotationToHR >= 0)
+        {
+        var temp = document.getElementById('pacingRate').value = document.getElementById('pacingBoxRate').innerText = rotationToHR
+        }
       }
+
+      if (clickEvent.target.id=="vOutputDialImg")
+      {
+        clickEvent.target.maxDegree = 
+        rotationToHR = Math.round(10+clickEvent.target.cumulativeDegrees*dialToRateFactor)
+        if (rotationToHR >= 0)
+        {
+        var temp = document.getElementById('vOutputBox').value = document.getElementById('pacingBoxVOutput').innerText = rotationToHR
+        }
+      }
+
+      if (clickEvent.target.id=="aOutputDialImg")
+      {
+        rotationToHR = Math.round(5+clickEvent.target.cumulativeDegrees*dialToRateFactor)
+        if (rotationToHR >= 0)
+        {
+        var temp = document.getElementById('aOutputBox').value = document.getElementById('pacingBoxAOutput').innerText = rotationToHR
+        }
+      }
+
+      onParameterChange()
 
   }
 
