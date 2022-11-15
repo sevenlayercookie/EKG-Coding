@@ -6,6 +6,7 @@
         I.  Data processor - cycles through EKG data
         II. Painter - paints the canvas
     - painter should run at browser framerate (max for device) for smoothness
+      - or, limit to 30 fps flat for ease
     - data processor should run as fast as possible, but 
 
     width = 1000 pixels
@@ -16,7 +17,11 @@
       - # data points per R-R = 500 Hz * 1 second = 500 data points
 
     so 500 data points should be processed every second
-    paint will paint at Max Browser Framerate. So data processing should be 500/Max Browse Frame Rate and then paint 
+    ** if limit based on browser framerate ** 
+      - paint will paint at Max Browser Framerate. So data processing should be 500/Max Browse Frame Rate and then paint 
+
+    ** if 30 fps **
+          - paint will paint at 30fps. So data processing should be 500/30 = 16.67 points and then paint 
 
 PHYSIOLOGY POINTS
  - in typical conduction scenarios, SA node is NOT affected by ectopic impulses, including those coming from the ventricle.
@@ -284,12 +289,17 @@ function onload() {
   function loop() {
     //ctx.canvas.width  = window.innerWidth; // working on screen resizing
     l++; //count # of times through loop
+<<<<<<< Updated upstream
     teleCtx.beginPath();
     //for (let z = 0; z < dataHertz / avgFPS; z++)
     // let y = dataHertz/avgFPS
     
     for (let z = 0; z < y; z++)  
     {
+=======
+    ctx.beginPath();
+    for (let z = 0; z < dataHertz / 30; z++) {
+>>>>>>> Stashed changes
       parseData();
       px += speed; // horizontal pixels per data point
 
