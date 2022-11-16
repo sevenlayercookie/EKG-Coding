@@ -1,6 +1,5 @@
 <head>
   <script type="text/javascript" src="data.js"></script>
-  <!-- <script type="text/javascript" src="JogDial\jogDial.js"></script> -->
   <link rel="stylesheet" href="css.css" />
   <meta name="viewport" content="width=device-width" />
 </head>
@@ -200,7 +199,7 @@
 
             </div>
             <div class = "topKnobs">
-              <div class = 'knobClass' id="rateDial">
+              <div class = 'knobClass' id="rateDialDiv">
                 <img draggable="false" id="rateDialImg" src="assets/knob-full-gradient.svg">
               </div>
               <div class = 'knobClass' id="vOutputDialDiv">
@@ -230,8 +229,8 @@
             <img src="assets/enterButton-white-black.svg" onclick="animateButton(this); enterClick()">
             <img src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()">
             <img src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()">
-            <div class="knobClass" id = "bottomKnob" draggable="false">
-              <img draggable="false" src="assets/knob-full-gradient.svg">
+            <div class="knobClass" id = "bottomKnobDiv" draggable="false">
+              <img draggable="false" id = "bottomKnobImg"src="assets/knob-full-gradient.svg">
             </div>
             <img src="assets/pauseButton-white-black.svg" onclick="animateButton(this)">
           </div>
