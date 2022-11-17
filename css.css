@@ -218,7 +218,7 @@ img {
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: flex-start;
   border-bottom-style: dotted;
   border-width: clamp(0px, .2vh, .3vw)  
 }

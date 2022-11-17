@@ -82,6 +82,7 @@ var rOLD=0
 var AVExtension=0
 var PRInterval;
 // pacemaker button related variables
+var currentBottomScreen = "mainmenu"
 var bottomRowsArray = []
 var currentlySelectedRowNumber = 0;
 var maxRowNumber = 8;
@@ -2078,21 +2079,85 @@ function updateAllGUIValues()
   document.getElementById("pacingRate").value = pacingRate
 
   // show or hide appropriate elements
-  if (pacerMode == 'VVI' || pacerMode == 'VOO' || pacerMode == 'OOO')
-  {
-    document.getElementById('aOutputRow').style.visibility = 'hidden';
-  }
-  else
+  if (pacerMode == 'DDD')
   {
     document.getElementById('aOutputRow').style.visibility = '';
-  }
-  if (pacerMode == 'AAI' || pacerMode == 'AOO' || pacerMode == 'OOO')
-  {
-    document.getElementById('vOutputRow').style.visibility = 'hidden';
-  }
-  else
-  {
     document.getElementById('vOutputRow').style.visibility = '';
+    document.getElementById('AsenseRow').style.display = '';
+    document.getElementById('VsenseRow').style.display = '';
+    document.getElementById('AVIrow').style.display = '';
+    document.getElementById('PVARProw').style.display = '';
+    document.getElementById('aTracking').style.display = '';
+  }
+  if (pacerMode == 'DDI')
+  {
+    document.getElementById('aOutputRow').style.visibility = '';
+    document.getElementById('vOutputRow').style.visibility = '';
+    document.getElementById('AsenseRow').style.display = '';
+    document.getElementById('VsenseRow').style.display = '';
+    document.getElementById('AVIrow').style.display = '';
+    document.getElementById('PVARProw').style.display = '';
+    document.getElementById('aTracking').style.display = '';
+  }
+  if (pacerMode == 'DOO')
+  {
+    document.getElementById('aOutputRow').style.visibility = '';
+    document.getElementById('vOutputRow').style.visibility = '';
+    document.getElementById('AsenseRow').style.display = 'none';
+    document.getElementById('VsenseRow').style.display = 'none';
+    document.getElementById('AVIrow').style.display = '';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+  if (pacerMode == 'AAI')
+  {
+    document.getElementById('aOutputRow').style.visibility = '';
+    document.getElementById('vOutputRow').style.visibility = 'hidden';
+    document.getElementById('AsenseRow').style.display = '';
+    document.getElementById('VsenseRow').style.display = 'none';
+    document.getElementById('AVIrow').style.display = 'none';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+  if (pacerMode == 'AOO')
+  {
+    document.getElementById('aOutputRow').style.visibility = '';
+    document.getElementById('vOutputRow').style.visibility = 'hidden';
+    document.getElementById('AsenseRow').style.display = 'none';
+    document.getElementById('VsenseRow').style.display = 'none';
+    document.getElementById('AVIrow').style.display = 'none';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+  if (pacerMode == 'VVI')
+  {
+    document.getElementById('aOutputRow').style.visibility = 'hidden';
+    document.getElementById('vOutputRow').style.visibility = '';
+    document.getElementById('AsenseRow').style.display = 'none';
+    document.getElementById('VsenseRow').style.display = '';
+    document.getElementById('AVIrow').style.display = 'none';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+  if (pacerMode == 'VOO')
+  {
+    document.getElementById('aOutputRow').style.visibility = 'hidden';
+    document.getElementById('vOutputRow').style.visibility = '';
+    document.getElementById('AsenseRow').style.display = 'none';
+    document.getElementById('VsenseRow').style.display = 'none';
+    document.getElementById('AVIrow').style.display = 'none';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+  if (pacerMode == 'VOO')
+  {
+    document.getElementById('aOutputRow').style.visibility = 'hidden';
+    document.getElementById('vOutputRow').style.visibility = 'hidden';
+    document.getElementById('AsenseRow').style.display = 'none';
+    document.getElementById('VsenseRow').style.display = 'none';
+    document.getElementById('AVIrow').style.display = 'none';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
   }
 }
 updateAllGUIValues()
@@ -2271,7 +2336,12 @@ function loadKnobState(rowID)
 var selectedRow
 function downArrowClick()
 {
+  var selectableRows = getSelectableRows()
+  maxRowNumber = selectableRows.length
+  if (currentBottomScreen=='mainmenu')
+  {
   saveKnobState(document.getElementById("bottomKnobImg"),selectedRow.id)
+  }
 
   if (currentlySelectedRowNumber < maxRowNumber)
   {
@@ -2282,17 +2352,49 @@ function downArrowClick()
     currentlySelectedRowNumber=0;
   }
   drawBordersAndArrow()
-  loadKnobState(selectedRow.id)
+  if (currentBottomScreen=='mainmenu')
+  {
+    loadKnobState(selectedRow.id)
+  }
+  //drawBordersAndArrow()
   getBottomDialParameters()
   // resetBottomKnob()
 }
 
+function getSelectableRows()
+{
+  var selectableRowsArray = []
+  if (currentBottomScreen=='mainmenu')
+  {var ancestor = document.getElementById('mainScreen');}
+  else
+  {var ancestor = document.getElementById('modeScreen');}
+
+  var descendents = ancestor.getElementsByTagName('*');
+    // gets all rows
+
+    var i, e, d;
+    for (i = 0; i < descendents.length; ++i) 
+    {
+    e = descendents[i];
+      if ((e.className == "barRow" || e.className == "bottomRows" || e.id == "radio") && e.style.display != 'none')
+      {
+        e.selectable = true
+        selectableRowsArray.push(e)
+      }
+    }
+    return (selectableRowsArray)
+}
+
 function upArrowClick()
 {
+  var selectableRows = getSelectableRows()
+  maxRowNumber = selectableRows.length
+  
   if (currentBottomScreen=='mainmenu')
   {
   saveKnobState(document.getElementById("bottomKnobImg"),selectedRow.id)
   }
+
   if (currentlySelectedRowNumber > 0)
   {
   currentlySelectedRowNumber-=1;
@@ -2306,7 +2408,7 @@ function upArrowClick()
   {
     loadKnobState(selectedRow.id)
   }
-  drawBordersAndArrow()
+  //drawBordersAndArrow()
   getBottomDialParameters()
   // resetBottomKnob()
 
@@ -2316,54 +2418,89 @@ function upArrowClick()
 var selectedOption // bottom screen, which item is selected?
 function drawBordersAndArrow()
 {
-  var ancestor = document.getElementById('bottomScreenHide');
+  if (currentBottomScreen=='mainmenu')
+  {var ancestor = document.getElementById('mainScreen');}
+  else
+  {var ancestor = document.getElementById('modeScreen');}
+
   var descendents = ancestor.getElementsByTagName('*');
     // gets all rows
 
     var i, e, d;
-    for (i = 0; i < descendents.length; ++i) {
+    for (i = 0; i < descendents.length; ++i) 
+    {
     e = descendents[i];
-    if (e.className == "barRow" || e.className == "bottomRows")
-    {
-      var found = false;
-      bottomRowsArray.forEach(element => {
-        if (element.id == e.id)
-        {
-          found = true;
-        }
-      });
-      if (!found)
-        {
-          bottomRowsArray.push(e)
-        }
-    }
-    if (e.dataset.rownum == currentlySelectedRowNumber)
-    {
-      selectedRow = e
-      if (e.id=="radio" || e.className == "bottomRows")
+      if ((e.className == "barRow" || e.className == "bottomRows" || e.id == "radio") && e.style.display != 'none')
       {
-
-        divNode.appendChild(imgNode)
-        e.appendChild(divNode)
+        e.selectable = true
       }
-      else
+      else {e.selectable = false}
+      
+      if (e.selectable == true)
       {
-        divNode.remove();
-      }
-      e.classList.add('rowSelected')
-      selectedOption = e.id
-    }
-    else if (e.dataset.rownum != undefined)
-    {
-      e.classList.remove('rowSelected')
+        if (e.className == "barRow" || e.className == "bottomRows")
+        {
+          var found = false;
+          bottomRowsArray.forEach(element => {
+            if (element.id == e.id)
+            {
+              found = true;
+            }
+          });
+          if (!found)
+            {
+              bottomRowsArray.push(e)
+            }
+        }
+        if (e.style.display == 'none')
+        {
+          currentlySelectedRowNumber++
+          if (e.classList.contains('rowSelected'))
+          {
+            e.classList.remove('rowSelected')
 
-    }
+          }
+        }
+        else if (e.dataset.rownum == currentlySelectedRowNumber)
+        {
+          selectedRow = e
+          if (e.id=="radio" || e.className == "bottomRows")
+          {
+
+            divNode.appendChild(imgNode)
+            e.appendChild(divNode)
+          }
+          else
+          {
+            divNode.remove();
+          }
+          e.classList.add('rowSelected')
+          selectedOption = e.id
+        }
+        else if (e.classList.contains('rowSelected'))
+        {
+          e.classList.remove('rowSelected')
+
+        }
+      }
+      else 
+        {
+          if (e.classList.contains('rowSelected'))
+          {
+          e.classList.remove('rowSelected')
+          }
+          
+        }
   }
 }
 
 function enterClick()
 {
-  var ancestor = document.getElementById('bottomScreenHide');
+  if (currentBottomScreen=='mainmenu')
+  {var ancestor = document.getElementById('mainScreen');}
+  else
+  {var ancestor = document.getElementById('modeScreen');}
+  
   var descendents = ancestor.getElementsByTagName('*');
     // gets all rows
 
@@ -2432,7 +2569,7 @@ function enterClick()
   
     }
 }
-var currentBottomScreen = "mainmenu"
+
 function backClick()
 {
   // write new HTML
@@ -2447,7 +2584,11 @@ function drawMainMenu()
 {
   currentlySelectedRowNumber = 0;
   maxRowNumber = 7;
+
   
+  document.getElementById("modeScreen").style.display = "none"
+  document.getElementById("mainScreen").style.display = ""
+  /*
   document.getElementById("bottomScreenHide").innerHTML = `
   <div class = "mainScreen">
     <div class = "modeContent" id="modeContent">
@@ -2502,7 +2643,7 @@ function drawMainMenu()
     <div class = "bottomRows"  id = "modeSelection"  data-rownum = 7>Mode Selection</div>
   </div>
   `
-
+*/
  drawBordersAndArrow()
 }
 
@@ -2512,6 +2653,10 @@ function modeSelectionClick()
 
   currentlySelectedRowNumber = 0;
   maxRowNumber = 8;
+
+  document.getElementById("mainScreen").style.display = "none"
+  document.getElementById("modeScreen").style.display = ""
+  /*
   // write new HTML
   document.getElementById("bottomScreenHide").innerHTML = `
   <div class = "modeScreen">
@@ -2553,6 +2698,8 @@ function modeSelectionClick()
     <div class = "bottomRows" id = "backOption" data-rownum = 8>Back</div>
   </div>
   `
+  */
+
   drawBordersAndArrow()
 
   // select current mode
