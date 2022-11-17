@@ -2049,20 +2049,25 @@ function updateAllGUIValues()
 {
   // pacemaker GUI
       // meters
-      
+      if (currentBottomScreen=='mainmenu')
+      {
       document.getElementById("aSenseMeter").value = 100-calculateMeter(aPacerSensitivity,aPacerMaxSensitivity,aPacerMinSensitivity)
       document.getElementById("vSenseMeter").value = 100-calculateMeter(vPacerSensitivity,vPacerMaxSensitivity,vPacerMinSensitivity)
       document.getElementById("PVARPMeter").value = calculateMeter(PVARP,PVARPmin,PVARPmax)
       document.getElementById("AVMeter").value = calculateMeter(AVInterval,AVImin,AVImax)
+      
 
   document.getElementById("boxAsenseValue").innerText = aPacerSensitivity.toFixed(1) + " mV"
   document.getElementById("boxVsenseValue").innerText = vPacerSensitivity.toFixed(1) + " mV"
   document.getElementById("boxAVInterval").innerText = AVInterval.toFixed(0) + " ms"
-
+  document.getElementById("boxPVARPValue").innerText = PVARP.toFixed(0) + " ms"    
+}
+      
+      // upper screen
   document.getElementById("pacingBoxRate").innerText = pacingRate
   document.getElementById("pacingBoxVOutput").innerText = vPacerOutput
   document.getElementById("pacingBoxAOutput").innerText = aPacerOutput
-  document.getElementById("boxPVARPValue").innerText = PVARP.toFixed(0) + " ms"
+  
   
 
   // text boxes left side
@@ -2071,6 +2076,24 @@ function updateAllGUIValues()
   document.getElementById("aSensitivityBox").value = aPacerSensitivity.toFixed(1)
   document.getElementById("vSensitivityBox").value = vPacerSensitivity.toFixed(1)
   document.getElementById("pacingRate").value = pacingRate
+
+  // show or hide appropriate elements
+  if (pacerMode == 'VVI' || pacerMode == 'VOO' || pacerMode == 'OOO')
+  {
+    document.getElementById('aOutputRow').style.visibility = 'hidden';
+  }
+  else
+  {
+    document.getElementById('aOutputRow').style.visibility = '';
+  }
+  if (pacerMode == 'AAI' || pacerMode == 'AOO' || pacerMode == 'OOO')
+  {
+    document.getElementById('vOutputRow').style.visibility = 'hidden';
+  }
+  else
+  {
+    document.getElementById('vOutputRow').style.visibility = '';
+  }
 }
 updateAllGUIValues()
 
@@ -2353,9 +2376,11 @@ function enterClick()
         if (e.id == "radio")
         {
         e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
-        document.getElementById("pacingBoxMode").innerText = e.firstElementChild.nextElementSibling.innerText
+        pacerMode = e.firstElementChild.nextElementSibling.innerText
+        document.getElementById("pacingBoxMode").innerText = pacerMode
         let element = document.getElementById("pacingMode")
         element.selectedIndex = currentlySelectedRowNumber
+        updateAllGUIValues()
         
         }
         else if (e.id == "backOption")
@@ -2415,6 +2440,7 @@ function backClick()
   drawMainMenu()  
   getBottomDialParameters()
   updateAllGUIValues()
+  loadKnobState(selectedRow.id)
 }
 
 function drawMainMenu()
