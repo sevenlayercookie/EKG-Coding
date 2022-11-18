@@ -2940,8 +2940,14 @@ function knobClick (clickEvent)
 
   function mousemove(dragEvent){
     // calculate position of mouse relative to center of knob
+    if (dragEvent.type=='touchmove')
+    {
+      clickTarget.mouseRelativetoKnobCenter = [dragEvent.touches[0].pageX - clickTarget.centerPos[0], clickTarget.centerPos[1]- dragEvent.touches[0].pageY]
+    }
+    else
+    {
     clickTarget.mouseRelativetoKnobCenter = [dragEvent.pageX - clickTarget.centerPos[0], clickTarget.centerPos[1]- dragEvent.pageY]
-
+    }
     // find initial degree when first clicked
     if (isNaN(clickTarget.lastDeg)) // if it's undefined, then it must be the first run
     {
@@ -3082,11 +3088,14 @@ else
 
   function knobOff(event){
     window.removeEventListener('mousemove',mousemove)
+    window.removeEventListener('touchmove',mousemove)
     clickTarget.lastDeg = undefined;
   }
 
   window.addEventListener('mousemove', mousemove);
+  window.addEventListener('touchmove', mousemove);
   window.addEventListener('mouseup', knobOff);
+  window.addEventListener('touchend', knobOff);
 }
 
 // initialze knob parameters
@@ -3118,9 +3127,13 @@ elem.turnFactor = knobTurnFactor
 
 // add listeners
 document.getElementById('rateDialImg').addEventListener('mousedown', knobClick);
+document.getElementById('rateDialImg').addEventListener('touchstart', knobClick);
 document.getElementById('vOutputDialImg').addEventListener('mousedown', knobClick);
+document.getElementById('vOutputDialImg').addEventListener('touchstart', knobClick);
 document.getElementById('aOutputDialImg').addEventListener('mousedown', knobClick);
+document.getElementById('aOutputDialImg').addEventListener('touchstart', knobClick);
 document.getElementById('bottomKnobImg').addEventListener('mousedown', knobClick);
+document.getElementById('bottomKnobImg').addEventListener('touchstart', knobClick);
 
 
 function getBottomDialParameters()
