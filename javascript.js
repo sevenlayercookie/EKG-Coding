@@ -1452,7 +1452,7 @@ function startPacing() {
 function pacingModeBoxChange()
 {
   let element = document.getElementById("pacingMode")
-  document.getElementById("pacingBoxMode").innerText=element.options[element.selectedIndex].text;
+  pacerMode = document.getElementById("pacingBoxMode").innerText=element.options[element.selectedIndex].text;
   if (element.options[element.selectedIndex].text == "DDD")
   {
     document.getElementById("URLdiv").hidden=false
@@ -2020,7 +2020,7 @@ function onOutputChange(chamber) {
 function onParameterChange() {
   //aPacerSensitivity = document.getElementById("aSensitivityBox").value;
   //vPacerSensitivity = document.getElementById("vSensitivityBox").value;
-  AVInterval = document.getElementById("AVInterval").value;
+  AVInterval = parseInt(document.getElementById("AVInterval").value);
 
   // update pacer display
   //document.getElementById("aSenseMeter").value = -10.4167*aPacerSensitivity + 104.17
@@ -2030,6 +2030,7 @@ function onParameterChange() {
   document.getElementById("boxAVInterval").innerText = AVInterval + " ms"
   //document.getElementById("AVMeter").value = AVInterval
   pacingRate = document.getElementById('pacingBoxRate').innerText
+  updateAllGUIValues()
 }
 
 function calculateMeter(value,min,max)
@@ -2050,8 +2051,6 @@ function updateAllGUIValues()
 {
   // pacemaker GUI
       // meters
-      if (currentBottomScreen=='mainmenu')
-      {
       document.getElementById("aSenseMeter").value = 100-calculateMeter(aPacerSensitivity,aPacerMaxSensitivity,aPacerMinSensitivity)
       document.getElementById("vSenseMeter").value = 100-calculateMeter(vPacerSensitivity,vPacerMaxSensitivity,vPacerMinSensitivity)
       document.getElementById("PVARPMeter").value = calculateMeter(PVARP,PVARPmin,PVARPmax)
@@ -2062,7 +2061,7 @@ function updateAllGUIValues()
   document.getElementById("boxVsenseValue").innerText = vPacerSensitivity.toFixed(1) + " mV"
   document.getElementById("boxAVInterval").innerText = AVInterval.toFixed(0) + " ms"
   document.getElementById("boxPVARPValue").innerText = PVARP.toFixed(0) + " ms"    
-}
+
       
       // upper screen
   document.getElementById("pacingBoxRate").innerText = pacingRate
@@ -2077,6 +2076,7 @@ function updateAllGUIValues()
   document.getElementById("aSensitivityBox").value = aPacerSensitivity.toFixed(1)
   document.getElementById("vSensitivityBox").value = vPacerSensitivity.toFixed(1)
   document.getElementById("pacingRate").value = pacingRate
+  document.getElementById("AVInterval").value = AVInterval.toFixed(0)
 
   // show or hide appropriate elements
   if (pacerMode == 'DDD')
@@ -2333,11 +2333,62 @@ function loadKnobState(rowID)
   
 }
 
+function getSelectableRows()
+{
+  var selectableRowsArray = []
+  if (currentBottomScreen=='mainmenu')
+  {var ancestor = document.getElementById('mainScreen');}
+  else
+  {var ancestor = document.getElementById('modeScreen');}
+
+  var descendents = ancestor.getElementsByTagName('*');
+    // gets all rows
+
+    var i, e, d;
+    for (i = 0; i < descendents.length; ++i) 
+    {
+    e = descendents[i];
+      if ((e.classList.contains("barRow") || e.classList.contains("bottomRows") || e.id == "radio") && e.style.display != 'none')
+      {
+        e.selectable = true
+        selectableRowsArray.push(e)
+        if (e.classList.contains("rowSelected"))
+        {
+          e.selected = true;
+        }
+        else
+        {
+          e.selected = false;
+        }
+      }
+      else
+      {
+        e.selectable = false
+      }
+    }
+    return (selectableRowsArray)
+}
+
+function reassignRowNumbers()
+{
+  let i = 0
+  for (i = 0; i < selectableRows.length; i++) {
+    const element = selectableRows[i];
+
+    selectableRows[i].dataset.rownum = i
+    
+  }
+  return i
+}
+
 var selectedRow
+var selectableRows = []
 function downArrowClick()
 {
-  var selectableRows = getSelectableRows()
-  maxRowNumber = selectableRows.length
+  selectableRows = getSelectableRows()
+  reassignRowNumbers()
+  maxRowNumber = selectableRows.length-1
+
   if (currentBottomScreen=='mainmenu')
   {
   saveKnobState(document.getElementById("bottomKnobImg"),selectedRow.id)
@@ -2361,34 +2412,14 @@ function downArrowClick()
   // resetBottomKnob()
 }
 
-function getSelectableRows()
-{
-  var selectableRowsArray = []
-  if (currentBottomScreen=='mainmenu')
-  {var ancestor = document.getElementById('mainScreen');}
-  else
-  {var ancestor = document.getElementById('modeScreen');}
 
-  var descendents = ancestor.getElementsByTagName('*');
-    // gets all rows
-
-    var i, e, d;
-    for (i = 0; i < descendents.length; ++i) 
-    {
-    e = descendents[i];
-      if ((e.className == "barRow" || e.className == "bottomRows" || e.id == "radio") && e.style.display != 'none')
-      {
-        e.selectable = true
-        selectableRowsArray.push(e)
-      }
-    }
-    return (selectableRowsArray)
-}
 
 function upArrowClick()
 {
-  var selectableRows = getSelectableRows()
-  maxRowNumber = selectableRows.length
+  selectableRows = getSelectableRows()
+
+  reassignRowNumbers()
+  maxRowNumber = selectableRows.length-1
   
   if (currentBottomScreen=='mainmenu')
   {
@@ -2582,9 +2613,10 @@ function backClick()
 
 function drawMainMenu()
 {
+  selectableRows = getSelectableRows()
+  reassignRowNumbers()
+  maxRowNumber = selectableRows.length-1
   currentlySelectedRowNumber = 0;
-  maxRowNumber = 7;
-
   
   document.getElementById("modeScreen").style.display = "none"
   document.getElementById("mainScreen").style.display = ""
@@ -2812,7 +2844,7 @@ if (clickTarget.lastDeg-clickTarget.deg < -300)
     var testCumulative = clickTarget.cumulativeDegrees + (clickTarget.deg - clickTarget.lastDeg) + revolution
     var testValue = Math.round(clickTarget.startValue+clickTarget.cumulativeDegrees*clickTarget.turnFactor)
     
-    console.log(testCumulative)
+    //console.log(testCumulative)
     if (testCumulative >= clickTarget.maxDegree)
     {
       maxLock = true;
