@@ -306,3 +306,8 @@ img {
   cursor:grab;
   padding:3%;
 }
+
+.arrow {
+  height: 100%; 
+  display: flex;
+}

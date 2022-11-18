@@ -88,7 +88,7 @@ var maxRowNumber = 8;
 var divNode = document.createElement("div")
   divNode.className = "arrow"
   divNode.id = "arrow"
-  divNode.style = "height: 100%; display: flex;"
+  //divNode.style = "height: 100%; display: flex;"
   var imgNode = document.createElement("img")
   imgNode.src = "assets/arrowEnter.svg"
 // a fib
@@ -2826,81 +2826,40 @@ function drawMainMenu()
 function modeSelectionClick()
 {
   currentBottomScreen = "modeselect"
+  selectableRows = getSelectableRows()
+  reassignRowNumbers()
+  maxRowNumber = selectableRows.length-1
 
   currentlySelectedRowNumber = 0;
-  maxRowNumber = 8;
 
   document.getElementById("mainScreen").style.display = "none"
   document.getElementById("modeScreen").style.display = ""
-  /*
-  // write new HTML
-  document.getElementById("bottomScreenHide").innerHTML = `
-  <div class = "modeScreen">
-    <div class = "modeTitle">Mode Selection</div>
-    <div class = "modeContent" id="modeContent">
-      <div class = "row" id ="radio" data-rownum = 0>
-        <div class = "modeRadio"><img src="assets/radio-circle-marked.svg"></div>
-        <div class = "modeName">DDD</div>
-      </div>
-      <div class = "row" id ="radio" data-rownum = 1>
-        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-        <div class = "modeName">DDI</div>
-      </div>
-      <div class = "row" id ="radio" data-rownum = 2>
-        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-        <div class = "modeName">DOO</div>
-      </div>
-      <div class = "row" id ="radio" data-rownum = 3>
-        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-        <div class = "modeName">AAI</div>
-      </div>
-      <div class = "row" id ="radio" data-rownum = 4>
-        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-        <div class = "modeName">AOO</div>
-      </div>
-      <div class = "row" id ="radio" data-rownum = 5>
-        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-        <div class = "modeName">VVI</div>
-      </div>
-      <div class = "row" id ="radio" data-rownum = 6>
-        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-        <div class = "modeName">VOO</div>
-      </div>
-      <div class = "row" id ="radio" data-rownum = 7>
-        <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-        <div class = "modeName">OOO</div>
-      </div>
-    </div>
-    <div class = "bottomRows" id = "backOption" data-rownum = 8>Back</div>
-  </div>
-  `
-  */
 
   drawBordersAndArrow()
 
   // select current mode
 
-  var ancestor = document.getElementById('modeContent');
-  var descendents = ancestor.getElementsByTagName('*');
-    // gets all rows
-    let element = document.getElementById("pacingMode")
+    // gets all selectable rows
     
-    var i, e, d;
-    for (i = 0; i < descendents.length; ++i) 
+    var i, e, found=false;
+    for (i = 0; i < selectableRows.length; ++i) 
     {
-      e = descendents[i];
-      if (e.dataset.rownum == element.selectedIndex)
-      {
-        e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
-        break
-      }
-      else if (e.id == "radio")
-      {
-        e.firstElementChild.firstElementChild.src = "assets/radio-circle.svg"
-        
-      }
+      e = selectableRows[i];
+      var descendents = e.getElementsByClassName("modeName")
+      for (let j = 0; j < descendents.length; j++) {
+        const element = descendents[j];
+        if (element.innerText == pacerMode)
+        {
+          e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
+        }
+        else if (e.id == "radio")
+        {
+          e.firstElementChild.firstElementChild.src = "assets/radio-circle.svg"
+          
+        }
   
     }
+  }
 }
 
 // Harrison Knob
