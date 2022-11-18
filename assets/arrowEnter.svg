@@ -1,7 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" 
-    xmlns:xlink="http://www.w3.org/1999/xlink" 
-    width="1em" height="1em" viewBox="296.9938659667969 344.2501525878906 139.6517791748047 102.02681732177734" preserveAspectRatio="xMidYMid meet" >
-    <rect id="svgEditorBackground" x="0" y="0" width="1350" height="960" style="fill:none;stroke:none"/>
-    <path d="M40,72h80c4.419,0,8,-3.581,8,-8s-3.581,-8,-8,-8h-80v-32l-40,40l40,40v-32Z" style="fill:#000000;stroke:black;vector-effect:non-scaling-stroke;stroke-width:1px" id="e1_shape" transform="matrix(1.07972 0 0 1.07972 297.441 333.619)"/>
-    <path d="M427.635549,404.594451v-60.09" style="fill:none;stroke:black;stroke-width:17px" id="e7_pathV"/>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 27.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 12 8.8" style="enable-background:new 0 0 12 8.8;" xml:space="preserve">
+<style type="text/css">
+	.st0{display:none;fill:none;}
+	.st1{stroke:#000000;stroke-width:9.277820e-02;stroke-miterlimit:10;}
+	.st2{fill:none;stroke:#000000;stroke-width:1.4608;stroke-miterlimit:10;}
+</style>
+<rect id="svgEditorBackground" x="-19.5" y="-35.6" class="st0" width="116" height="82.5"/>
+<path id="e1_shape" class="st1" d="M3.8,5.7h7.4c0.4,0,0.7-0.3,0.7-0.7c0-0.4-0.3-0.7-0.7-0.7H3.8v-3L0.1,5l3.7,3.7V5.7z"/>
+<path id="e7_pathV" class="st2" d="M11.3,5.2V0"/>
 </svg>
