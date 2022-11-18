@@ -76,7 +76,6 @@ var noiseFlag = false;
 var pacingFeedback=true;
 var VRP // prevent ventricular sensing of immediate post-V noise (OPTIONAL)
 //var PVARP // prevent atrial sensing of immediate post-V noise (OPTIONAL)
-var upperRateLimit //prevent atrial tracking of atrial tachyarrythmias (OPTIONAL)
 var rNEW=0
 var rOLD=0
 var AVExtension=0
@@ -133,9 +132,20 @@ py = canvasBaseline;
 var y = dataHertz/144;
 var histPTimes=[0];
 var histVentTimes = [0];   // each time implies a beat
+//
+var avgVentRate=0;
+var oldTime=performance.now();
+var histVentBeats=0;
+var pacerate=80
 
+var sensedVentTimes = [];   // each time implies a beat
+var vAmplitude = 0.660; // default amplitude of R-wave
+var sensedPTimes = [];   // each time implies a beat
+var aAmplitude = 0.290; // default amplitude of P-wave
 // default pacer parameters
-var minPaceRate = 0
+var pacerOn = true;
+var pacingRate = 80;
+var minPaceRate = 30
 var maxPaceRate = 200
 var aPacerSensitivity = document.getElementById("aSensitivityBox").value = 4; // default
 var aPacerMaxSensitivity = 0.4
@@ -152,6 +162,17 @@ var AVImin = 20
 var PVARP = 300
 var PVARPmin = 150
 var PVARPmax = 500
+var upperRateLimit = 110 //prevent atrial tracking of atrial tachyarrythmias
+var URLmin = 80
+var URLmax = 230
+
+var manAVI, manURL, manPVARP = false;
+
+var HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/2)*2
+
+var autoAV = true
+
+var meanRatePacer = 60
 
 // pacer thresholds
 var vCaptureThreshold = 5; // default V capture threshold (mA)
@@ -343,7 +364,7 @@ input.onchange = function(){setHR=input.value;HRchanged=true;};
 pacerate = document.getElementById('pacingRate');
 pacerate.onchange = function()
 {
-  pacingRate=pacerate.value
+  //pacingRate=pacerate.value
   document.getElementById("pacingBoxRate").innerText=pacerate.value;
 };
 
@@ -399,21 +420,50 @@ function senseP(inhibitSenseLight) // if inhibitSenseLight = 'inhibitSenseLight'
 
 function senseV(inhibitSenseLight)
 {
-  if (typeof inhibitSenseLight == undefined || inhibitSenseLight != 'inhibitSenseLight')
+  if (pacerOn)
   {
-    inhibitSenseLight = false; // sense light should turn on
+    if (typeof inhibitSenseLight == undefined || inhibitSenseLight != 'inhibitSenseLight')
+    {
+      inhibitSenseLight = false; // sense light should turn on
+    }
+    else if (inhibitSenseLight=='inhibitSenseLight')
+    {
+      inhibitSenseLight = true; // sense light should NOT turn on (e.g. a paced beat)
+    }
+    
+    sensedVentTimes.push(dataClock); // add to record of all sensed V activity
+    calcMeanHR()
+
+    if (!inhibitSenseLight)
+    {
+    document.getElementById("vSenseLight").src = "assets/senseLightOn.svg" // turn sense light on
+      setTimeout(function(){document.getElementById("vSenseLight").src = "assets/senseLightOff.svg"},"250") // turn light off after time period
+    }
   }
-  else if (inhibitSenseLight=='inhibitSenseLight')
+}
+
+function calcMeanHR()
+{
+  // calculate mean rate from pacer perspective (includes paced and sensed V's)
+  meanRatePacer = 0
+  var i = 0
+
+  if (sensedVentTimes.length>1)
   {
-    inhibitSenseLight = true; // sense light should NOT turn on (e.g. a paced beat)
+   for (i = 0; i < sensedVentTimes.length-1; i++) {
+    const element = sensedVentTimes[i];
+    let lastInterval = sensedVentTimes[i+1] - sensedVentTimes[i]
+    meanRatePacer += 1/(lastInterval/60000)
+    
+   }
+   meanRatePacer=Math.round(meanRatePacer/i)
   }
 
-  sensedVentTimes.push(dataClock); // add to record of all sensed V activity
-  if (pacerOn && !inhibitSenseLight)
+  while (sensedVentTimes.length>10) // trim old senses
   {
-  document.getElementById("vSenseLight").src = "assets/senseLightOn.svg" // turn sense light on
-    setTimeout(function(){document.getElementById("vSenseLight").src = "assets/senseLightOff.svg"},"250") // turn light off after time period
+    sensedVentTimes.shift()
   }
+
 }
 
 function drawPWave(morphOnly,width,height,invert) { // morphOnly='morphOnly' or not,   width:2x,3x etc. (integer only),  height:1.5x, 2.8xm etc, (floatOK),   invert:true or false
@@ -483,15 +533,7 @@ function TwaveClick() {
       }
 }
 
-var avgVentRate=0;
-var oldTime=performance.now();
-var histVentBeats=0;
 
-
-var sensedVentTimes = [];   // each time implies a beat
-var vAmplitude = 0.660; // default amplitude of R-wave
-var sensedPTimes = [];   // each time implies a beat
-var aAmplitude = 0.290; // default amplitude of P-wave
 
 
 
@@ -1438,13 +1480,13 @@ function paceButtonClick() {
 var aPacerInterval;
 var vPacerInterval;
 var pacerInterval;
-var pacerOn = false;
-var pacingRate = 60;
+
+
 var atrialRefactoryPeriod = 0;
 var ventBlankingPeriod = 0;
 function startPacing() {
 	
-	pacingRate = document.getElementById("pacingRate").value;
+	pacingRate = parseInt(document.getElementById("pacingRate").value);
   
   pacerOn = true;  
 }
@@ -1465,13 +1507,14 @@ function pacingModeBoxChange()
 }
 
 var AVInterval = 120; // pacemaker interval between atrial and v pace
+var manAVInterval = 120;
 let captureOverride = false;
 var sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
 
 
 function pacingFunction()
 {
-  AVInterval = document.getElementById("AVInterval").value; // delay between atrial and vent pace
+  AVInterval = parseInt(document.getElementById("AVInterval").value); // delay between atrial and vent pace
   
   let timeSinceP = timeSinceLastSensedP();
   let timeSinceV = timeSinceLastSensedV();
@@ -1479,8 +1522,7 @@ function pacingFunction()
   let element = document.getElementById("pacingMode")
   pacerMode = element.options[element.selectedIndex].text;
   document.getElementById("pacingBoxRate").innerText=pacerate.value;
-  
- 
+   
     // AAI (A pace, A sense (ignore V) )
 
     if (pacerMode=='AAI')
@@ -1581,13 +1623,33 @@ function pacingFunction()
     // If spontaneous activity is sensed in the ventricle, it inhibits both stimuli (subsequent cycles).
 
 
+
+  // shared DDD and DDI settings
+ 
+  if (pacerMode == 'DDI' || pacerMode == 'DDD')
+  {
+    
+    if (!manPVARP)
+    {
+      let rate
+      if (pacingRate >= meanRatePacer) {rate = pacingRate}
+      else {rate = meanRatePacer}
+      if (rate < 100) {PVARP = 300}
+      else if (rate < 150) {PVARP = 250}
+      else if (rate < 180) {PVARP = 230}
+      else if (rate >= 180) {PVARP = 200}
+    }
+  }
+
+
   if (pacerMode == 'DDI')  // sensing fixed
   {
-    var autoAV = AVIntervalHRAdjustBox.checked;
-    let HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/2)*2
-    var usedAVinterval = HRadjustedAV
+    autoAV = AVIntervalHRAdjustBox.checked;
+    HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/2)*2
+    
     if (HRadjustedAV < 50) {HRadjustedAV = 50}
-    if (HRadjustedAV > 150) {HRadjustedAV = 150}
+    if (HRadjustedAV > 250) {HRadjustedAV = 250}
+    var usedAVinterval = HRadjustedAV
 
     if (autoAV)
     {
@@ -1595,7 +1657,7 @@ function pacingFunction()
     }
     else
     {
-      usedAVinterval = AVInterval // use whatever is in the box
+      usedAVinterval = manAVInterval // use whatever is in the box
     }
     var debug = timeSinceLastSensedV()
     if (timeSinceLastSensedV() == 2)
@@ -1716,13 +1778,14 @@ function pacingFunction()
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
       maxTrackingRate = document.getElementById('URLbox').value;
-      var autoAV = AVIntervalHRAdjustBox.checked;
+      autoAV = AVIntervalHRAdjustBox.checked;
       let lowerRateLimit = VAItimer + AVInterval
       let VAinterval = goalPacerMs - AVInterval
-      let HRadjustedAV = 300 - (1.67 * pacingRate)
-      var usedAVinterval = HRadjustedAV
+      HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/2)*2
+      
       if (HRadjustedAV < 50) {HRadjustedAV = 50}
-      if (HRadjustedAV > 150) {HRadjustedAV = 150}
+      if (HRadjustedAV > 250) {HRadjustedAV = 250}
+      var usedAVinterval = HRadjustedAV
 
       if (autoAV)
       {
@@ -1730,7 +1793,7 @@ function pacingFunction()
       }
       else
       {
-        usedAVinterval = AVInterval // use whatever is in the box
+        usedAVinterval = manAVInterval // use whatever is in the box
       }
 
       // once pacer is turned on, timers should start immediately regardless of sensing or anything else
@@ -1928,6 +1991,13 @@ function pacingFunction()
     }
   }
 
+// every x amount of time, refresh pacer GUI
+if (dataClock%500==0)
+{
+  updateAllGUIValues()
+}
+
+
 }
 var AVITimerFlag=false;
 var VAITimerFlag=false;
@@ -2029,7 +2099,7 @@ function onParameterChange() {
   document.getElementById("boxVsenseValue").innerText = vPacerSensitivity + " mV"
   document.getElementById("boxAVInterval").innerText = AVInterval + " ms"
   //document.getElementById("AVMeter").value = AVInterval
-  pacingRate = document.getElementById('pacingBoxRate').innerText
+  pacingRate = parseInt(document.getElementById('pacingBoxRate').innerText)
   updateAllGUIValues()
 }
 
@@ -2054,13 +2124,20 @@ function updateAllGUIValues()
       document.getElementById("aSenseMeter").value = 100-calculateMeter(aPacerSensitivity,aPacerMaxSensitivity,aPacerMinSensitivity)
       document.getElementById("vSenseMeter").value = 100-calculateMeter(vPacerSensitivity,vPacerMaxSensitivity,vPacerMinSensitivity)
       document.getElementById("PVARPMeter").value = calculateMeter(PVARP,PVARPmin,PVARPmax)
-      document.getElementById("AVMeter").value = calculateMeter(AVInterval,AVImin,AVImax)
+      if (autoAV) {document.getElementById("AVMeter").value = calculateMeter(HRadjustedAV,AVImin,AVImax)}
+      else        {document.getElementById("AVMeter").value = calculateMeter(AVInterval,AVImin,AVImax)}
+      document.getElementById("URLMeter").value = calculateMeter(upperRateLimit,URLmin,URLmax)
       
 
   document.getElementById("boxAsenseValue").innerText = aPacerSensitivity.toFixed(1) + " mV"
   document.getElementById("boxVsenseValue").innerText = vPacerSensitivity.toFixed(1) + " mV"
   document.getElementById("boxAVInterval").innerText = AVInterval.toFixed(0) + " ms"
   document.getElementById("boxPVARPValue").innerText = PVARP.toFixed(0) + " ms"    
+  document.getElementById("boxURL").innerText = upperRateLimit.toFixed(0) + " ppm"   
+  
+  HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/2)*2
+  if (HRadjustedAV < 50) {HRadjustedAV = 50}
+  if (HRadjustedAV > 250) {HRadjustedAV = 250}
 
       
       // upper screen
@@ -2077,6 +2154,8 @@ function updateAllGUIValues()
   document.getElementById("vSensitivityBox").value = vPacerSensitivity.toFixed(1)
   document.getElementById("pacingRate").value = pacingRate
   document.getElementById("AVInterval").value = AVInterval.toFixed(0)
+  document.getElementById("URLbox").value = upperRateLimit.toFixed(0)
+  document.getElementById("paceButton").innerHTML = 'Stop Pacing'
 
   // show or hide appropriate elements
   if (pacerMode == 'DDD')
@@ -2088,6 +2167,8 @@ function updateAllGUIValues()
     document.getElementById('AVIrow').style.display = '';
     document.getElementById('PVARProw').style.display = '';
     document.getElementById('aTracking').style.display = '';
+    document.getElementById('URLrow').style.display = '';
+    document.getElementById('settings').style.display = '';
   }
   if (pacerMode == 'DDI')
   {
@@ -2098,6 +2179,8 @@ function updateAllGUIValues()
     document.getElementById('AVIrow').style.display = '';
     document.getElementById('PVARProw').style.display = '';
     document.getElementById('aTracking').style.display = '';
+    document.getElementById('URLrow').style.display = 'none';
+    document.getElementById('settings').style.display = '';
   }
   if (pacerMode == 'DOO')
   {
@@ -2108,6 +2191,8 @@ function updateAllGUIValues()
     document.getElementById('AVIrow').style.display = '';
     document.getElementById('PVARProw').style.display = 'none';
     document.getElementById('aTracking').style.display = 'none';
+    document.getElementById('URLrow').style.display = 'none';
+    document.getElementById('settings').style.display = '';
   }
   if (pacerMode == 'AAI')
   {
@@ -2118,6 +2203,8 @@ function updateAllGUIValues()
     document.getElementById('AVIrow').style.display = 'none';
     document.getElementById('PVARProw').style.display = 'none';
     document.getElementById('aTracking').style.display = 'none';
+    document.getElementById('URLrow').style.display = 'none';
+    document.getElementById('settings').style.display = '';
   }
   if (pacerMode == 'AOO')
   {
@@ -2128,6 +2215,8 @@ function updateAllGUIValues()
     document.getElementById('AVIrow').style.display = 'none';
     document.getElementById('PVARProw').style.display = 'none';
     document.getElementById('aTracking').style.display = 'none';
+    document.getElementById('URLrow').style.display = 'none';
+    document.getElementById('settings').style.display = 'none';
   }
   if (pacerMode == 'VVI')
   {
@@ -2138,6 +2227,8 @@ function updateAllGUIValues()
     document.getElementById('AVIrow').style.display = 'none';
     document.getElementById('PVARProw').style.display = 'none';
     document.getElementById('aTracking').style.display = 'none';
+    document.getElementById('URLrow').style.display = 'none';
+    document.getElementById('settings').style.display = '';
   }
   if (pacerMode == 'VOO')
   {
@@ -2148,8 +2239,10 @@ function updateAllGUIValues()
     document.getElementById('AVIrow').style.display = 'none';
     document.getElementById('PVARProw').style.display = 'none';
     document.getElementById('aTracking').style.display = 'none';
+    document.getElementById('URLrow').style.display = 'none';
+    document.getElementById('settings').style.display = 'none';
   }
-  if (pacerMode == 'VOO')
+  if (pacerMode == 'OOO')
   {
     document.getElementById('aOutputRow').style.visibility = 'hidden';
     document.getElementById('vOutputRow').style.visibility = 'hidden';
@@ -2158,7 +2251,52 @@ function updateAllGUIValues()
     document.getElementById('AVIrow').style.display = 'none';
     document.getElementById('PVARProw').style.display = 'none';
     document.getElementById('aTracking').style.display = 'none';
+    document.getElementById('URLrow').style.display = 'none';
+    document.getElementById('settings').style.display = 'none';
   }
+
+  // update manual asterisks *
+  if (manAVI)
+  {
+    document.getElementById("boxAVInterval").innerText = "*"+AVInterval.toFixed(0) + " ms"
+    autoAV = false
+  }
+  else
+  {
+    document.getElementById("boxAVInterval").innerText = HRadjustedAV.toFixed(0) + " ms"
+    autoAV = true
+  }
+
+  if (manURL)
+  {
+    document.getElementById("boxURL").innerText = "*"+upperRateLimit.toFixed(0) + " ppm"
+  }
+  else
+  {
+    upperRateLimit = pacingRate + 30
+    if (upperRateLimit < 110) {upperRateLimit=110}
+    document.getElementById("boxURL").innerText = upperRateLimit.toFixed(0) + " ppm"
+  }
+
+  if (manPVARP)
+  {
+    document.getElementById("boxPVARPValue").innerText = "*"+PVARP.toFixed(0) + " ms"  
+  }
+  else
+  {
+    document.getElementById("boxPVARPValue").innerText = PVARP.toFixed(0) + " ms"
+    //if (pacingRate)
+  }
+
+  if (manAVI || manURL || manPVARP)
+  {
+    document.getElementById("settingsValue").innerText = 'Manual(*)'
+  }
+  else
+  {
+    document.getElementById("settingsValue").innerText = 'Automatic'
+  }
+
 }
 updateAllGUIValues()
 
@@ -2568,14 +2706,14 @@ function enterClick()
             e.lastElementChild.lastElementChild.innerHTML = 'Off'
             let element = document.getElementById("pacingMode")
             element.selectedIndex = 1;
-            document.getElementById("pacingBoxMode").innerText = 'DDI'
+            pacerMode = document.getElementById("pacingBoxMode").innerText = 'DDI'
           }
           else if (e.lastElementChild.lastElementChild.innerHTML == "Off")
           {
             e.lastElementChild.lastElementChild.innerHTML = 'On'
             let element = document.getElementById("pacingMode")
             element.selectedIndex = 0;
-            document.getElementById("pacingBoxMode").innerText = 'DDD'
+            pacerMode = document.getElementById("pacingBoxMode").innerText = 'DDD'
           }
         break
         }
@@ -2583,11 +2721,16 @@ function enterClick()
         {
           if (e.lastElementChild.lastElementChild.innerHTML == "Automatic")
           {
-            e.lastElementChild.lastElementChild.innerHTML = 'Manual'
+            e.lastElementChild.lastElementChild.innerHTML = 'Manual'  // set all rate-dependent settings to manual
+            manAVI = manURL = manPVARP = true;
           }
-          else if (e.lastElementChild.lastElementChild.innerHTML == "Manual")
+          else if (e.lastElementChild.lastElementChild.innerHTML == "Manual(*)")
           {
             e.lastElementChild.lastElementChild.innerHTML = 'Automatic'
+            manAVI = manURL = manPVARP = false;
+            AVInterval = HRadjustedAV
+            upperRateLimit = 110
+            PVARP = 300
           }
         break
         }
@@ -2599,6 +2742,7 @@ function enterClick()
       }
   
     }
+    updateAllGUIValues()
 }
 
 function backClick()
@@ -3025,6 +3169,17 @@ function getBottomDialParameters()
     elem.reverseKnob = false
     elem.currentValue = PVARP
   }
+
+  if (selectedOption=="URLrow")
+  {
+    var elem = document.getElementById('bottomKnobImg')
+    elem.minValue = URLmin
+    elem.startValue = 110
+    elem.maxValue = URLmax
+    elem.turnFactor = knobTurnFactor*3
+    elem.reverseKnob = false
+    elem.currentValue = upperRateLimit
+  }
 }
 getBottomDialParameters()
 
@@ -3056,14 +3211,22 @@ function bottomKnobFunction(knobResult)
 
   if (selectedOption=="AVIrow")
   {
-    
      AVInterval = knobResult
+     manAVI = true
   }
 
   if (selectedOption=="PVARProw")
   {
     
     PVARP = knobResult
+    manPVARP = true
+  }
+
+  if (selectedOption=="URLrow")
+  {
+    
+    upperRateLimit = knobResult
+    manURL = true
   }
   
 

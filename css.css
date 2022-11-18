@@ -262,7 +262,7 @@ img {
   flex-direction: column;
   height: 100%;
   justify-content: space-between;
-  font-size: clamp(0px, 1.3vw, 1.6vh);
+  font-size: clamp(0px, 1.4vw, 1.4vh);
 }
 
 .modeName {
