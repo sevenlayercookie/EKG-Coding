@@ -1644,7 +1644,7 @@ function pacingFunction()
 
   if (pacerMode == 'DDI')  // sensing fixed
   {
-    autoAV = AVIntervalHRAdjustBox.checked;
+    //autoAV = AVIntervalHRAdjustBox.checked;
     HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/2)*2
     
     if (HRadjustedAV < 50) {HRadjustedAV = 50}
@@ -1778,7 +1778,7 @@ function pacingFunction()
       timeSinceV=timeSinceLastSensedV();
       timeSinceP=timeSinceLastSensedP();
       maxTrackingRate = document.getElementById('URLbox').value;
-      autoAV = AVIntervalHRAdjustBox.checked;
+      //autoAV = AVIntervalHRAdjustBox.checked;
       let lowerRateLimit = VAItimer + AVInterval
       let VAinterval = goalPacerMs - AVInterval
       HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/2)*2

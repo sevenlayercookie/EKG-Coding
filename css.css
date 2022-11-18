@@ -69,6 +69,7 @@ img {
   margin-left: 1%;
   margin-right: 2%;
   margin-left: 1%;
+  touch-action: none;
  }
  .wholeBox  {
   border-radius: min(2vw, 30px);
@@ -77,6 +78,7 @@ img {
   background-color:#34422f;
   padding-left: 10%;
   padding-bottom: 10%;
+  touch-action: none;
  }
  
  .topButtons {
@@ -173,6 +175,7 @@ img {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
+  
  }
 
 .topKnobsBlank {
