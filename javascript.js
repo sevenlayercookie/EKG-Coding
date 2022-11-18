@@ -32,6 +32,9 @@ PHYSIOLOGY POINTS
 */
 
 // -------------------------- GLOBAL DEFINITIONS -----------------------------
+
+
+//
 var pacedBeatFlag = false;
 var ventRefractoryTimer = 9999
 var atrialRefractoryTimer = 9999
@@ -72,13 +75,15 @@ var AVtimer = 200 //used by DOO logic (may be able to combine with AVITimer)
 var noiseFlag = false;
 var pacingFeedback=true;
 var VRP // prevent ventricular sensing of immediate post-V noise (OPTIONAL)
-var PVARP // prevent atrial sensing of immediate post-V noise (OPTIONAL)
+//var PVARP // prevent atrial sensing of immediate post-V noise (OPTIONAL)
 var upperRateLimit //prevent atrial tracking of atrial tachyarrythmias (OPTIONAL)
 var rNEW=0
 var rOLD=0
 var AVExtension=0
 var PRInterval;
 // pacemaker button related variables
+var currentBottomScreen = "mainmenu"
+var bottomRowsArray = []
 var currentlySelectedRowNumber = 0;
 var maxRowNumber = 8;
 var divNode = document.createElement("div")
@@ -128,13 +133,42 @@ py = canvasBaseline;
 var y = dataHertz/144;
 var histPTimes=[0];
 var histVentTimes = [0];   // each time implies a beat
-var aPacerSensitivity = document.getElementById("aSensitivityBox").value; // default 
-var vPacerSensitivity = document.getElementById("vSensitivityBox").value; // default 
-var aPacerOutput = document.getElementById("aOutputBox").value;
-var vPacerOutput = document.getElementById("vOutputBox").value;
+
+// default pacer parameters
+var minPaceRate = 0
+var maxPaceRate = 200
+var aPacerSensitivity = document.getElementById("aSensitivityBox").value = 4; // default
+var aPacerMaxSensitivity = 0.4
+var aPacerMinSensitivity = 10
+var vPacerSensitivity = document.getElementById("vSensitivityBox").value = 4; // default
+var vPacerMaxSensitivity = 0.8
+var vPacerMinSensitivity = 20 
+var aPacerOutput = document.getElementById("aOutputBox").value = 10;
+var vPacerOutput = document.getElementById("vOutputBox").value = 20;
+var aPacerMaxOutput = 20
+var vPacerMaxOutput = 25
+var AVImax = 300
+var AVImin = 20
+var PVARP = 300
+var PVARPmin = 150
+var PVARPmax = 500
+
+// pacer thresholds
 var vCaptureThreshold = 5; // default V capture threshold (mA)
 var aCaptureThreshold = 2; // default A capture threshold (mA)
+// The sensing threshold is the least sensitive mV setting at which the temporary pacemaker can detect a heartbeat
+var aOversenseThreshold = 1 // threhsold below which pacer will oversense (e.g. T wave)
+var aUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see P wave)
+var vOversenseThreshold = 2 // threhsold below which pacer will oversense (e.g. T wave)
+var vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
 
+
+// knob intialization
+
+var knobTurnFactor = 1/36 // how fast does the dial change the value (e.g 1/36 = 36 degrees to 1 bpm, one rotation = 10 bpm)
+var dialToRateB
+var rotationToHR = dialToRateB = pacingRate
+var currentRotation = 0
 
 // ------------------------- onload () ---------------------------------------
 onload();
@@ -459,12 +493,7 @@ var vAmplitude = 0.660; // default amplitude of R-wave
 var sensedPTimes = [];   // each time implies a beat
 var aAmplitude = 0.290; // default amplitude of P-wave
 
-var aOversenseThreshold = 1.5 // threhsold below which pacer will oversense (e.g. T wave)
-var aUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see P wave)
-                              // The sensing threshold is the least sensitive mV setting at which the temporary pacemaker can detect a heartbeat
 
-var vOversenseThreshold = 1.5 // threhsold below which pacer will oversense (e.g. T wave)
-var vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
 
 
 function drawQRST(width, invertT, invertQRS) {   // width: 0=normal, 1=double, 2=triple, etc.)  invertT: 0=upright, 1=invert)  invertQRS: 0=upright, 1=invert
@@ -543,21 +572,7 @@ var drawQRS=false;
 var PRtimer=-1;
 function masterRhythmFunction()
 {
-  /*
-  if (document.getElementById("CHBbox").checked==true)
-    {
-      //currentRhythm='CHB'
-      CHB=true;
-      document.getElementById("CHBstuff").hidden = false;
-    }
-  if (document.getElementById("CHBbox").checked==false)
-    {
-      //currentRhythm='NSR'
-    CHB=false;
-    document.getElementById("CHBstuff").hidden = true;
-    }
-    */
-
+ 
     if(dataClock%100 == 0)
     {
       PRInterval = parseInt(document.getElementById("PRbox").value)  // native PR interval
@@ -1437,7 +1452,7 @@ function startPacing() {
 function pacingModeBoxChange()
 {
   let element = document.getElementById("pacingMode")
-  document.getElementById("pacingBoxMode").innerText=element.options[element.selectedIndex].text;
+  pacerMode = document.getElementById("pacingBoxMode").innerText=element.options[element.selectedIndex].text;
   if (element.options[element.selectedIndex].text == "DDD")
   {
     document.getElementById("URLdiv").hidden=false
@@ -1446,6 +1461,7 @@ function pacingModeBoxChange()
   {
     document.getElementById("URLdiv").hidden=true
   }
+  onParameterChange()
 }
 
 var AVInterval = 120; // pacemaker interval between atrial and v pace
@@ -2002,17 +2018,153 @@ function onOutputChange(chamber) {
 }
 
 function onParameterChange() {
-  aPacerSensitivity = document.getElementById("aSensitivityBox").value;
-  vPacerSensitivity = document.getElementById("vSensitivityBox").value;
-  AVInterval = document.getElementById("AVInterval").value;
+  //aPacerSensitivity = document.getElementById("aSensitivityBox").value;
+  //vPacerSensitivity = document.getElementById("vSensitivityBox").value;
+  AVInterval = parseInt(document.getElementById("AVInterval").value);
 
   // update pacer display
-  document.getElementById("aSenseMeter").value = -10.4167*aPacerSensitivity + 104.17
-  document.getElementById("vSenseMeter").value = -5.2083*vPacerSensitivity + 104.17
+  //document.getElementById("aSenseMeter").value = -10.4167*aPacerSensitivity + 104.17
+  //document.getElementById("vSenseMeter").value = -5.2083*vPacerSensitivity + 104.17
   document.getElementById("boxAsenseValue").innerText = aPacerSensitivity + " mV"
   document.getElementById("boxVsenseValue").innerText = vPacerSensitivity + " mV"
   document.getElementById("boxAVInterval").innerText = AVInterval + " ms"
-  document.getElementById("AVMeter").value = AVInterval
+  //document.getElementById("AVMeter").value = AVInterval
+  pacingRate = document.getElementById('pacingBoxRate').innerText
+  updateAllGUIValues()
+}
+
+function calculateMeter(value,min,max)
+{ // y = mx + b
+  // slope = dy/dx
+  // b = y - mx   // in my case, always equal to the min value
+  let y1 = 100
+  let y2 = 0
+  let x1 = max
+  let x2 = min
+  let slope = (y2 - y1) / (x2 - x1)
+  let intercept = y2 - slope*x2
+  let result = value*slope + intercept
+  return parseFloat(result)
+}
+
+function updateAllGUIValues()
+{
+  // pacemaker GUI
+      // meters
+      document.getElementById("aSenseMeter").value = 100-calculateMeter(aPacerSensitivity,aPacerMaxSensitivity,aPacerMinSensitivity)
+      document.getElementById("vSenseMeter").value = 100-calculateMeter(vPacerSensitivity,vPacerMaxSensitivity,vPacerMinSensitivity)
+      document.getElementById("PVARPMeter").value = calculateMeter(PVARP,PVARPmin,PVARPmax)
+      document.getElementById("AVMeter").value = calculateMeter(AVInterval,AVImin,AVImax)
+      
+
+  document.getElementById("boxAsenseValue").innerText = aPacerSensitivity.toFixed(1) + " mV"
+  document.getElementById("boxVsenseValue").innerText = vPacerSensitivity.toFixed(1) + " mV"
+  document.getElementById("boxAVInterval").innerText = AVInterval.toFixed(0) + " ms"
+  document.getElementById("boxPVARPValue").innerText = PVARP.toFixed(0) + " ms"    
+
+      
+      // upper screen
+  document.getElementById("pacingBoxRate").innerText = pacingRate
+  document.getElementById("pacingBoxVOutput").innerText = vPacerOutput
+  document.getElementById("pacingBoxAOutput").innerText = aPacerOutput
+  
+  
+
+  // text boxes left side
+  document.getElementById("aOutputBox").value = aPacerOutput
+  document.getElementById("vOutputBox").value = vPacerOutput
+  document.getElementById("aSensitivityBox").value = aPacerSensitivity.toFixed(1)
+  document.getElementById("vSensitivityBox").value = vPacerSensitivity.toFixed(1)
+  document.getElementById("pacingRate").value = pacingRate
+  document.getElementById("AVInterval").value = AVInterval.toFixed(0)
+
+  // show or hide appropriate elements
+  if (pacerMode == 'DDD')
+  {
+    document.getElementById('aOutputRow').style.visibility = '';
+    document.getElementById('vOutputRow').style.visibility = '';
+    document.getElementById('AsenseRow').style.display = '';
+    document.getElementById('VsenseRow').style.display = '';
+    document.getElementById('AVIrow').style.display = '';
+    document.getElementById('PVARProw').style.display = '';
+    document.getElementById('aTracking').style.display = '';
+  }
+  if (pacerMode == 'DDI')
+  {
+    document.getElementById('aOutputRow').style.visibility = '';
+    document.getElementById('vOutputRow').style.visibility = '';
+    document.getElementById('AsenseRow').style.display = '';
+    document.getElementById('VsenseRow').style.display = '';
+    document.getElementById('AVIrow').style.display = '';
+    document.getElementById('PVARProw').style.display = '';
+    document.getElementById('aTracking').style.display = '';
+  }
+  if (pacerMode == 'DOO')
+  {
+    document.getElementById('aOutputRow').style.visibility = '';
+    document.getElementById('vOutputRow').style.visibility = '';
+    document.getElementById('AsenseRow').style.display = 'none';
+    document.getElementById('VsenseRow').style.display = 'none';
+    document.getElementById('AVIrow').style.display = '';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+  if (pacerMode == 'AAI')
+  {
+    document.getElementById('aOutputRow').style.visibility = '';
+    document.getElementById('vOutputRow').style.visibility = 'hidden';
+    document.getElementById('AsenseRow').style.display = '';
+    document.getElementById('VsenseRow').style.display = 'none';
+    document.getElementById('AVIrow').style.display = 'none';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+  if (pacerMode == 'AOO')
+  {
+    document.getElementById('aOutputRow').style.visibility = '';
+    document.getElementById('vOutputRow').style.visibility = 'hidden';
+    document.getElementById('AsenseRow').style.display = 'none';
+    document.getElementById('VsenseRow').style.display = 'none';
+    document.getElementById('AVIrow').style.display = 'none';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+  if (pacerMode == 'VVI')
+  {
+    document.getElementById('aOutputRow').style.visibility = 'hidden';
+    document.getElementById('vOutputRow').style.visibility = '';
+    document.getElementById('AsenseRow').style.display = 'none';
+    document.getElementById('VsenseRow').style.display = '';
+    document.getElementById('AVIrow').style.display = 'none';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+  if (pacerMode == 'VOO')
+  {
+    document.getElementById('aOutputRow').style.visibility = 'hidden';
+    document.getElementById('vOutputRow').style.visibility = '';
+    document.getElementById('AsenseRow').style.display = 'none';
+    document.getElementById('VsenseRow').style.display = 'none';
+    document.getElementById('AVIrow').style.display = 'none';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+  if (pacerMode == 'VOO')
+  {
+    document.getElementById('aOutputRow').style.visibility = 'hidden';
+    document.getElementById('vOutputRow').style.visibility = 'hidden';
+    document.getElementById('AsenseRow').style.display = 'none';
+    document.getElementById('VsenseRow').style.display = 'none';
+    document.getElementById('AVIrow').style.display = 'none';
+    document.getElementById('PVARProw').style.display = 'none';
+    document.getElementById('aTracking').style.display = 'none';
+  }
+}
+updateAllGUIValues()
+
+function updateVariablesFromGUI()
+{
+
 }
 
 function clickCHB() {
@@ -2157,8 +2309,91 @@ function animateButton(clickedButton)
   setTimeout(function(){clickedButton.style.transform = 'scale(100%)';},"150");
 }
 
+var knobArray = []
+
+function saveKnobState(knob,rowID)
+{
+  if (knob.cumulativeDegrees != undefined)
+  {
+  knobArray[rowID] = knob.cumulativeDegrees
+  }
+}
+
+function loadKnobState(rowID)
+{
+  if(knobArray[rowID] == undefined)
+  {
+    return 1;
+  }
+  else
+  {
+  document.getElementById("bottomKnobImg").cumulativeDegrees = knobArray[rowID]
+  return 0;
+  }
+  
+}
+
+function getSelectableRows()
+{
+  var selectableRowsArray = []
+  if (currentBottomScreen=='mainmenu')
+  {var ancestor = document.getElementById('mainScreen');}
+  else
+  {var ancestor = document.getElementById('modeScreen');}
+
+  var descendents = ancestor.getElementsByTagName('*');
+    // gets all rows
+
+    var i, e, d;
+    for (i = 0; i < descendents.length; ++i) 
+    {
+    e = descendents[i];
+      if ((e.classList.contains("barRow") || e.classList.contains("bottomRows") || e.id == "radio") && e.style.display != 'none')
+      {
+        e.selectable = true
+        selectableRowsArray.push(e)
+        if (e.classList.contains("rowSelected"))
+        {
+          e.selected = true;
+        }
+        else
+        {
+          e.selected = false;
+        }
+      }
+      else
+      {
+        e.selectable = false
+      }
+    }
+    return (selectableRowsArray)
+}
+
+function reassignRowNumbers()
+{
+  let i = 0
+  for (i = 0; i < selectableRows.length; i++) {
+    const element = selectableRows[i];
+
+    selectableRows[i].dataset.rownum = i
+    
+  }
+  return i
+}
+
+var selectedRow
+var selectableRows = []
 function downArrowClick()
 {
+  selectableRows = getSelectableRows()
+  reassignRowNumbers()
+  maxRowNumber = selectableRows.length-1
+
+  if (currentBottomScreen=='mainmenu')
+  {
+  saveKnobState(document.getElementById("bottomKnobImg"),selectedRow.id)
+  }
+
   if (currentlySelectedRowNumber < maxRowNumber)
   {
     currentlySelectedRowNumber+=1;
@@ -2167,12 +2402,30 @@ function downArrowClick()
   {
     currentlySelectedRowNumber=0;
   }
-  
   drawBordersAndArrow()
+  if (currentBottomScreen=='mainmenu')
+  {
+    loadKnobState(selectedRow.id)
+  }
+  //drawBordersAndArrow()
+  getBottomDialParameters()
+  // resetBottomKnob()
 }
+
+
 
 function upArrowClick()
 {
+  selectableRows = getSelectableRows()
+
+  reassignRowNumbers()
+  maxRowNumber = selectableRows.length-1
+  
+  if (currentBottomScreen=='mainmenu')
+  {
+  saveKnobState(document.getElementById("bottomKnobImg"),selectedRow.id)
+  }
+
   if (currentlySelectedRowNumber > 0)
   {
   currentlySelectedRowNumber-=1;
@@ -2182,44 +2435,103 @@ function upArrowClick()
     currentlySelectedRowNumber=maxRowNumber
   }
   drawBordersAndArrow()
+  if (currentBottomScreen=='mainmenu')
+  {
+    loadKnobState(selectedRow.id)
+  }
+  //drawBordersAndArrow()
+  getBottomDialParameters()
+  // resetBottomKnob()
 
 }
 
+
+var selectedOption // bottom screen, which item is selected?
 function drawBordersAndArrow()
 {
-  var ancestor = document.getElementById('bottomScreenHide');
+  if (currentBottomScreen=='mainmenu')
+  {var ancestor = document.getElementById('mainScreen');}
+  else
+  {var ancestor = document.getElementById('modeScreen');}
+
   var descendents = ancestor.getElementsByTagName('*');
     // gets all rows
 
     var i, e, d;
-    for (i = 0; i < descendents.length; ++i) {
+    for (i = 0; i < descendents.length; ++i) 
+    {
     e = descendents[i];
-    if (e.dataset.rownum == currentlySelectedRowNumber)
-    {
-      if (e.id=="radio" || e.className == "bottomRows")
+      if ((e.className == "barRow" || e.className == "bottomRows" || e.id == "radio") && e.style.display != 'none')
       {
-
-        divNode.appendChild(imgNode)
-        e.appendChild(divNode)
+        e.selectable = true
       }
-      else
-      {
-        divNode.remove();
-      }
-      e.classList.add('rowSelected')
+      else {e.selectable = false}
       
-    }
-    else if (e.dataset.rownum != undefined)
-    {
-      e.classList.remove('rowSelected')
+      if (e.selectable == true)
+      {
+        if (e.className == "barRow" || e.className == "bottomRows")
+        {
+          var found = false;
+          bottomRowsArray.forEach(element => {
+            if (element.id == e.id)
+            {
+              found = true;
+            }
+          });
+          if (!found)
+            {
+              bottomRowsArray.push(e)
+            }
+        }
+        if (e.style.display == 'none')
+        {
+          currentlySelectedRowNumber++
+          if (e.classList.contains('rowSelected'))
+          {
+            e.classList.remove('rowSelected')
 
-    }
+          }
+        }
+        else if (e.dataset.rownum == currentlySelectedRowNumber)
+        {
+          selectedRow = e
+          if (e.id=="radio" || e.className == "bottomRows")
+          {
+
+            divNode.appendChild(imgNode)
+            e.appendChild(divNode)
+          }
+          else
+          {
+            divNode.remove();
+          }
+          e.classList.add('rowSelected')
+          selectedOption = e.id
+        }
+        else if (e.classList.contains('rowSelected'))
+        {
+          e.classList.remove('rowSelected')
+
+        }
+      }
+      else 
+        {
+          if (e.classList.contains('rowSelected'))
+          {
+          e.classList.remove('rowSelected')
+          }
+          
+        }
   }
 }
 
 function enterClick()
 {
-  var ancestor = document.getElementById('bottomScreenHide');
+  if (currentBottomScreen=='mainmenu')
+  {var ancestor = document.getElementById('mainScreen');}
+  else
+  {var ancestor = document.getElementById('modeScreen');}
+  
   var descendents = ancestor.getElementsByTagName('*');
     // gets all rows
 
@@ -2232,9 +2544,11 @@ function enterClick()
         if (e.id == "radio")
         {
         e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
-        document.getElementById("pacingBoxMode").innerText = e.firstElementChild.nextElementSibling.innerText
+        pacerMode = e.firstElementChild.nextElementSibling.innerText
+        document.getElementById("pacingBoxMode").innerText = pacerMode
         let element = document.getElementById("pacingMode")
         element.selectedIndex = currentlySelectedRowNumber
+        updateAllGUIValues()
         
         }
         else if (e.id == "backOption")
@@ -2290,19 +2604,28 @@ function enterClick()
 function backClick()
 {
   // write new HTML
+  currentBottomScreen = "mainmenu"
   drawMainMenu()  
+  getBottomDialParameters()
+  updateAllGUIValues()
+  loadKnobState(selectedRow.id)
 }
 
 function drawMainMenu()
 {
+  selectableRows = getSelectableRows()
+  reassignRowNumbers()
+  maxRowNumber = selectableRows.length-1
   currentlySelectedRowNumber = 0;
-  maxRowNumber = 7;
   
+  document.getElementById("modeScreen").style.display = "none"
+  document.getElementById("mainScreen").style.display = ""
+  /*
   document.getElementById("bottomScreenHide").innerHTML = `
   <div class = "mainScreen">
     <div class = "modeContent" id="modeContent">
     
-    <div class = "barRow" data-rownum = 0>
+    <div class = "barRow" id = "AsenseRow" data-rownum = 0>
       <div class = "labelRow">
         <div class = "rowName">A Sensitivity</div>
         <div class = "value" id = "boxAsenseValue">0.5 mV</div>
@@ -2310,7 +2633,7 @@ function drawMainMenu()
       <div class = "bar"><meter class = "meterBar" id = "aSenseMeter" value="30" min="0" max="100">
       </meter></div>
     </div>
-    <div class = "barRow" data-rownum = 1>
+    <div class = "barRow" id = "VsenseRow" data-rownum = 1>
       <div class = "labelRow">
         <div class = "rowName">V Sensitivity</div>
         <div class = "value" id = "boxVsenseValue">2.0 mV</div>
@@ -2318,20 +2641,20 @@ function drawMainMenu()
       <div class = "bar"><meter class = "meterBar" id = "vSenseMeter" value="20" min="0" max="100">
       </meter></div>
     </div>
-    <div class = "barRow" data-rownum = 2>
+    <div class = "barRow" id = "AVIrow" data-rownum = 2>
       <div class = "labelRow">
         <div class = "rowName">A-V Interval</div>
         <div class = "value" id = "boxAVInterval" >170 ms</div>
       </div>
-      <div class = "bar"><meter class = "meterBar" id = "AVMeter" value="170" min="20" max="300">
+      <div class = "bar"><meter class = "meterBar" id = "AVMeter" value="30" min="0" max="100">
       </meter></div>
     </div>
-    <div class = "barRow" data-rownum = 3>
+    <div class = "barRow" id = "PVARProw" data-rownum = 3>
       <div class = "labelRow">
         <div class = "rowName">PVARP</div>
         <div class = "value" id = "boxPVARPValue" >300 ms</div>
       </div>
-      <div class = "bar"><meter class = "meterBar" id = "PVARPMeter" value="300" min ="150" max="500">
+      <div class = "bar"><meter class = "meterBar" id = "PVARPMeter" value="30" min ="0" max="100">
       </meter></div>
     </div>
     <div class = "barRow" id = "aTracking" data-rownum = 4>
@@ -2352,14 +2675,20 @@ function drawMainMenu()
     <div class = "bottomRows"  id = "modeSelection"  data-rownum = 7>Mode Selection</div>
   </div>
   `
-
+*/
  drawBordersAndArrow()
 }
 
 function modeSelectionClick()
 {
+  currentBottomScreen = "modeselect"
+
   currentlySelectedRowNumber = 0;
   maxRowNumber = 8;
+
+  document.getElementById("mainScreen").style.display = "none"
+  document.getElementById("modeScreen").style.display = ""
+  /*
   // write new HTML
   document.getElementById("bottomScreenHide").innerHTML = `
   <div class = "modeScreen">
@@ -2401,6 +2730,8 @@ function modeSelectionClick()
     <div class = "bottomRows" id = "backOption" data-rownum = 8>Back</div>
   </div>
   `
+  */
+
   drawBordersAndArrow()
 
   // select current mode
@@ -2426,4 +2757,317 @@ function modeSelectionClick()
       }
   
     }
+}
+
+// Harrison Knob
+function knobClick (clickEvent)
+{
+  //getBottomDialParameters()
+  var clickTarget = clickEvent.target
+  var minLock = false
+  var maxLock = false
+
+  // calculate minDegree and maxDegree for the knob clicked
+  if (clickTarget.reverseKnob)
+  {
+  clickTarget.maxDegree = -(clickTarget.minValue - clickTarget.startValue)/clickTarget.turnFactor
+  clickTarget.minDegree = -(clickTarget.maxValue - clickTarget.startValue)/clickTarget.turnFactor
+  }
+  else
+  {
+    clickTarget.minDegree = (clickTarget.minValue - clickTarget.startValue)/clickTarget.turnFactor
+    clickTarget.maxDegree = (clickTarget.maxValue - clickTarget.startValue)/clickTarget.turnFactor
+  }
+  // calcute center of knob
+  clickTarget.knobRect = clickTarget.getBoundingClientRect()
+  clickTarget.centerPos = [clickTarget.knobRect.left + (clickTarget.knobRect.width / 2), clickTarget.knobRect.top + (clickTarget.knobRect.height / 2)]
+  //if (isNaN(clickTarget.lastDeg))
+  //{clickTarget.lastDeg = 0}
+
+  if (isNaN(clickTarget.cumulativeDegrees)) {clickTarget.cumulativeDegrees=0}
+  if (isNaN(clickTarget.revolutions)) 
+  {clickTarget.revolutions=0}
+  
+  
+
+
+
+  //clickTarget.cumulativeDegrees = clickTarget.turnFactor
+
+  function mousemove(dragEvent){
+    // calculate position of mouse relative to center of knob
+    clickTarget.mouseRelativetoKnobCenter = [dragEvent.pageX - clickTarget.centerPos[0], clickTarget.centerPos[1]- dragEvent.pageY]
+
+    // find initial degree when first clicked
+    if (isNaN(clickTarget.lastDeg)) // if it's undefined, then it must be the first run
+    {
+      clickTarget.lastDeg = Math.round(Math.atan2(clickTarget.mouseRelativetoKnobCenter[0], clickTarget.mouseRelativetoKnobCenter[1]) * (180/Math.PI)); // x,y -> rad -> degree
+    }
+ 
+    // convert coordinates to angle in degrees
+    clickTarget.deg = Math.round(Math.atan2(clickTarget.mouseRelativetoKnobCenter[0], clickTarget.mouseRelativetoKnobCenter[1]) * (180/Math.PI)); // x,y -> rad -> degree
+    if (clickTarget.deg<0){clickTarget.deg+=360}
+   // console.log('degree: ' + clickTarget.deg)
+
+    // rotate the knob
+    function turn(image, degree) 
+    {
+      image.setAttribute('style', 'transform: rotate(' + degree + 'deg)');
+    }
+    turn(clickTarget, clickTarget.deg)
+
+//////////////////
+ // manage knob limits
+var newRev = false
+
+clickTarget.revolutions = Math.floor(clickTarget.cumulativeDegrees / 360)
+
+var revolution = 0;
+
+if (clickTarget.lastDeg-clickTarget.deg > 300 ) // if number passes through 0/360, add or subtract a rotation
+{
+  if (!maxLock)
+  {
+  revolution = 360
+  }
+  newRev = true
+}
+if (clickTarget.lastDeg-clickTarget.deg < -300)
+{
+  if (!minLock)
+  {
+  revolution = -360
+  }
+  newRev = true
+}
+    
+    var testCumulative = clickTarget.cumulativeDegrees + (clickTarget.deg - clickTarget.lastDeg) + revolution
+    var testValue = Math.round(clickTarget.startValue+clickTarget.cumulativeDegrees*clickTarget.turnFactor)
+    
+    //console.log(testCumulative)
+    if (testCumulative >= clickTarget.maxDegree)
+    {
+      maxLock = true;
+    }
+
+    if (testCumulative <= clickTarget.minDegree)
+    {
+      minLock = true;
+    }
+
+    if (maxLock)
+    {
+      if (testCumulative < clickTarget.maxDegree && !newRev && clickTarget.lastDeg - clickTarget.deg > 0) // break the max lock?
+      {
+        maxLock = false
+      }
+      else // if can't break lock..
+      {
+        clickTarget.cumulativeDegrees = clickTarget.maxDegree
+      }
+    }
+
+    if (minLock)
+    {
+      if (testCumulative > clickTarget.minDegree && !newRev && clickTarget.lastDeg - clickTarget.deg < 0) // break the min lock?
+      {
+        minLock = false
+      }
+      else // if can't break lock..
+      {
+        clickTarget.cumulativeDegrees = clickTarget.minDegree
+      }
+    }
+
+    if (!minLock && !maxLock)
+    {
+      clickTarget.cumulativeDegrees = testCumulative
+    }
+
+
+///////////////////
+      clickTarget.lastDeg = clickTarget.deg
+      //console.log('cumulative degrees: ' + clickTarget.cumulativeDegrees)
+     // console.log('revolutions: ' + clickTarget.revolutions)
+/*
+     if (selectedOption!="AsenseRow" && selectedOption != "VsenseRow")
+     {
+     var result = clickTarget.startValue+clickTarget.cumulativeDegrees*clickTarget.turnFactor
+     }
+    if (selectedOption=="AsenseRow")
+    {
+      var result = 2.4 + clickTarget.startValue-clickTarget.cumulativeDegrees*clickTarget.turnFactor
+    }
+    if (selectedOption=="VsenseRow")
+    {
+      var result = 12.8 +clickTarget.startValue-clickTarget.cumulativeDegrees*clickTarget.turnFactor
+    }
+*/
+
+var result = clickTarget.startValue + (clickTarget.cumulativeDegrees * clickTarget.turnFactor)
+
+var negresult = clickTarget.startValue + (-clickTarget.cumulativeDegrees * clickTarget.turnFactor)
+if (clickTarget.reverseKnob)
+{clickTarget.currentValue = result = negresult}
+else
+{clickTarget.currentValue = result}
+
+
+      if (clickTarget.id=="rateDialImg")
+      {
+        pacingRate = Math.round(result)
+      }
+
+      if (clickTarget.id=="vOutputDialImg")
+      {
+        vPacerOutput = Math.round(result)
+      }
+
+      if (clickTarget.id=="aOutputDialImg")
+      {
+        aPacerOutput = Math.round(result) 
+      }
+
+      if (clickTarget.id=="bottomKnobImg")
+      {
+        bottomKnobFunction(result)
+      }
+      // onParameterChange()
+      updateAllGUIValues()
+  }
+
+  function knobOff(event){
+    window.removeEventListener('mousemove',mousemove)
+    clickTarget.lastDeg = undefined;
+  }
+
+  window.addEventListener('mousemove', mousemove);
+  window.addEventListener('mouseup', knobOff);
+}
+
+// initialze knob parameters
+var elem
+
+// set rateDial parameters
+elem = document.getElementById('rateDialImg')
+elem.minValue = minPaceRate
+elem.startValue = pacingRate
+elem.maxValue = maxPaceRate
+elem.turnFactor = knobTurnFactor
+
+
+// set vOutputDial parameters
+elem = document.getElementById('vOutputDialImg')
+elem.minValue = 0
+elem.startValue = vPacerOutput
+elem.maxValue = vPacerMaxOutput
+elem.turnFactor = knobTurnFactor
+
+
+// set aOutputDial parameters
+elem = document.getElementById('aOutputDialImg')
+elem.minValue = 0
+elem.startValue = aPacerOutput
+elem.maxValue = aPacerMaxOutput
+elem.turnFactor = knobTurnFactor
+
+
+// add listeners
+document.getElementById('rateDialImg').addEventListener('mousedown', knobClick);
+document.getElementById('vOutputDialImg').addEventListener('mousedown', knobClick);
+document.getElementById('aOutputDialImg').addEventListener('mousedown', knobClick);
+document.getElementById('bottomKnobImg').addEventListener('mousedown', knobClick);
+
+
+function getBottomDialParameters()
+{
+  if (selectedOption=="AsenseRow")
+  {
+    var elem = document.getElementById('bottomKnobImg')
+    elem.minValue = aPacerMaxSensitivity
+    elem.startValue = 4
+    elem.maxValue = aPacerMinSensitivity
+    elem.turnFactor = knobTurnFactor/3
+    elem.reverseKnob = true
+    elem.currentValue = aPacerSensitivity
+
+  }
+
+  if (selectedOption=="VsenseRow")
+  {
+    var elem = document.getElementById('bottomKnobImg')
+    elem.minValue = vPacerMaxSensitivity
+    elem.startValue = 4
+    elem.maxValue = vPacerMinSensitivity
+    elem.turnFactor = knobTurnFactor/2
+    elem.reverseKnob = true
+    elem.currentValue = vPacerSensitivity
+  }
+
+  if (selectedOption=="AVIrow")
+  {
+    var elem = document.getElementById('bottomKnobImg')
+    elem.minValue = AVImin
+    elem.startValue = 120
+    elem.maxValue = AVImax
+    elem.turnFactor = knobTurnFactor*3
+    elem.reverseKnob = false
+    elem.currentValue = AVInterval
+  }
+
+  if (selectedOption=="PVARProw")
+  {
+    var elem = document.getElementById('bottomKnobImg')
+    elem.minValue = PVARPmin
+    elem.startValue = 300
+    elem.maxValue = PVARPmax
+    elem.turnFactor = knobTurnFactor*3
+    elem.reverseKnob = false
+    elem.currentValue = PVARP
+  }
+}
+getBottomDialParameters()
+
+function resetBottomKnob()
+{
+  var elem = document.getElementById('bottomKnobImg')
+  elem.cumulativeDegrees = 0
+  elem.deg = 0
+  elem.lastDeg = 0
+}
+
+
+function bottomKnobFunction(knobResult)
+{
+  if (currentBottomScreen == "modeselection")
+  {return 1}
+
+
+  if (selectedOption=="AsenseRow")
+  {
+     aPacerSensitivity = knobResult
+  }
+
+  if (selectedOption=="VsenseRow")
+  {
+    
+     vPacerSensitivity = knobResult
+  }
+
+  if (selectedOption=="AVIrow")
+  {
+    
+     AVInterval = knobResult
+  }
+
+  if (selectedOption=="PVARProw")
+  {
+    
+    PVARP = knobResult
+  }
+  
+
+  
+
+  updateAllGUIValues()
 }

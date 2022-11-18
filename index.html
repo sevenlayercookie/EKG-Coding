@@ -138,7 +138,7 @@
   
         <div class ="topHalf">
           <div class = "topScreen">
-            <div id = "topScreenHide">
+            <div class = "topScreenHide" id = "topScreenHide">
             <div class = "activityLights">
               <img id="aPaceLight" src="assets/paceLightOff.svg">
               A
@@ -160,18 +160,7 @@
                   </div>
                 </div>
               </div>
-              <div class = "topScreenRow">
-                <div class = "meter"><img src="assets/rateMeter.svg"></div>
-                <div class = "rightSide">
-                  <div class = "rightLabel">
-                    V OUTPUT
-                  </div>
-                  <div class = "numMeter" id="pacingBoxVOutput">
-                    10
-                  </div>
-                </div>
-              </div>
-              <div class = "topScreenRow">
+              <div class = "topScreenRow" id = "aOutputRow">
                 <div class = "meter"><img src="assets/rateMeter.svg"></div>
                 <div class = "rightSide">
                   <div class = "rightSide">
@@ -184,6 +173,18 @@
                   </div>
                 </div>
               </div>
+              <div class = "topScreenRow" id = "vOutputRow">
+                <div class = "meter"><img src="assets/rateMeter.svg"></div>
+                <div class = "rightSide">
+                  <div class = "rightLabel">
+                    V OUTPUT
+                  </div>
+                  <div class = "numMeter" id="pacingBoxVOutput">
+                    10
+                  </div>
+                </div>
+              </div>
+              
             </div>
             <div class = "modeIndicatorRow">
               <div id="pacingBoxMode">DDD</div>
@@ -199,9 +200,16 @@
 
             </div>
             <div class = "topKnobs">
-              <img src="assets/knob-full-gradient.svg"> 
-              <img src="assets/knob-full-gradient.svg"> 
-              <img src="assets/knob-full-gradient.svg"> 
+              <div class = 'knobClass' id="rateDialDiv">
+                <img draggable="false" id="rateDialImg" src="assets/knob-full-gradient.svg">
+              </div>
+              <div class = 'knobClass' id="aOutputDialDiv">
+                <img draggable="false" id="aOutputDialImg"src="assets/knob-full-gradient.svg"> 
+              </div>
+              <div class = 'knobClass' id="vOutputDialDiv">
+                <img draggable="false" id="vOutputDialImg" src="assets/knob-full-gradient.svg"> 
+              </div>
+             
             </div>
             <div class = "lockButton">
               <img src="assets/lockButton-white-blackback.svg" onclick="animateButton(this)"> 
@@ -215,15 +223,107 @@
         <div class ="bottomHalf">
           <div class = "bottomScreen">
             <div id = "bottomScreenHide" class = "bottomScreenHide">
-              
+              <div class = "mainScreen" id = "mainScreen" style="">
+                <div class = "modeContent" id="modeContent">
+                
+                <div class = "barRow" id = "AsenseRow" data-rownum = 0>
+                  <div class = "labelRow">
+                    <div class = "rowName">A Sensitivity</div>
+                    <div class = "value" id = "boxAsenseValue">0.5 mV</div>
+                  </div>
+                  <div class = "bar"><meter class = "meterBar" id = "aSenseMeter" value="30" min="0" max="100">
+                  </meter></div>
+                </div>
+                <div class = "barRow" id = "VsenseRow" data-rownum = 1>
+                  <div class = "labelRow">
+                    <div class = "rowName">V Sensitivity</div>
+                    <div class = "value" id = "boxVsenseValue">2.0 mV</div>
+                  </div>
+                  <div class = "bar"><meter class = "meterBar" id = "vSenseMeter" value="20" min="0" max="100">
+                  </meter></div>
+                </div>
+                <div class = "barRow" id = "AVIrow" data-rownum = 2>
+                  <div class = "labelRow">
+                    <div class = "rowName">A-V Interval</div>
+                    <div class = "value" id = "boxAVInterval" >170 ms</div>
+                  </div>
+                  <div class = "bar"><meter class = "meterBar" id = "AVMeter" value="30" min="0" max="100">
+                  </meter></div>
+                </div>
+                <div class = "barRow" id = "PVARProw" data-rownum = 3>
+                  <div class = "labelRow">
+                    <div class = "rowName">PVARP</div>
+                    <div class = "value" id = "boxPVARPValue" >300 ms</div>
+                  </div>
+                  <div class = "bar"><meter class = "meterBar" id = "PVARPMeter" value="30" min ="0" max="100">
+                  </meter></div>
+                </div>
+                <div class = "barRow" id = "aTracking" data-rownum = 4>
+                  <div class = "labelRow">
+                    <div class = "rowName">A. Tracking</div>
+                    <div class = "value">On</div>
+                  </div>
+                </div>
+                <div class = "barRow" id = "settings" data-rownum = 5>
+                  <div class = "labelRow">
+                    <div class = "rowName">Settings</div>
+                    <div class = "value">Automatic</div>
+                  </div>
+                </div>
+                
+                </div>
+                <div class = "bottomRows" id = "RAP" data-rownum = 6>Rapid Atrial Pacing</div>
+                <div class = "bottomRows"  id = "modeSelection"  data-rownum = 7>Mode Selection</div>
+              </div>
+              <div class = "modeScreen" id = "modeScreen" style="display: none;">
+                <div class = "modeTitle">Mode Selection</div>
+                <div class = "modeContent" id="modeContent">
+                  <div class = "row" id ="radio" data-rownum = 0>
+                    <div class = "modeRadio"><img src="assets/radio-circle-marked.svg"></div>
+                    <div class = "modeName">DDD</div>
+                  </div>
+                  <div class = "row" id ="radio" data-rownum = 1>
+                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                    <div class = "modeName">DDI</div>
+                  </div>
+                  <div class = "row" id ="radio" data-rownum = 2>
+                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                    <div class = "modeName">DOO</div>
+                  </div>
+                  <div class = "row" id ="radio" data-rownum = 3>
+                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                    <div class = "modeName">AAI</div>
+                  </div>
+                  <div class = "row" id ="radio" data-rownum = 4>
+                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                    <div class = "modeName">AOO</div>
+                  </div>
+                  <div class = "row" id ="radio" data-rownum = 5>
+                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                    <div class = "modeName">VVI</div>
+                  </div>
+                  <div class = "row" id ="radio" data-rownum = 6>
+                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                    <div class = "modeName">VOO</div>
+                  </div>
+                  <div class = "row" id ="radio" data-rownum = 7>
+                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                    <div class = "modeName">OOO</div>
+                  </div>
+                </div>
+                <div class = "bottomRows" id = "backOption" data-rownum = 8>Back</div>
+              </div>
             </div>
+            
           </div>
           
           <div class = "bottomKnobs">
             <img src="assets/enterButton-white-black.svg" onclick="animateButton(this); enterClick()">
             <img src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()">
             <img src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()">
-            <img src="assets/knob-full-gradient.svg">
+            <div class="knobClass" id = "bottomKnobDiv" draggable="false">
+              <img draggable="false" id = "bottomKnobImg"src="assets/knob-full-gradient.svg">
+            </div>
             <img src="assets/pauseButton-white-black.svg" onclick="animateButton(this)">
           </div>
         

@@ -99,7 +99,7 @@ img {
   position:static;
   width: 70%;
   height: 100%;
-  background-color:#85d385;
+  background-color:#548654;
  }
 
  .activityLights {
@@ -197,7 +197,7 @@ img {
   position:relative;
   width:70%;
   height:100%;
-  background-color:#85d385;
+  background-color:#548654;
  }
 
 .bottomKnobs {
@@ -218,7 +218,7 @@ img {
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: flex-start;
   border-bottom-style: dotted;
   border-width: clamp(0px, .2vh, .3vw)  
 }
@@ -248,16 +248,6 @@ img {
   width: 10%;
   padding-right: 10%;
 }
-
-/*
-.bottomScreenHide {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  justify-content: space-between;
-  font-size: clamp(0px, 1.3vw, 1.6vh);
-}
-*/
 
 .modeScreen {
   display: flex;
@@ -295,4 +285,21 @@ img {
 
 .meterBar {
   width: 100%;
+}
+
+.topScreenHide {
+  background-color:#85d385;
+  height: 100%;
+  width: 100%;
+}
+
+.bottomScreenHide {
+  background-color:#85d385;
+  height: 100%;
+  width: 100%;
+}
+
+.knobClass {
+  cursor:grab;
+  padding:3%;
 }
