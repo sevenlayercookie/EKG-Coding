@@ -28,14 +28,14 @@ cursor:crosshair;
 
 /* Split the screen in half */
 .split {
-  height: 100%;
+  height: auto;
   
   position: fixed;
   z-index: 1;
   top: 0;
   overflow-x: hidden;
   /*overflow-y: hidden;*/
-  padding-top: 20px;
+  /*padding-top: 20px;*/
 }
 
 /* Control the left side */
@@ -49,27 +49,29 @@ cursor:crosshair;
   right: 0;
   width: 30%;    
   height:100%;
-  margin-bottom: 100px;
   overflow-y: hidden;
 }
 
 img {
-  max-height: 95%;
+  /* max-height: 95%; */
  }
 
 
  /* Pacer Box */
 
  .pacemakerGraphic {
+  /*
   height: 68vmin;
   width: 29vmin;
+  */
   aspect-ratio: 3/7;
   min-height: 0;
-  max-height: 90%;
+  max-height: 95%;
   margin-left: 1%;
   margin-right: 2%;
   margin-left: 1%;
   touch-action: none;
+  padding-bottom: 10%;
  }
  .wholeBox  {
   border-radius: min(2vw, 30px);
@@ -93,12 +95,12 @@ img {
 
  .topHalf {
   display: flex;
-  position:static;
-  height: 53%;
+  position:relative;
+  height: 50%;
  } 
 
  .topScreen {
-  position:static;
+  position:relative;
   width: 70%;
   height: 100%;
   background-color:#548654;
@@ -151,7 +153,7 @@ img {
  }
 
  .modeIndicatorRow {
-  height: 10%;
+  height: 12%;
   display: flex;
   justify-content: space-evenly;
   font-family: 'Courier New', Courier, monospace;
@@ -159,6 +161,17 @@ img {
   font-size: clamp(0px, 3vw, 3vh);
   align-items: flex-end;
  }
+
+.batteryDiv {
+  width: 30%;
+  display: flex;
+  align-self: center;
+}
+.lockIndicatorDiv {
+  width: 30%;
+    display: flex;
+    align-self: center;
+}
  
  .topRightSide {
   position: static;
@@ -232,6 +245,7 @@ img {
   border: solid transparent;
   border-width: clamp(0px, .2vh, .3vw);
   align-items: center;
+  height: 10%;
 }
 
 .barRow {
@@ -264,6 +278,7 @@ img {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
   justify-content: space-between;
   font-size: clamp(0px, 1.4vw, 1.4vh);
 }
@@ -278,6 +293,8 @@ img {
   border-width: clamp(0px, .2vh, .3vw);
   align-items: center;
   justify-content: space-between;
+  height:10%;
+  max-width: 100%;
 }
 
 .rowSelected {
@@ -291,6 +308,9 @@ img {
 }
 
 .topScreenHide {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   background-color:#85d385;
   height: 100%;
   width: 100%;
@@ -309,5 +329,54 @@ img {
 
 .arrow {
   height: 100%; 
+  display: contents;
+}
+
+.textBoxes {
+  display:block;
+}
+
+.mainDiv {
   display: flex;
+  height: 100%;
+}
+
+
+/* Media queries */
+
+@media screen and (max-width: 480px) {
+  .mainDiv {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .split {
+    position: relative;
+  }
+  .textBoxes {
+    display:none;
+  }
+  .right {
+    display: flex;
+    justify-content: center;
+    padding-right: 1%;
+    height: 100%;
+    width: auto;
+  }
+  .left {
+    width:100%
+  }
+  .pacemakerGraphic {
+    height: min(70vh,95%);
+    width: 30vh;
+   }
+   .wholeBox  {
+    border-radius: min(3vh, 30px);
+   }
+
+   .activityLights {
+    font-size: clamp(0px, 1.5vh, 2.0vh);
+  }
+
 }

@@ -245,8 +245,8 @@ function onload() {
   var lold = 0;
   function updateHertz() {
     sec++;
-    avgFPS = document.getElementById("demoTEXT").innerText = l - lold;
-    document.getElementById("demoTEXT3").innerText = processingSpeed = j - jold;
+    avgFPS = l - lold;
+    processingSpeed = j - jold;
     lold = l;
     jold = j;
   }
@@ -338,7 +338,6 @@ function onload() {
     
     isPainted = false;
     requestAnimationFrame(paint);
-    document.getElementById("demoTEXT2").innerText = i;
   }
 
   function paint() {
@@ -348,17 +347,6 @@ function onload() {
     startAnimating();
   }
 
-  document.getElementById("demoTEXT").onkeydown = function () {
-    i = 0;
-    PVCflag = 1;
-  };
-
-  //window.addEventListener('resize', function(event){
-    // do stuff here
-    //ctx.save();
-   // w = document.getElementById("demo").width = ctx.width = window.innerWidth;
-    //ctx.restore();
-  //});
 input = document.getElementById('avgRateBox');
 input.onchange = function(){setHR=input.value;HRchanged=true;};
 pacerate = document.getElementById('pacingRate');

@@ -4,341 +4,330 @@
   <meta name="viewport" content="width=device-width" />
 </head>
 <body>
-
-  <div class="split left">
-    
-      <div hidden="true" style="text-align: right;width:100%">fps: <span id="demoTEXT">0</span>
-        <p></p>
-        i: <span id="demoTEXT2">0</span>
-      </div>
-        <!--avg data points processed per second: --><span hidden=true id="demoTEXT3">0</span>
-        
-        <label for="PRbox">native PR interval</label> <input type="number" id="PRbox" value=150 size ="2" max="1000" min="0" >
-        <label for="avgRateBox">native rate:</label> <input type="number" id="avgRateBox" value=60 size ="2" max="1000" min="0">
-        <p></p>
-    
-    
-        <p></p>
+  <div class="mainDiv">
+    <div class="split left">
+        <div class="textBoxes">
+          <label for="PRbox">native PR interval</label> <input type="number" id="PRbox" value=150 size ="2" max="1000" min="0" >
+          <label for="avgRateBox">native rate:</label> <input type="number" id="avgRateBox" value=60 size ="2" max="1000" min="0">
+          <p></p>
+      
+      
+          <p></p>
 
 
-        <label for="pacingMode">Pacing mode:</label>
-        <select name="pacingMode" id="pacingMode" onchange=pacingModeBoxChange()>
-          <option value="listDDD">DDD</option>
-          <option value="listDDI">DDI</option>
-          <option value="listDOO">DOO</option>
-          <option value="listAAI">AAI</option>
-          <option value="listAOO">AOO</option>
-          <option value="listVVI">VVI</option>
-          <option value="listVOO">VOO</option>
-          <option value="listVOO">OOO</option>
-        </select>
+          <label for="pacingMode">Pacing mode:</label>
+          <select name="pacingMode" id="pacingMode" onchange=pacingModeBoxChange()>
+            <option value="listDDD">DDD</option>
+            <option value="listDDI">DDI</option>
+            <option value="listDOO">DOO</option>
+            <option value="listAAI">AAI</option>
+            <option value="listAOO">AOO</option>
+            <option value="listVVI">VVI</option>
+            <option value="listVOO">VOO</option>
+            <option value="listVOO">OOO</option>
+          </select>
 
-          <button id="paceButton" onclick="paceButtonClick()">Start Pacing</button>
+            <button id="paceButton" onclick="paceButtonClick()">Start Pacing</button>
+            
+          <input hidden=true type="checkbox" id="capturing" value="capturing">
+          <label hidden=true for="capturing"> capture override</label><br>
+          <label for="pacingRate">pacing rate:</label>
+          <input id="pacingRate" value=60 size="2" type="number" min="0" max ="1000">
+          <label for="AVInterval">pacer AV interval:</label>
+          <input id="AVInterval" value=170 size="2"  type="number" min="20" max="300" onchange="onParameterChange()">
+          <label for="AVIntervalHRAdjustBox">auto AV interval (rate controlled)</label>
+          <input id="AVIntervalHRAdjustBox" type="checkbox" checked=true>
           
-        <input hidden=true type="checkbox" id="capturing" value="capturing">
-        <label hidden=true for="capturing"> capture override</label><br>
-        <label for="pacingRate">pacing rate:</label>
-        <input id="pacingRate" value=60 size="2" type="number" min="0" max ="1000">
-        <label for="AVInterval">pacer AV interval:</label>
-        <input id="AVInterval" value=170 size="2"  type="number" min="20" max="300" onchange="onParameterChange()">
-        <label for="AVIntervalHRAdjustBox">auto AV interval (rate controlled)</label>
-        <input id="AVIntervalHRAdjustBox" type="checkbox" checked=true>
-        
-        <br>
-        <label for="aOutputBox">atrial output:</label>
-        <input id="aOutputBox" size ="1" value=10 type="number" min="0" max ="1000" onChange="onOutputChange('atrium')">mA <label for="aSensitivityBox">sensitivity:</label><input id="aSensitivityBox" type="number" value=4 size ="2" min="0.4" max ="10" step="0.2" onChange="onParameterChange()">mV
-        <br>
-        <label for="vOutputBox">ventricle output:</label>
-        <input id="vOutputBox" size ="1" value=10 type="number" min="0" max ="1000" onChange="onOutputChange('ventricle')">mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" type="number" value=4 size ="2" min="0.8" max ="20" step="0.2" onChange="onParameterChange()">mV
-        <div id="URLdiv">
-          <label for="URLbox">upper rate limit (DDD):</label>
-          <input id="URLbox" value=150 size="2" type="number" min="0" max ="1000">
-          </div>
-        
-        <!-- <input type="checkbox" id="CHBbox" value="CHBbox" onchange="clickCHB()">
-        <label for="CHBbox">complete heart block</label><br> -->
-
-        
-
-        <label for="rhythmList">Rhythm:</label>
-        <select id="rhythmList">
-          <option value="NSR">Sinus rhythm</option>
-          <option value="flatline">Flatline</option>
-          <option value="junctional">Junctional escape</option>
-          <option value="ventEscape">Ventricular escape</option>
-          <option value="aFib">Atrial fibrillation</option>
-          <option value="aFlutter">Atrial flutter</option>
-          <option value="2ndtypeI">Second-degree, Type I (Mobitz I, Wenckebach)</option>
-          <option value="intermAVBlock">Second-degree, Type II (Mobitz II, intermittent)</option>
-          <option value="highDegreeBlock">Second-degree, Type II (high grade, fixed ratios)</option>
-          <option value="completeBlock">Complete heart block</option>
-          <option value="geminies">Geminies</option>
-          
-          <!-- <option value="synthetic">Synthetic</option> -->
-        </select>
-        <br>
-        <div id="flutterStuff" hidden=true>
-          <label for="flutterAtrialRate">flutter, atrial rate:</label> <input id="flutterAtrialRate" value=300 size ="2" type="number" min="0" max ="1000">
-          <label for="flutterConductionRatio">conduction ratio (A:V) :</label> <input id="flutterConductionRatio" value=4 size ="2" type="number" min="0" max ="20">
-          <input type="checkbox" id="flutterVariableAV" value="flutterVariableAV">
-          <label for="flutterVariableAV"> variable AV conduction</label><br>
-        </div>
-        <div id="wenckStuff" hidden=true>
-          <label for="wenckeDegreeBox">degree of block:</label> <input id="wenckeDegreeBox" value=3 size ="2" type="number" min="2" max ="10">
-          <label id='AVblockLabel'>4:3</label>
-        </div>
-        <div id="intermAVBlockStuff" hidden=true>
-          <label for="blockFreqBox">frequency of block: </label> <input id="blockFreqBox" value=.20 size ="2" type="number" min="0" max ="1" step="0.1">
-          <label id='blockedRatioLabel'>20% blocked</label>
-        </div>
-        <div id="CHBstuff" hidden=true>
-          <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40 size ="2" type="number" min="0" max ="1000">
-          <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=90 size ="2" type="number" min="0" max ="1000">
-        </div>
-        <div id="geminiStuff" hidden=true>
-          <label for="geminiRatioBox">ratio normal QRS to PVC </label> <input id="geminiRatioBox" value=1 size ="2" type="number" min="1" max ="10" step="1">
-          <!-- <label id='blockedRatioLabel'>20% blocked</label> -->
-        </div>
-
-<input type="checkbox" id="noise" value="noise" onclick="noiseToggle()">
-<label for="noise"> noise</label>
-<!--
-        <div id="buttons" class="container">
-          <button class="buttonsStyle" onclick="clearRhythms()">clear rhythms</button>
-          <button class="buttonsStyle" onclick="drawPWave()">P wave</button>
-          <button class="buttonsStyle" onclick="drawQRST()">QRS</button>
-           <button class="buttonsStyle" onclick="NSRhythm()">NSR</button> 
-           <button class="buttonsStyle" onclick="showCHB()">CHB</button> 
-           <button class="buttonsStyle" onclick="ECGsyn()">Synthetic</button> 
-        </div>
-      -->
-        
-        <div id="feedbackBox"></div>
-        
-        <div id="canvasesdiv" style="position:relative; width:100%; height:200px">
-            <canvas class="leftSideCanvas" id="tele" style="position:absolute; left:0px; top:0px;" width=100% height=200px></canvas>
-            <canvas class="leftSideCanvas" id="HRLayer" style="position:absolute; left:0px; top:0px; background-color: transparent;" width=100% height="200"></canvas>
-        </div>
-
-    
-  </div>
-  
-<div class="split right">
-  <!--<img id="pacemakerImg" src="assets/pacemaker.svg" hidden="true">
-    <div id="pacemakerDiv" style="position:relative; width:100%; height: 50%">
-      <canvas class ="rightSideCanvas" id="pacemakerCanvas"></canvas>
-    </div>
-  -->
-    <div class="pacemakerGraphic">
-      <div class="wholeBox">
-        <div class="topButtons">
-          <img src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick(this)">
-          <img src="assets/powerButton-white-blackback.svg"  onclick="animateButton(this); paceButtonClick()">
-        </div>
-  
-        <div class ="topHalf">
-          <div class = "topScreen">
-            <div class = "topScreenHide" id = "topScreenHide">
-            <div class = "activityLights">
-              <img id="aPaceLight" src="assets/paceLightOff.svg">
-              A
-              <img id="aSenseLight" src="assets/senseLightOff.svg">
-              <div class="spacer"></div>
-              <img id="vPaceLight" src="assets/paceLightOff.svg">
-              V
-              <img id="vSenseLight" src="assets/senseLightOff.svg">
+          <br>
+          <label for="aOutputBox">atrial output:</label>
+          <input id="aOutputBox" size ="1" value=10 type="number" min="0" max ="1000" onChange="onOutputChange('atrium')">mA <label for="aSensitivityBox">sensitivity:</label><input id="aSensitivityBox" type="number" value=4 size ="2" min="0.4" max ="10" step="0.2" onChange="onParameterChange()">mV
+          <br>
+          <label for="vOutputBox">ventricle output:</label>
+          <input id="vOutputBox" size ="1" value=10 type="number" min="0" max ="1000" onChange="onOutputChange('ventricle')">mA <label for="vSensitivityBox">sensitivity:</label><input id="vSensitivityBox" type="number" value=4 size ="2" min="0.8" max ="20" step="0.2" onChange="onParameterChange()">mV
+          <div id="URLdiv">
+            <label for="URLbox">upper rate limit (DDD):</label>
+            <input id="URLbox" value=150 size="2" type="number" min="0" max ="1000">
             </div>
-            <div class = "topScreenRows">
-              <div class = "topScreenRow">
-                <div class = "meter"><img src="assets/rateMeter.svg"></div>
-                <div class = "rightSide">
-                  <div class = "rightLabel">
-                    RATE
-                  </div>
-                  <div class = "numMeter" id="pacingBoxRate">
-                    80
-                  </div>
-                </div>
+          
+          <!-- <input type="checkbox" id="CHBbox" value="CHBbox" onchange="clickCHB()">
+          <label for="CHBbox">complete heart block</label><br> -->
+
+          
+            </div>
+            <div class="rhythmStuff">
+              <label for="rhythmList">Rhythm:</label>
+              <select id="rhythmList">
+                <option value="NSR">Sinus rhythm</option>
+                <option value="flatline">Flatline</option>
+                <option value="junctional">Junctional escape</option>
+                <option value="ventEscape">Ventricular escape</option>
+                <option value="aFib">Atrial fibrillation</option>
+                <option value="aFlutter">Atrial flutter</option>
+                <option value="2ndtypeI">Second-degree, Type I (Mobitz I, Wenckebach)</option>
+                <option value="intermAVBlock">Second-degree, Type II (Mobitz II, intermittent)</option>
+                <option value="highDegreeBlock">Second-degree, Type II (high grade, fixed ratios)</option>
+                <option value="completeBlock">Complete heart block</option>
+                <option value="geminies">Geminies</option>
+                
+                <!-- <option value="synthetic">Synthetic</option> -->
+              </select>
+              <br>
+              <div id="flutterStuff" hidden=true>
+                <label for="flutterAtrialRate">flutter, atrial rate:</label> <input id="flutterAtrialRate" value=300 size ="2" type="number" min="0" max ="1000">
+                <label for="flutterConductionRatio">conduction ratio (A:V) :</label> <input id="flutterConductionRatio" value=4 size ="2" type="number" min="0" max ="20">
+                <input type="checkbox" id="flutterVariableAV" value="flutterVariableAV">
+                <label for="flutterVariableAV"> variable AV conduction</label><br>
               </div>
-              <div class = "topScreenRow" id = "aOutputRow">
-                <div class = "meter"><img src="assets/rateMeter.svg"></div>
-                <div class = "rightSide">
+              <div id="wenckStuff" hidden=true>
+                <label for="wenckeDegreeBox">degree of block:</label> <input id="wenckeDegreeBox" value=3 size ="2" type="number" min="2" max ="10">
+                <label id='AVblockLabel'>4:3</label>
+              </div>
+              <div id="intermAVBlockStuff" hidden=true>
+                <label for="blockFreqBox">frequency of block: </label> <input id="blockFreqBox" value=.20 size ="2" type="number" min="0" max ="1" step="0.1">
+                <label id='blockedRatioLabel'>20% blocked</label>
+              </div>
+              <div id="CHBstuff" hidden=true>
+                <label for="ventRateBox">ventricular rate:</label> <input id="ventRateBox" value=40 size ="2" type="number" min="0" max ="1000">
+                <label for="atrialRateBox">atrial rate:</label> <input id="atrialRateBox" value=90 size ="2" type="number" min="0" max ="1000">
+              </div>
+              <div id="geminiStuff" hidden=true>
+                <label for="geminiRatioBox">ratio normal QRS to PVC </label> <input id="geminiRatioBox" value=1 size ="2" type="number" min="1" max ="10" step="1">
+                
+              </div>
+            </div>
+
+  <input type="checkbox" id="noise" value="noise" onclick="noiseToggle()">
+  <label for="noise"> noise</label>
+
+          
+          <div id="feedbackBox"></div>
+          
+          <div id="canvasesdiv" style="position:relative; width:100%; height:200px">
+              <canvas class="leftSideCanvas" id="tele" style="position:absolute; left:0px; top:0px;" width=100% height=200px></canvas>
+              <canvas class="leftSideCanvas" id="HRLayer" style="position:absolute; left:0px; top:0px; background-color: transparent;" width=100% height="200"></canvas>
+          </div>
+
+      
+    </div>
+    
+  <div class="split right">
+    
+      <div class="pacemakerGraphic">
+        <div class="wholeBox">
+          <div class="topButtons">
+            <img src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick(this)">
+            <img src="assets/powerButton-white-blackback.svg"  onclick="animateButton(this); paceButtonClick()">
+          </div>
+    
+          <div class ="topHalf">
+            <div class = "topScreen">
+              <div class = "topScreenHide" id = "topScreenHide">
+              <div class = "activityLights">
+                <img id="aPaceLight" src="assets/paceLightOff.svg">
+                A
+                <img id="aSenseLight" src="assets/senseLightOff.svg">
+                <div class="spacer"></div>
+                <img id="vPaceLight" src="assets/paceLightOff.svg">
+                V
+                <img id="vSenseLight" src="assets/senseLightOff.svg">
+              </div>
+              <div class = "topScreenRows">
+                <div class = "topScreenRow">
+                  <div class = "meter"><img src="assets/rateMeter.svg"></div>
                   <div class = "rightSide">
                     <div class = "rightLabel">
-                      A OUTPUT
+                      RATE
                     </div>
-                    <div class = "numMeter" id="pacingBoxAOutput">
-                      5
+                    <div class = "numMeter" id="pacingBoxRate">
+                      80
                     </div>
                   </div>
                 </div>
+                <div class = "topScreenRow" id = "aOutputRow">
+                  <div class = "meter"><img src="assets/rateMeter.svg"></div>
+                  <div class = "rightSide">
+                    <div class = "rightSide">
+                      <div class = "rightLabel">
+                        A OUTPUT
+                      </div>
+                      <div class = "numMeter" id="pacingBoxAOutput">
+                        5
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class = "topScreenRow" id = "vOutputRow">
+                  <div class = "meter"><img src="assets/rateMeter.svg"></div>
+                  <div class = "rightSide">
+                    <div class = "rightLabel">
+                      V OUTPUT
+                    </div>
+                    <div class = "numMeter" id="pacingBoxVOutput">
+                      10
+                    </div>
+                  </div>
+                </div>
+                
               </div>
-              <div class = "topScreenRow" id = "vOutputRow">
-                <div class = "meter"><img src="assets/rateMeter.svg"></div>
-                <div class = "rightSide">
-                  <div class = "rightLabel">
-                    V OUTPUT
+              <div class = "modeIndicatorRow">
+                <div id="pacingBoxMode">DDD</div>
+                <div class="batteryDiv">
+                  <img src="assets/battery3.svg"> 
+                </div>
+                <div class="lockIndicatorDiv">
+                  <img src="assets/lockIndicator.svg">
+                </div>
+              </div>
+            </div>
+            </div>
+            
+            
+            <div class = "topRightSide">
+              <div class = "topKnobsBlank">
+
+              </div>
+              <div class = "topKnobs">
+                <div class = 'knobClass' id="rateDialDiv">
+                  <img draggable="false" id="rateDialImg" src="assets/knob-full-gradient.svg">
+                </div>
+                <div class = 'knobClass' id="aOutputDialDiv">
+                  <img draggable="false" id="aOutputDialImg"src="assets/knob-full-gradient.svg"> 
+                </div>
+                <div class = 'knobClass' id="vOutputDialDiv">
+                  <img draggable="false" id="vOutputDialImg" src="assets/knob-full-gradient.svg"> 
+                </div>
+              
+              </div>
+              <div class = "lockButton">
+                <img src="assets/lockButton-white-blackback.svg" onclick="animateButton(this)"> 
+              </div>
+            </div>
+          
+          </div>
+          <div class="screenSpacer">
+
+          </div>
+          <div class ="bottomHalf">
+            <div class = "bottomScreen">
+              <div id = "bottomScreenHide" class = "bottomScreenHide">
+                <div class = "mainScreen" id = "mainScreen">
+                  <div class = "modeContent" id="modeContent">
+                  
+                  <div class = "barRow" id = "AsenseRow" data-rownum = 0>
+                    <div class = "labelRow">
+                      <div class = "rowName">A Sensitivity</div>
+                      <div class = "value" id = "boxAsenseValue">0.5 mV</div>
+                    </div>
+                    <div class = "bar"><meter class = "meterBar" id = "aSenseMeter" value="30" min="0" max="100">
+                    </meter></div>
                   </div>
-                  <div class = "numMeter" id="pacingBoxVOutput">
-                    10
+                  <div class = "barRow" id = "VsenseRow" data-rownum = 1>
+                    <div class = "labelRow">
+                      <div class = "rowName">V Sensitivity</div>
+                      <div class = "value" id = "boxVsenseValue">2.0 mV</div>
+                    </div>
+                    <div class = "bar"><meter class = "meterBar" id = "vSenseMeter" value="20" min="0" max="100">
+                    </meter></div>
                   </div>
+                  <div class = "barRow" id = "AVIrow" data-rownum = 2>
+                    <div class = "labelRow">
+                      <div class = "rowName">A-V Interval</div>
+                      <div class = "value" id = "boxAVInterval" >170 ms</div>
+                    </div>
+                    <div class = "bar"><meter class = "meterBar" id = "AVMeter" value="30" min="0" max="100">
+                    </meter></div>
+                  </div>
+                  <div class = "barRow" id = "URLrow" data-rownum = 3>
+                    <div class = "labelRow">
+                      <div class = "rowName">Upper Rate</div>
+                      <div class = "value" id = "boxURL" >110 ppm</div>
+                    </div>
+                    <div class = "bar"><meter class = "meterBar" id = "URLMeter" value="30" min="0" max="100">
+                    </meter></div>
+                  </div>
+                  <div class = "barRow" id = "PVARProw" data-rownum = 4>
+                    <div class = "labelRow">
+                      <div class = "rowName">PVARP</div>
+                      <div class = "value" id = "boxPVARPValue" >300 ms</div>
+                    </div>
+                    <div class = "bar"><meter class = "meterBar" id = "PVARPMeter" value="30" min ="0" max="100">
+                    </meter></div>
+                  </div>
+                  <div class = "barRow" id = "aTracking" data-rownum = 5>
+                    <div class = "labelRow">
+                      <div class = "rowName">A. Tracking</div>
+                      <div class = "value">On</div>
+                    </div>
+                  </div>
+                  <div class = "barRow" id = "settings" data-rownum = 6>
+                    <div class = "labelRow">
+                      <div class = "rowName">Settings</div>
+                      <div class = "value" id = "settingsValue">Automatic</div>
+                    </div>
+                  </div>
+                  
+                  </div>
+                  <div class = "bottomRows" id = "RAP" data-rownum = 7>Rapid Atrial Pacing</div>
+                  <div class = "bottomRows"  id = "modeSelection"  data-rownum = 8>Mode Selection</div>
+                </div>
+                <div class = "modeScreen" id = "modeScreen" style="display: none;">
+                  <div class = "modeTitle">Mode Selection</div>
+                  <div class = "modeContent" id="modeContent">
+                    <div class = "row" id ="radio" data-rownum = 0>
+                      <div class = "modeRadio"><img src="assets/radio-circle-marked.svg"></div>
+                      <div class = "modeName">DDD</div>
+                    </div>
+                    <div class = "row" id ="radio" data-rownum = 1>
+                      <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                      <div class = "modeName">DDI</div>
+                    </div>
+                    <div class = "row" id ="radio" data-rownum = 2>
+                      <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                      <div class = "modeName">DOO</div>
+                    </div>
+                    <div class = "row" id ="radio" data-rownum = 3>
+                      <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                      <div class = "modeName">AAI</div>
+                    </div>
+                    <div class = "row" id ="radio" data-rownum = 4>
+                      <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                      <div class = "modeName">AOO</div>
+                    </div>
+                    <div class = "row" id ="radio" data-rownum = 5>
+                      <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                      <div class = "modeName">VVI</div>
+                    </div>
+                    <div class = "row" id ="radio" data-rownum = 6>
+                      <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                      <div class = "modeName">VOO</div>
+                    </div>
+                    <div class = "row" id ="radio" data-rownum = 7>
+                      <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
+                      <div class = "modeName">OOO</div>
+                    </div>
+                  </div>
+                  <div class = "bottomRows" id = "backOption" data-rownum = 8>Back</div>
                 </div>
               </div>
               
             </div>
-            <div class = "modeIndicatorRow">
-              <div id="pacingBoxMode">DDD</div>
-              <img src="assets/battery3.svg"> 
-              <img src="assets/lockIndicator.svg">
-            </div>
-          </div>
-          </div>
-          
-          
-          <div class = "topRightSide">
-            <div class = "topKnobsBlank">
-
-            </div>
-            <div class = "topKnobs">
-              <div class = 'knobClass' id="rateDialDiv">
-                <img draggable="false" id="rateDialImg" src="assets/knob-full-gradient.svg">
-              </div>
-              <div class = 'knobClass' id="aOutputDialDiv">
-                <img draggable="false" id="aOutputDialImg"src="assets/knob-full-gradient.svg"> 
-              </div>
-              <div class = 'knobClass' id="vOutputDialDiv">
-                <img draggable="false" id="vOutputDialImg" src="assets/knob-full-gradient.svg"> 
-              </div>
-             
-            </div>
-            <div class = "lockButton">
-              <img src="assets/lockButton-white-blackback.svg" onclick="animateButton(this)"> 
-            </div>
-          </div>
-        
-        </div>
-        <div class="screenSpacer">
-
-        </div>
-        <div class ="bottomHalf">
-          <div class = "bottomScreen">
-            <div id = "bottomScreenHide" class = "bottomScreenHide">
-              <div class = "mainScreen" id = "mainScreen">
-                <div class = "modeContent" id="modeContent">
-                
-                <div class = "barRow" id = "AsenseRow" data-rownum = 0>
-                  <div class = "labelRow">
-                    <div class = "rowName">A Sensitivity</div>
-                    <div class = "value" id = "boxAsenseValue">0.5 mV</div>
-                  </div>
-                  <div class = "bar"><meter class = "meterBar" id = "aSenseMeter" value="30" min="0" max="100">
-                  </meter></div>
-                </div>
-                <div class = "barRow" id = "VsenseRow" data-rownum = 1>
-                  <div class = "labelRow">
-                    <div class = "rowName">V Sensitivity</div>
-                    <div class = "value" id = "boxVsenseValue">2.0 mV</div>
-                  </div>
-                  <div class = "bar"><meter class = "meterBar" id = "vSenseMeter" value="20" min="0" max="100">
-                  </meter></div>
-                </div>
-                <div class = "barRow" id = "AVIrow" data-rownum = 2>
-                  <div class = "labelRow">
-                    <div class = "rowName">A-V Interval</div>
-                    <div class = "value" id = "boxAVInterval" >170 ms</div>
-                  </div>
-                  <div class = "bar"><meter class = "meterBar" id = "AVMeter" value="30" min="0" max="100">
-                  </meter></div>
-                </div>
-                <div class = "barRow" id = "URLrow" data-rownum = 3>
-                  <div class = "labelRow">
-                    <div class = "rowName">Upper Rate</div>
-                    <div class = "value" id = "boxURL" >110 ppm</div>
-                  </div>
-                  <div class = "bar"><meter class = "meterBar" id = "URLMeter" value="30" min="0" max="100">
-                  </meter></div>
-                </div>
-                <div class = "barRow" id = "PVARProw" data-rownum = 4>
-                  <div class = "labelRow">
-                    <div class = "rowName">PVARP</div>
-                    <div class = "value" id = "boxPVARPValue" >300 ms</div>
-                  </div>
-                  <div class = "bar"><meter class = "meterBar" id = "PVARPMeter" value="30" min ="0" max="100">
-                  </meter></div>
-                </div>
-                <div class = "barRow" id = "aTracking" data-rownum = 5>
-                  <div class = "labelRow">
-                    <div class = "rowName">A. Tracking</div>
-                    <div class = "value">On</div>
-                  </div>
-                </div>
-                <div class = "barRow" id = "settings" data-rownum = 6>
-                  <div class = "labelRow">
-                    <div class = "rowName">Settings</div>
-                    <div class = "value" id = "settingsValue">Automatic</div>
-                  </div>
-                </div>
-                
-                </div>
-                <div class = "bottomRows" id = "RAP" data-rownum = 7>Rapid Atrial Pacing</div>
-                <div class = "bottomRows"  id = "modeSelection"  data-rownum = 8>Mode Selection</div>
-              </div>
-              <div class = "modeScreen" id = "modeScreen" style="display: none;">
-                <div class = "modeTitle">Mode Selection</div>
-                <div class = "modeContent" id="modeContent">
-                  <div class = "row" id ="radio" data-rownum = 0>
-                    <div class = "modeRadio"><img src="assets/radio-circle-marked.svg"></div>
-                    <div class = "modeName">DDD</div>
-                  </div>
-                  <div class = "row" id ="radio" data-rownum = 1>
-                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-                    <div class = "modeName">DDI</div>
-                  </div>
-                  <div class = "row" id ="radio" data-rownum = 2>
-                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-                    <div class = "modeName">DOO</div>
-                  </div>
-                  <div class = "row" id ="radio" data-rownum = 3>
-                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-                    <div class = "modeName">AAI</div>
-                  </div>
-                  <div class = "row" id ="radio" data-rownum = 4>
-                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-                    <div class = "modeName">AOO</div>
-                  </div>
-                  <div class = "row" id ="radio" data-rownum = 5>
-                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-                    <div class = "modeName">VVI</div>
-                  </div>
-                  <div class = "row" id ="radio" data-rownum = 6>
-                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-                    <div class = "modeName">VOO</div>
-                  </div>
-                  <div class = "row" id ="radio" data-rownum = 7>
-                    <div class = "modeRadio"><img src="assets/radio-circle.svg"></div>
-                    <div class = "modeName">OOO</div>
-                  </div>
-                </div>
-                <div class = "bottomRows" id = "backOption" data-rownum = 8>Back</div>
-              </div>
-            </div>
             
-          </div>
-          
-          <div class = "bottomKnobs">
-            <img src="assets/enterButton-white-black.svg" onclick="animateButton(this); enterClick()">
-            <img src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()">
-            <img src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()">
-            <div class="knobClass" id = "bottomKnobDiv" draggable="false">
-              <img draggable="false" id = "bottomKnobImg"src="assets/knob-full-gradient.svg">
+            <div class = "bottomKnobs">
+              <img src="assets/enterButton-white-black.svg" onclick="animateButton(this); enterClick()">
+              <img src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()">
+              <img src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()">
+              <div class="knobClass" id = "bottomKnobDiv" draggable="false">
+                <img draggable="false" id = "bottomKnobImg"src="assets/knob-full-gradient.svg">
+              </div>
+              <img src="assets/pauseButton-white-black.svg" onclick="animateButton(this)">
             </div>
-            <img src="assets/pauseButton-white-black.svg" onclick="animateButton(this)">
+          
           </div>
-        
         </div>
       </div>
     </div>
   </div>
-
+</div>
+  
     <script type="text/javascript" src="javascript.js"></script>
 </body>
