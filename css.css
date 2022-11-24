@@ -1,3 +1,7 @@
+img {
+  height: 100%;
+}
+
 .leftSideCanvas {
   background:#000;
   cursor:crosshair;
@@ -69,6 +73,10 @@ cursor:crosshair;
   margin-left: 1%;
   touch-action: none;
   padding-bottom: 10%;
+
+  -moz-user-select: none;
+-webkit-user-select: none;
+user-select: none;
  }
  .wholeBox  {
   border-radius: min(2vw, 30px);
@@ -108,7 +116,7 @@ cursor:crosshair;
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;
-  font-size: clamp(0px, 1.5vw, 2.0vh);
+
 }
 .spacer {
   width: 10%;
@@ -131,6 +139,7 @@ cursor:crosshair;
   width:50%;
  }
 
+
  .rightSide {
   display: flex;
   align-items: center;
@@ -139,14 +148,12 @@ cursor:crosshair;
  }
 
  .rightLabel {
-  font-size: clamp(0px, 1.5vw, 1.7vh);
   white-space: nowrap;
 
  }
 
  .numMeter {
-  font-size: clamp(0px, 5vw, 6vh);
-
+  font-size: 250%;
  }
 
  .modeIndicatorRow {
@@ -155,8 +162,9 @@ cursor:crosshair;
   justify-content: space-evenly;
   font-family: 'Courier New', Courier, monospace;
   font-weight: bold;
-  font-size: clamp(0px, 3vw, 3vh);
+
   align-items: flex-end;
+  font-size: 180%;
  }
 
 .batteryDiv {
@@ -236,6 +244,16 @@ cursor:crosshair;
   border-width: clamp(0px, .2vh, .3vw)  
 }
 
+.mainContent {
+  height: 80%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-bottom-style: dotted;
+  border-width: clamp(0px, .2vh, .3vw)  
+}
+
 
 .row {
   display: flex;
@@ -250,6 +268,7 @@ cursor:crosshair;
   border: solid transparent;
   border-width: clamp(0px, .2vh, .3vw);
   flex-direction: column;
+  height: 14%;
 }
 
 .labelRow {
@@ -268,7 +287,6 @@ cursor:crosshair;
   flex-direction: column;
   height: 100%;
   justify-content: space-between;
-  font-size: clamp(0px, 1.3vw, 1.6vh);
 }
 
 .mainScreen {
@@ -277,7 +295,6 @@ cursor:crosshair;
   height: 100%;
   width: 100%;
   justify-content: space-between;
-  font-size: clamp(0px, 1.4vw, 1.4vh);
 }
 
 .modeName {
@@ -305,7 +322,6 @@ cursor:crosshair;
 }
 
 .topScreenHide {
-  display: flex;
   flex-direction: column;
   justify-content: space-between;
   background-color:#85d385;
@@ -317,6 +333,7 @@ cursor:crosshair;
   background-color:#85d385;
   height: 100%;
   width: 100%;
+
 }
 
 .knobClass {
@@ -367,13 +384,14 @@ cursor:crosshair;
   .pacemakerGraphic {
     height: min(70vh,95%);
     width: 30vh;
+    font-size: 1em;
    }
    .wholeBox  {
     border-radius: min(3vh, 30px);
    }
 
    .activityLights {
-    font-size: clamp(0px, 1.5vh, 2.0vh);
+
   }
 
 }

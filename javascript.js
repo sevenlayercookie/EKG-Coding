@@ -2367,13 +2367,14 @@ function feedbackFunction() // provides feedback on settings
       
         settingsCorrect=true;
         document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
-      
+        document.getElementById("feedbackBox").style.backgroundColor = ""
       
     }
     else
       {
         settingsCorrect=false;
         document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
+        document.getElementById("feedbackBox").style.backgroundColor = "red"
       }
   }
   else if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter')
@@ -2382,17 +2383,28 @@ function feedbackFunction() // provides feedback on settings
     if (aPacerSensitivity < aUndersenseThreshold && aPacerSensitivity > aOversenseThreshold && vPacerSensitivity < vUndersenseThreshold && vPacerSensitivity > vOversenseThreshold && vPacerOutput > vCaptureThreshold) // sensitivity settings
     {
         settingsCorrect=true;
-        document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT" 
+        document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
+        document.getElementById("feedbackBox").style.backgroundColor = ""
     }
     else
       {
         settingsCorrect=false;
         document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
+        document.getElementById("feedbackBox").style.backgroundColor = "red"
       }
-      if (pacerMode=='DDD')
-        {
-          document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nBe careful of A-tracking supraventricular arrhythmias while in DDD mode")
-        }
+    if (pacerMode=='DDD')
+      {
+        document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nBe careful of A-tracking supraventricular arrhythmias while in DDD mode")
+        document.getElementById("feedbackBox").style.backgroundColor = "yellow"
+      }
+    if (pacerMode == 'AAI')
+    {
+      document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nMode: Atrial capture is not possible with atrial fib/flutter.")
+
+        document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat('\nMode: Atrial sensing is not reliable/useful with atrial fib/flutter')
+  
+      document.getElementById("feedbackBox").style.backgroundColor = "red"
+    }
   }
 }
 
@@ -3194,3 +3206,73 @@ function bottomKnobFunction(knobResult)
 
   updateAllGUIValues()
 }
+
+function rescaleFonts () 
+{
+  const pacemakerGraphic = document.getElementsByClassName("pacemakerGraphic")[0]
+  let currentPacemakerHeight = pacemakerGraphic.offsetHeight // add padding into calculation?
+  
+  const fontSizeToPacemakerHeightRatioMainScreen = 0.02168
+  let mainScreen = document.getElementsByClassName("mainScreen");
+
+  const fontSizeToPacemakerHeightRatioModeScreen = 0.02627
+  let modeScreen = document.getElementsByClassName("modeScreen");
+
+  const fontSizeToPacemakerHeightRatioNumMeter = 0.07005
+  let numMeter = document.getElementsByClassName("numMeter");
+
+  for(var i = 0; i < mainScreen.length; i++)
+  {
+      let mainScreenElement = mainScreen.item(i)
+      let newfont = (currentPacemakerHeight*fontSizeToPacemakerHeightRatioMainScreen).toFixed(1) + 'px'
+      mainScreenElement.style.fontSize = newfont
+      let temp =0
+  }
+
+
+
+  for(var i = 0; i < modeScreen.length; i++)
+  {
+      let element = modeScreen.item(i)
+      let newfont = (currentPacemakerHeight*fontSizeToPacemakerHeightRatioModeScreen).toFixed(1) + 'px'
+      element.style.fontSize = newfont
+      let temp =0
+  }
+
+  for(var i = 0; i < numMeter.length; i++)
+  {
+      let element = numMeter.item(i)
+      let newfont = (currentPacemakerHeight*fontSizeToPacemakerHeightRatioNumMeter).toFixed(1) + 'px'
+      element.style.fontSize = newfont
+      let temp =0
+  }
+
+
+  const fontSizeToPacemakerHeightRatioRightLabel = 0.07005
+  let rightLabel = document.getElementsByClassName("rightLabel");
+
+  for(var i = 0; i < rightLabel.length; i++)
+  {
+      let element = rightLabel.item(i)
+      let newfont = (currentPacemakerHeight*fontSizeToPacemakerHeightRatioRightLabel).toFixed(1) + 'px'
+      element.style.fontSize = newfont
+      let temp =0
+  }
+
+
+ // rightLabel
+
+}
+
+function rescaleFonts () 
+{
+  const pacemakerGraphic = document.getElementsByClassName("pacemakerGraphic")[0]
+  let currentPacemakerHeight = pacemakerGraphic.offsetHeight // add padding into calculation?
+  let ratio = 0.022767
+  let newfont = (currentPacemakerHeight*ratio).toFixed(1) + 'px'
+  pacemakerGraphic.style.fontSize = newfont
+  let temp =0
+
+}
+
+new ResizeObserver(rescaleFonts).observe(document.getElementById('pacemakerGraphic'))
