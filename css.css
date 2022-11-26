@@ -1,6 +1,4 @@
-img {
-  height: 100%;
-}
+
 
 .leftSideCanvas {
   background:#000;
@@ -111,13 +109,20 @@ user-select: none;
   background-color:#548654;
  }
 
- .activityLights {
+ .activityLightsDiv {
   height: 8%;
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;
+  font-size: 100%;
 
 }
+
+.activityLightsImgs {
+  height: 100%;
+}
+
+
 .spacer {
   width: 10%;
 }
@@ -130,13 +135,30 @@ user-select: none;
  }
 
  .topScreenRow {
+  height: 25%;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
  }
 
  .meter {
-  width:50%;
+   height:100%;
+ }
+
+ .meterLabels {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    align-content: flex-start;
+    font-size: 70%;
+    padding-left: 10%;
+    padding-right: 10%;
+ }
+
+ .meterSVG {
+  height: 100%;
  }
 
 
@@ -177,6 +199,10 @@ user-select: none;
     display: flex;
     align-self: center;
 }
+
+.lockIndicatorImg {
+  width: 100%;
+}
  
  .topRightSide {
   position: static;
@@ -205,9 +231,17 @@ user-select: none;
   display: flex;
   justify-content: center;
 }
+
+.topButtonImgs {
+  height: 100%;
+}
+
+.rightSideButtonImgs {
+  width: 100%;
+}
+
  .bottomHalf {
   display: flex;
-  position:relative;
   height: 40%;
  }
  
@@ -215,7 +249,6 @@ user-select: none;
   height:3%;
  }
  .bottomScreen {
-  position:relative;
   width:70%;
   height:100%;
   background-color:#548654;
@@ -331,8 +364,8 @@ user-select: none;
 
 .bottomScreenHide {
   background-color:#85d385;
-  height: 100%;
-  width: 100%;
+    /* height: 100%; */
+    /* width: 100%; */
 
 }
 
@@ -346,6 +379,10 @@ user-select: none;
   display: contents;
 }
 
+.arrowImg {
+  height: 100%;
+}
+
 .textBoxes {
   display:block;
 }
@@ -355,6 +392,39 @@ user-select: none;
   height: 100%;
 }
 
+.lockScreenInner {
+    /* display: flex; */
+    width: 50%;
+    /* flex-wrap: nowrap; */
+    /* flex-direction: column; */
+    /* align-items: center; */
+    align-self: center;
+    text-align: center;
+}
+
+.pauseScreenInner {
+      /* display: flex; */
+      width: 75%;
+      /* flex-wrap: nowrap; */
+      /* flex-direction: column; */
+      /* align-items: center; */
+      align-self: center;
+      text-align: center;
+
+}
+
+.lockScreenWrap {
+  height: 100%;
+  border-width: thick;
+  border-style: solid;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.lockScreenIcon {
+  width: 60%;
+}
 
 /* Media queries */
 
@@ -377,21 +447,27 @@ user-select: none;
     padding-right: 1%;
     height: 100%;
     width: auto;
+    -webkit-touch-callout:none;
   }
   .left {
     width:100%
   }
   .pacemakerGraphic {
-    height: min(70vh,95%);
+    /*
+    height: min(65vh,95%);
     width: 30vh;
+    */
+    aspect-ratio: 3/7;
+    height: 100%;
     font-size: 1em;
    }
    .wholeBox  {
     border-radius: min(3vh, 30px);
    }
 
-   .activityLights {
 
+  .checkboxStuff {
+    display: none;
   }
 
 }

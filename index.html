@@ -95,9 +95,10 @@
                 
               </div>
             </div>
-
+  <div class="checkboxStuff">
   <input type="checkbox" id="noise" value="noise" onclick="noiseToggle()">
   <label for="noise"> noise</label>
+</div>
 
           
           <div id="feedbackBox"></div>
@@ -115,25 +116,31 @@
       <div class="pacemakerGraphic" id="pacemakerGraphic">
         <div class="wholeBox">
           <div class="topButtons">
-            <img src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick(this)">
-            <img src="assets/powerButton-white-blackback.svg"  onclick="animateButton(this); paceButtonClick()">
+            <img class='topButtonImgs' src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick(this)" draggable="false">
+            <img class='topButtonImgs' src="assets/powerButton-white-blackback.svg"  onclick="animateButton(this); paceButtonClick()" draggable="false">
           </div>
     
           <div class ="topHalf">
             <div class = "topScreen">
               <div class = "topScreenHide" id = "topScreenHide">
-              <div class = "activityLights">
-                <img id="aPaceLight" src="assets/paceLightOff.svg">
+              <div class = "activityLightsDiv">
+                <img class = "activityLightsImgs" id="aPaceLight" src="assets/paceLightOff.svg">
                 A
-                <img id="aSenseLight" src="assets/senseLightOff.svg">
+                <img class = "activityLightsImgs" id="aSenseLight" src="assets/senseLightOff.svg">
                 <div class="spacer"></div>
-                <img id="vPaceLight" src="assets/paceLightOff.svg">
+                <img class = "activityLightsImgs" id="vPaceLight" src="assets/paceLightOff.svg">
                 V
-                <img id="vSenseLight" src="assets/senseLightOff.svg">
+                <img class = "activityLightsImgs" id="vSenseLight" src="assets/senseLightOff.svg">
               </div>
               <div class = "topScreenRows">
                 <div class = "topScreenRow">
-                  <div class = "meter"><img src="assets/rateMeter.svg"></div>
+                  <div class = "meter">
+                    <img class = "meterSVG" id="rateMeterSVG" src="assets/rateMeter-nolabel.svg">
+                    <div class="meterLabels">
+                      <div class="rateMinLabel" id="rateMinLabel">30</div>
+                      <div class="rateMaxLabel" id="rateMaxLabel">200</div>
+                    </div>
+                  </div>
                   <div class = "rightSide">
                     <div class = "rightLabel">
                       RATE
@@ -144,7 +151,13 @@
                   </div>
                 </div>
                 <div class = "topScreenRow" id = "aOutputRow">
-                  <div class = "meter"><img src="assets/rateMeter.svg"></div>
+                  <div class = "meter">
+                    <img class = "meterSVG" id="aOutputMeterSVG" src="assets/rateMeter-nolabel.svg">
+                    <div class="meterLabels">
+                      <div class="aOutputMinLabel" id="aOutputMinLabel">0</div>
+                      <div class="aOutputMaxLabel" id="aOutputMinLabel">20</div>
+                    </div>
+                  </div>
                   <div class = "rightSide">
                     <div class = "rightSide">
                       <div class = "rightLabel">
@@ -157,7 +170,13 @@
                   </div>
                 </div>
                 <div class = "topScreenRow" id = "vOutputRow">
-                  <div class = "meter"><img src="assets/rateMeter.svg"></div>
+                  <div class = "meter">
+                    <img class = "meterSVG" id="vOutputMeterSVG" src="assets/rateMeter-nolabel.svg">
+                    <div class="meterLabels">
+                      <div class="vOutputMinLabel" id="vOutputMinLabel">0</div>
+                      <div class="vOutputMaxLabel" id="vOutputMinLabel">25</div>
+                    </div>
+                  </div>
                   <div class = "rightSide">
                     <div class = "rightLabel">
                       V OUTPUT
@@ -172,10 +191,10 @@
               <div class = "modeIndicatorRow">
                 <div id="pacingBoxMode">DDD</div>
                 <div class="batteryDiv">
-                  <img src="assets/battery3.svg"> 
+                  <img class= 'lockIndicatorImg' src="assets/battery3.svg"> 
                 </div>
-                <div class="lockIndicatorDiv">
-                  <img src="assets/lockIndicator.svg">
+                <div id='lockIndicator' class="lockIndicatorDiv">
+                  <img class="lockIndicatorImg" src="assets/lockIndicator.svg">
                 </div>
               </div>
             </div>
@@ -199,7 +218,7 @@
               
               </div>
               <div class = "lockButton">
-                <img src="assets/lockButton-white-blackback.svg" onclick="animateButton(this)"> 
+                <img class = "rightSideButtonImgs" src="assets/lockButton-white-blackback.svg" onclick="animateButton(this); lockButtonClick()" draggable="false"> 
               </div>
             </div>
           
@@ -308,18 +327,37 @@
                   </div>
                   <div class = "bottomRows" id = "backOption" data-rownum = 8>Back</div>
                 </div>
+                <div class = "lockScreenWrap" id = "lockScreen" style="display: none;">
+                  <div class = 'lockScreenInner'>
+                  LOCKED
+                  <br>
+                  Press
+                  <br>
+                  <img class = 'lockScreenIcon' src="assets/lockButton-white-blackback.svg" draggable="false">
+                  <br>
+                  to unlock.
+                </div>
+                </div>
+                <div class = "lockScreenWrap" id = "pauseScreen" style="display: none;">
+                  <div class = 'pauseScreenInner'>
+                    <p>PAUSE</p>
+                    <p>Caution: Pacing is suspended</p>
+                  </div>
+                </div>
               </div>
               
             </div>
             
             <div class = "bottomKnobs">
-              <img src="assets/enterButton-white-black.svg" onclick="animateButton(this); enterClick()">
-              <img src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()">
-              <img src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()">
+              <img class='rightSideButtonImgs' src="assets/enterButton-white-black.svg" onclick="animateButton(this); enterClick()" draggable="false">
+              <img class='rightSideButtonImgs' src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()" draggable="false">
+              <img class='rightSideButtonImgs' src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()" draggable="false">
               <div class="knobClass" id = "bottomKnobDiv" draggable="false">
                 <img draggable="false" id = "bottomKnobImg"src="assets/knob-full-gradient.svg">
               </div>
-              <img src="assets/pauseButton-white-black.svg" onclick="animateButton(this)">
+              <div id = 'pauseButtonDiv'>
+              <img class='rightSideButtonImgs' id = "pauseButton" src="assets/pauseButton-white-black.svg" draggable="false">
+            </div>
             </div>
           
           </div>

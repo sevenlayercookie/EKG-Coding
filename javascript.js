@@ -81,6 +81,8 @@ var rOLD=0
 var AVExtension=0
 var PRInterval;
 // pacemaker button related variables
+var pacerLocked = false
+var pacerPaused = false;
 var currentBottomScreen = "mainmenu"
 var bottomRowsArray = []
 var currentlySelectedRowNumber = 0;
@@ -91,6 +93,7 @@ var divNode = document.createElement("div")
   //divNode.style = "height: 100%; display: flex;"
   var imgNode = document.createElement("img")
   imgNode.src = "assets/arrowEnter.svg"
+  imgNode.classList.add('arrowImg')
 // a fib
 var random = (1-((Math.random()-0.5)/1))
 var aFibMS = 1000
@@ -1502,6 +1505,8 @@ var sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
 
 function pacingFunction()
 {
+  if (!pacerPaused)
+  {
   AVInterval = parseInt(document.getElementById("AVInterval").value); // delay between atrial and vent pace
   
   let timeSinceP = timeSinceLastSensedP();
@@ -1985,7 +1990,7 @@ if (dataClock%500==0)
   updateAllGUIValues()
 }
 
-
+  }
 }
 var AVITimerFlag=false;
 var VAITimerFlag=false;
@@ -2107,6 +2112,35 @@ function calculateMeter(value,min,max)
 
 function updateAllGUIValues()
 {
+  if (pacerLocked)
+  {
+    document.getElementById('mainScreen').style.display='none'
+    document.getElementById('modeScreen').style.display='none'
+    document.getElementById('lockScreen').style.display=''
+  }
+  else if (pacerPaused)
+  {
+    document.getElementById('mainScreen').style.display='none'
+    document.getElementById('modeScreen').style.display='none'
+    document.getElementById('lockScreen').style.display='none'
+    document.getElementById('pauseScreen').style.display=''
+  }
+  else
+  {
+    document.getElementById('lockScreen').style.display='none'
+    document.getElementById('pauseScreen').style.display='none'
+    if (currentBottomScreen=='mainmenu')
+    {
+      document.getElementById('mainScreen').style.display=''
+      document.getElementById('modeScreen').style.display='none'
+    }
+    else
+    {
+      document.getElementById('mainScreen').style.display='none'
+      document.getElementById('modeScreen').style.display=''
+    }
+  }
+
   // pacemaker GUI
       // meters
       document.getElementById("aSenseMeter").value = 100-calculateMeter(aPacerSensitivity,aPacerMaxSensitivity,aPacerMinSensitivity)
@@ -2116,8 +2150,15 @@ function updateAllGUIValues()
       else        {document.getElementById("AVMeter").value = calculateMeter(AVInterval,AVImin,AVImax)}
       document.getElementById("URLMeter").value = calculateMeter(upperRateLimit,URLmin,URLmax)
       
-
-  document.getElementById("boxAsenseValue").innerText = aPacerSensitivity.toFixed(1) + " mV"
+      // update visual rate indicator top screen
+      
+      let rateMeterSVG = document.getElementById('rateMeterSVG').contentDocument
+      //getElementById('minValue').innerText = 5000      
+      //getElementById("minValue").value = 50000
+  // document.getElementById("maxValue").value = 500000
+  
+  
+    document.getElementById("boxAsenseValue").innerText = aPacerSensitivity.toFixed(1) + " mV"
   document.getElementById("boxVsenseValue").innerText = vPacerSensitivity.toFixed(1) + " mV"
   document.getElementById("boxAVInterval").innerText = AVInterval.toFixed(0) + " ms"
   document.getElementById("boxPVARPValue").innerText = PVARP.toFixed(0) + " ms"    
@@ -2133,7 +2174,15 @@ function updateAllGUIValues()
   document.getElementById("pacingBoxVOutput").innerText = vPacerOutput
   document.getElementById("pacingBoxAOutput").innerText = aPacerOutput
   
-  
+  // icons
+  if (pacerLocked)
+  {
+    document.getElementById('lockIndicator').style.visibility = '';
+  }
+  else
+  {
+    document.getElementById('lockIndicator').style.visibility = 'hidden';
+  }
 
   // text boxes left side
   document.getElementById("aOutputBox").value = aPacerOutput
@@ -2443,9 +2492,65 @@ function widenWave(inputWave,factor)
 
 function animateButton(clickedButton)
 {
+  
   clickedButton.style.transform = 'scale(85%)';
   setTimeout(function(){clickedButton.style.transform = 'scale(100%)';},"150");
 }
+
+let pauseButtonDepressed = false
+function pauseButton(event)
+{ 
+  let pauseButton = event.target
+  let startTime = Date.now()
+  pauseButton.style.transform = 'scale(85%)';
+  if (event.type=='mousedown' || event.type=='touchstart')
+    {
+    pacerPaused = !pacerPaused
+    updateAllGUIValues() 
+
+    document.getElementById('pauseButton').addEventListener('mouseup', unpause)
+    }
+  if (event.type=='touchstartXXX')
+  {
+    pauseButtonDepressed=!pauseButtonDepressed
+    if (pauseButtonDepressed == true)
+    {
+      pauseButtonDepressed = false
+      pauseButton.style.transform = 'scale(100%)';
+      pacerPaused = false
+
+    }
+    if (pauseButtonDepressed == false)
+    {
+      pauseButtonDepressed = true
+      pauseButton.style.transform = 'scale(85%)';
+      pacerPaused = true
+    }
+    updateAllGUIValues()
+  }
+
+  function unpause(event)
+  {
+    let elapsedTime = Date.now() - startTime
+    pacerPaused = !pacerPaused
+
+    pauseButton.style.transform = 'scale(100%)';
+    pauseButton.removeEventListener('mouseup', unpause)
+    updateAllGUIValues()
+  }
+
+
+}
+
+document.getElementById('pauseButton').addEventListener('mousedown', pauseButton)
+document.getElementById('pauseButton').addEventListener('touchstart', pauseButton)
+
+function lockButtonClick()
+{
+  pacerLocked=!pacerLocked
+  updateAllGUIValues()
+}
+
 
 var knobArray = []
 
@@ -2476,7 +2581,7 @@ function getSelectableRows()
   var selectableRowsArray = []
   if (currentBottomScreen=='mainmenu')
   {var ancestor = document.getElementById('mainScreen');}
-  else
+  else if (currentBottomScreen=='modeScreen')
   {var ancestor = document.getElementById('modeScreen');}
 
   var descendents = ancestor.getElementsByTagName('*');
@@ -2764,68 +2869,13 @@ function drawMainMenu()
   
   document.getElementById("modeScreen").style.display = "none"
   document.getElementById("mainScreen").style.display = ""
-  /*
-  document.getElementById("bottomScreenHide").innerHTML = `
-  <div class = "mainScreen">
-    <div class = "modeContent" id="modeContent">
-    
-    <div class = "barRow" id = "AsenseRow" data-rownum = 0>
-      <div class = "labelRow">
-        <div class = "rowName">A Sensitivity</div>
-        <div class = "value" id = "boxAsenseValue">0.5 mV</div>
-      </div>
-      <div class = "bar"><meter class = "meterBar" id = "aSenseMeter" value="30" min="0" max="100">
-      </meter></div>
-    </div>
-    <div class = "barRow" id = "VsenseRow" data-rownum = 1>
-      <div class = "labelRow">
-        <div class = "rowName">V Sensitivity</div>
-        <div class = "value" id = "boxVsenseValue">2.0 mV</div>
-      </div>
-      <div class = "bar"><meter class = "meterBar" id = "vSenseMeter" value="20" min="0" max="100">
-      </meter></div>
-    </div>
-    <div class = "barRow" id = "AVIrow" data-rownum = 2>
-      <div class = "labelRow">
-        <div class = "rowName">A-V Interval</div>
-        <div class = "value" id = "boxAVInterval" >170 ms</div>
-      </div>
-      <div class = "bar"><meter class = "meterBar" id = "AVMeter" value="30" min="0" max="100">
-      </meter></div>
-    </div>
-    <div class = "barRow" id = "PVARProw" data-rownum = 3>
-      <div class = "labelRow">
-        <div class = "rowName">PVARP</div>
-        <div class = "value" id = "boxPVARPValue" >300 ms</div>
-      </div>
-      <div class = "bar"><meter class = "meterBar" id = "PVARPMeter" value="30" min ="0" max="100">
-      </meter></div>
-    </div>
-    <div class = "barRow" id = "aTracking" data-rownum = 4>
-      <div class = "labelRow">
-        <div class = "rowName">A. Tracking</div>
-        <div class = "value">On</div>
-      </div>
-    </div>
-    <div class = "barRow" id = "settings" data-rownum = 5>
-      <div class = "labelRow">
-        <div class = "rowName">Settings</div>
-        <div class = "value">Automatic</div>
-      </div>
-    </div>
-    
-    </div>
-    <div class = "bottomRows" id = "RAP" data-rownum = 6>Rapid Atrial Pacing</div>
-    <div class = "bottomRows"  id = "modeSelection"  data-rownum = 7>Mode Selection</div>
-  </div>
-  `
-*/
+  
  drawBordersAndArrow()
 }
 
 function modeSelectionClick()
 {
-  currentBottomScreen = "modeselect"
+  currentBottomScreen = "modeScreen"
   selectableRows = getSelectableRows()
   reassignRowNumbers()
   maxRowNumber = selectableRows.length-1
@@ -2898,6 +2948,7 @@ function knobClick (clickEvent)
   //clickTarget.cumulativeDegrees = clickTarget.turnFactor
 
   function mousemove(dragEvent){
+
     // calculate position of mouse relative to center of knob
     if (dragEvent.type=='touchmove')
     {
@@ -2924,7 +2975,8 @@ function knobClick (clickEvent)
       image.setAttribute('style', 'transform: rotate(' + degree + 'deg)');
     }
     turn(clickTarget, clickTarget.deg)
-
+if (!pacerLocked)
+{
 //////////////////
  // manage knob limits
 var newRev = false
@@ -3043,6 +3095,7 @@ else
       }
       // onParameterChange()
       updateAllGUIValues()
+    }
   }
 
   function knobOff(event){
@@ -3166,7 +3219,7 @@ function resetBottomKnob()
 
 function bottomKnobFunction(knobResult)
 {
-  if (currentBottomScreen == "modeselection")
+  if (currentBottomScreen == "modeScreen")
   {return 1}
 
 
