@@ -1,3 +1,4 @@
+
 /*  ABSTRACTION
       Data Description:
         - 500 Hz EKG data
@@ -81,6 +82,9 @@ var rOLD=0
 var AVExtension=0
 var PRInterval;
 // pacemaker button related variables
+let RAPrate = 250
+let RAPrateMin = 80
+let RAPrateMax = 800
 var pacerLocked = false
 var pacerPaused = false;
 var currentBottomScreen = "mainmenu"
@@ -193,6 +197,98 @@ var knobTurnFactor = 1/36 // how fast does the dial change the value (e.g 1/36 =
 var dialToRateB
 var rotationToHR = dialToRateB = pacingRate
 var currentRotation = 0
+
+
+////////////////////////////////////////////////////////////////////////
+/////////////// TOP SCREEN METERS //////////////////////////////////////
+
+// RATE METER
+const knobElem = document.getElementById('rateMeterDiv');
+// Create knob element, 300 x 300 px in size.
+const knob = pureknob.createKnob(knobElem.offsetWidth, knobElem.offsetHeight);
+
+// Set properties.
+knob.setProperty('angleStart', -0.75 * Math.PI);
+knob.setProperty('angleEnd', 0.75 * Math.PI);
+knob.setProperty('colorFG', '#000000');
+knob.setProperty('colorBG', '#548654');
+knob.setProperty('trackWidth', 0.6);
+knob.setProperty('valMin', minPaceRate);
+knob.setProperty('valMax', maxPaceRate);
+knob.setProperty('readonly', true);
+knob.setProperty('label', null);
+knob.setProperty('fnValueToString', function(value) {return ''});
+
+
+// Set initial value.
+knob.setValue(pacingRate);
+
+// Create element node.
+const node = knob.node();
+
+// Add it to the DOM.
+
+//knobElem.appendChild();
+knobElem.insertAdjacentElement('afterbegin',node)
+
+//////////////////////// V OUTPUT METER///////////////
+
+const knobElem3 = document.getElementById('vOutputMeterDiv');
+// Create knob element, 300 x 300 px in size.
+const knob3 = pureknob.createKnob(knobElem3.offsetWidth, knobElem3.offsetHeight);
+
+// Set properties.
+knob3.setProperty('angleStart', -0.75 * Math.PI);
+knob3.setProperty('angleEnd', 0.75 * Math.PI);
+knob3.setProperty('colorFG', '#000000');
+knob3.setProperty('colorBG', '#548654');
+knob3.setProperty('trackWidth', 0.6);
+knob3.setProperty('valMin', 0);
+knob3.setProperty('valMax', vPacerMaxOutput);
+knob3.setProperty('readonly', true);
+knob3.setProperty('label', null);
+knob3.setProperty('fnValueToString', function(value) {return ''});
+
+
+// Set initial value.
+knob3.setValue(vPacerOutput);
+
+// Create element node.
+const node3 = knob3.node();
+
+// Add it to the DOM.
+
+knobElem3.insertAdjacentElement('afterbegin',node3);
+
+//////////////////////// A OUTPUT METER////////////////////////////
+const knobElem2 = document.getElementById('aOutputMeterDiv');
+// Create knob element, 300 x 300 px in size.
+const knob2 = pureknob.createKnob(knobElem2.offsetWidth, knobElem2.offsetHeight);
+
+// Set properties.
+knob2.setProperty('angleStart', -0.75 * Math.PI);
+knob2.setProperty('angleEnd', 0.75 * Math.PI);
+knob2.setProperty('colorFG', '#000000');
+knob2.setProperty('colorBG', '#548654');
+knob2.setProperty('trackWidth', 0.6);
+knob2.setProperty('valMin', 0);
+knob2.setProperty('valMax', aPacerMaxOutput);
+knob2.setProperty('readonly', true);
+knob2.setProperty('label', null);
+knob2.setProperty('fnValueToString', function(value) {return ''});
+
+
+// Set initial value.
+knob2.setValue(aPacerOutput);
+
+// Create element node.
+const node2 = knob2.node();
+
+// Add it to the DOM.
+
+knobElem2.insertAdjacentElement('afterbegin',node2);
+
+
 
 // ------------------------- onload () ---------------------------------------
 onload();
@@ -1437,6 +1533,8 @@ pacedBeatFlag=false;
 }
 
 function DOObuttonClick(DOObutton) {
+  pacingRate = 80
+
   let element = document.getElementById("pacingMode")
   document.getElementById("pacingBoxMode").innerText= "DOO"
   element.selectedIndex = 2;
@@ -1447,6 +1545,7 @@ function DOObuttonClick(DOObutton) {
   aPacerSensitivity = document.getElementById("aSensitivityBox").value = 10;
   vPacerSensitivity = document.getElementById("vSensitivityBox").value = 20;
   pacingModeBoxChange();
+  updateAllGUIValues()
   animateButton(DOObutton)
 }
 
@@ -1494,7 +1593,7 @@ function pacingModeBoxChange()
   {
     document.getElementById("URLdiv").hidden=true
   }
-  onParameterChange()
+  //onParameterChange()
 }
 
 var AVInterval = 120; // pacemaker interval between atrial and v pace
@@ -1513,7 +1612,7 @@ function pacingFunction()
   let timeSinceV = timeSinceLastSensedV();
   let goalPacerMs = Math.round(((1/pacingRate)*60000)/2)*2; // goal how many ms between R waves
   let element = document.getElementById("pacingMode")
-  pacerMode = element.options[element.selectedIndex].text;
+  //pacerMode = element.options[element.selectedIndex].text;
   document.getElementById("pacingBoxRate").innerText=pacerate.value;
    
     // AAI (A pace, A sense (ignore V) )
@@ -2117,6 +2216,7 @@ function updateAllGUIValues()
     document.getElementById('mainScreen').style.display='none'
     document.getElementById('modeScreen').style.display='none'
     document.getElementById('lockScreen').style.display=''
+    document.getElementById('RAPscreen').style.display='none'
   }
   else if (pacerPaused)
   {
@@ -2124,6 +2224,7 @@ function updateAllGUIValues()
     document.getElementById('modeScreen').style.display='none'
     document.getElementById('lockScreen').style.display='none'
     document.getElementById('pauseScreen').style.display=''
+    document.getElementById('RAPscreen').style.display='none'
   }
   else
   {
@@ -2133,11 +2234,19 @@ function updateAllGUIValues()
     {
       document.getElementById('mainScreen').style.display=''
       document.getElementById('modeScreen').style.display='none'
+      document.getElementById('RAPscreen').style.display='none'
     }
-    else
+    else if (currentBottomScreen=="modeScreen")
     {
       document.getElementById('mainScreen').style.display='none'
       document.getElementById('modeScreen').style.display=''
+      document.getElementById('RAPscreen').style.display='none'
+    }
+    else if (currentBottomScreen=='RAPscreen')
+    {
+      document.getElementById('mainScreen').style.display='none'
+      document.getElementById('modeScreen').style.display='none'
+      document.getElementById('RAPscreen').style.display=''
     }
   }
 
@@ -2149,20 +2258,20 @@ function updateAllGUIValues()
       if (autoAV) {document.getElementById("AVMeter").value = calculateMeter(HRadjustedAV,AVImin,AVImax)}
       else        {document.getElementById("AVMeter").value = calculateMeter(AVInterval,AVImin,AVImax)}
       document.getElementById("URLMeter").value = calculateMeter(upperRateLimit,URLmin,URLmax)
+      document.getElementById("RAPrateMeter").value = calculateMeter(RAPrate,RAPrateMin,RAPrateMax)
       
       // update visual rate indicator top screen
-      
-      let rateMeterSVG = document.getElementById('rateMeterSVG').contentDocument
-      //getElementById('minValue').innerText = 5000      
-      //getElementById("minValue").value = 50000
-  // document.getElementById("maxValue").value = 500000
+      knob.setValue(pacingRate);
+      knob2.setValue(aPacerOutput);
+      knob3.setValue(vPacerOutput);
   
   
     document.getElementById("boxAsenseValue").innerText = aPacerSensitivity.toFixed(1) + " mV"
   document.getElementById("boxVsenseValue").innerText = vPacerSensitivity.toFixed(1) + " mV"
   document.getElementById("boxAVInterval").innerText = AVInterval.toFixed(0) + " ms"
   document.getElementById("boxPVARPValue").innerText = PVARP.toFixed(0) + " ms"    
-  document.getElementById("boxURL").innerText = upperRateLimit.toFixed(0) + " ppm"   
+  document.getElementById("boxURL").innerText = upperRateLimit.toFixed(0) + " ppm"
+  document.getElementById("RAPrateValue").innerText = RAPrate.toFixed(0)  + " ppm"  
   
   HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/2)*2
   if (HRadjustedAV < 50) {HRadjustedAV = 50}
@@ -2551,6 +2660,67 @@ function lockButtonClick()
   updateAllGUIValues()
 }
 
+function RAPclick()
+{
+  currentBottomScreen='RAPscreen'
+  selectableRows = getSelectableRows()
+  reassignRowNumbers()
+  maxRowNumber = selectableRows.length-1
+  currentlySelectedRowNumber = 0;
+  
+  //document.getElementById('RAPscreen').display=''
+  drawBordersAndArrow()
+  updateAllGUIValues()
+}
+
+document.getElementById('enterButton').addEventListener('mousedown', enterClick)
+document.getElementById('enterButton').addEventListener('touchstart', enterClick)
+
+function deliverRAP(event)
+{
+  
+  let enterButton = event.target
+  enterButton.style.transform = 'scale(85%)';
+  // remember pacemaker settings
+  let priorMode = pacerMode
+  let priorRate = pacingRate
+  let priorAOutput = aPacerOutput
+
+  pacerMode = 'AOO'
+  pacingRate = RAPrate
+
+  document.getElementById("enterButton").addEventListener("mouseup",endRAP)
+  document.getElementById("enterButton").addEventListener("touchend",endRAP)
+  updateAllGUIValues()
+  let RAPscreen = document.getElementById("RAPscreen")
+  
+  RAPscreen.classList.add("RAPscreenDark")
+
+  let RAPtextSection = document.getElementById('RAPtext')
+  let priorText = RAPtextSection.innerHTML
+
+  RAPtextSection.innerHTML = "DELIVERING<br>Rapid Atrial Pacing"
+
+
+  document.getElementById("bottomRowsSectionRAP").style.visibility = 'hidden'
+
+  function endRAP(event)
+  {
+    let enterButton = event.target
+    pacerMode = priorMode
+    pacingRate = priorRate
+    RAPtextSection.innerHTML = priorText
+
+    document.getElementById("RAPscreen").classList.remove("RAPscreenDark")
+    document.getElementById("bottomRowsSectionRAP").style.visibility = ''
+
+    enterButton.style.transform = 'scale(100%)';
+    // call function that determines if patient converts from flutter
+  }
+
+  
+  
+}
 
 var knobArray = []
 
@@ -2583,6 +2753,8 @@ function getSelectableRows()
   {var ancestor = document.getElementById('mainScreen');}
   else if (currentBottomScreen=='modeScreen')
   {var ancestor = document.getElementById('modeScreen');}
+  else if (currentBottomScreen=='RAPscreen')
+  {var ancestor = document.getElementById('RAPscreen');}
 
   var descendents = ancestor.getElementsByTagName('*');
     // gets all rows
@@ -2694,8 +2866,10 @@ function drawBordersAndArrow()
 {
   if (currentBottomScreen=='mainmenu')
   {var ancestor = document.getElementById('mainScreen');}
-  else
+  else if (currentBottomScreen=='modeScreen')
   {var ancestor = document.getElementById('modeScreen');}
+  else if (currentBottomScreen=='RAPscreen')
+  {var ancestor = document.getElementById('RAPscreen');}
 
   var descendents = ancestor.getElementsByTagName('*');
     // gets all rows
@@ -2768,12 +2942,16 @@ function drawBordersAndArrow()
   }
 }
 
-function enterClick()
+function enterClick(event)
 {
+
+  let enterButton = event.target
   if (currentBottomScreen=='mainmenu')
   {var ancestor = document.getElementById('mainScreen');}
-  else
+  else if (currentBottomScreen=='modeScreen')
   {var ancestor = document.getElementById('modeScreen');}
+  else if (currentBottomScreen=='RAPscreen')
+  {var ancestor = document.getElementById('RAPscreen');}
   
   var descendents = ancestor.getElementsByTagName('*');
     // gets all rows
@@ -2784,6 +2962,10 @@ function enterClick()
       e = descendents[i];
       if (e.dataset.rownum == currentlySelectedRowNumber)
       {
+        if (e.id != "RAPrateRow" && e.id != "pauseButton")
+        {
+          animateButton(enterButton)
+        }
         if (e.id == "radio")
         {
         e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
@@ -2838,6 +3020,17 @@ function enterClick()
             PVARP = 300
           }
         break
+        }
+        else if (e.id == "RAP")
+        {
+          RAPclick()
+          break
+        }
+        else if (e.id == "RAPrateRow")
+        {
+          deliverRAP(event)
+          //deliverRAP()
+          break
         }
       }
       else if (e.dataset.rownum != undefined && e.id == "radio")
@@ -2915,7 +3108,7 @@ function modeSelectionClick()
 // Harrison Knob
 function knobClick (clickEvent)
 {
-  //getBottomDialParameters()
+  getBottomDialParameters()
   var clickTarget = clickEvent.target
   var minLock = false
   var maxLock = false
@@ -3205,6 +3398,17 @@ function getBottomDialParameters()
     elem.reverseKnob = false
     elem.currentValue = upperRateLimit
   }
+
+  if (selectedOption=="RAPrateRow")
+  {
+    var elem = document.getElementById('bottomKnobImg')
+    elem.minValue = RAPrateMin
+    elem.startValue = 250
+    elem.maxValue = RAPrateMax
+    elem.turnFactor = knobTurnFactor*3
+    elem.reverseKnob = false
+    elem.currentValue = RAPrate
+  }
 }
 getBottomDialParameters()
 
@@ -3252,6 +3456,11 @@ function bottomKnobFunction(knobResult)
     
     upperRateLimit = knobResult
     manURL = true
+  }
+
+  if (selectedOption=="RAPrateRow")
+  {
+    RAPrate = parseInt(knobResult)
   }
   
 
@@ -3329,3 +3538,5 @@ function rescaleFonts ()
 }
 
 new ResizeObserver(rescaleFonts).observe(document.getElementById('pacemakerGraphic'))
+
+

@@ -1,5 +1,6 @@
 <head>
   <script type="text/javascript" src="data.js"></script>
+  <script type="text/javascript" src="pure-knob-master/pureknob.js"></script>
   <link rel="stylesheet" href="css.css" />
   <meta name="viewport" content="width=device-width" />
 </head>
@@ -134,8 +135,8 @@
               </div>
               <div class = "topScreenRows">
                 <div class = "topScreenRow">
-                  <div class = "meter">
-                    <img class = "meterSVG" id="rateMeterSVG" src="assets/rateMeter-nolabel.svg">
+                  <div class = "meter" id = "rateMeterDiv">
+                    <!--<img class = "meterSVG" id="rateMeterSVG" src="assets/rateMeter-nolabel.svg">-->
                     <div class="meterLabels">
                       <div class="rateMinLabel" id="rateMinLabel">30</div>
                       <div class="rateMaxLabel" id="rateMaxLabel">200</div>
@@ -151,8 +152,8 @@
                   </div>
                 </div>
                 <div class = "topScreenRow" id = "aOutputRow">
-                  <div class = "meter">
-                    <img class = "meterSVG" id="aOutputMeterSVG" src="assets/rateMeter-nolabel.svg">
+                  <div class = "meter" id="aOutputMeterDiv" >
+                    <!-- <img class = "meterSVG" id="aOutputMeterSVG" src="assets/rateMeter-nolabel.svg"> -->
                     <div class="meterLabels">
                       <div class="aOutputMinLabel" id="aOutputMinLabel">0</div>
                       <div class="aOutputMaxLabel" id="aOutputMinLabel">20</div>
@@ -170,8 +171,8 @@
                   </div>
                 </div>
                 <div class = "topScreenRow" id = "vOutputRow">
-                  <div class = "meter">
-                    <img class = "meterSVG" id="vOutputMeterSVG" src="assets/rateMeter-nolabel.svg">
+                  <div class = "meter" id='vOutputMeterDiv'>
+                    <!--<img class = "meterSVG" id="vOutputMeterSVG" src="assets/rateMeter-nolabel.svg">-->
                     <div class="meterLabels">
                       <div class="vOutputMinLabel" id="vOutputMinLabel">0</div>
                       <div class="vOutputMaxLabel" id="vOutputMinLabel">25</div>
@@ -238,7 +239,8 @@
                       <div class = "value" id = "boxAsenseValue">0.5 mV</div>
                     </div>
                     <div class = "bar"><meter class = "meterBar" id = "aSenseMeter" value="30" min="0" max="100">
-                    </meter></div>
+                    </meter>
+                    </div>
                   </div>
                   <div class = "barRow" id = "VsenseRow" data-rownum = 1>
                     <div class = "labelRow">
@@ -286,8 +288,10 @@
                   </div>
                   
                   </div>
-                  <div class = "bottomRows" id = "RAP" data-rownum = 7>Rapid Atrial Pacing</div>
-                  <div class = "bottomRows"  id = "modeSelection"  data-rownum = 8>Mode Selection</div>
+                  <div class = "bottomRowsSection">
+                    <div class = "bottomRows" id = "RAP" data-rownum = 7>Rapid Atrial Pacing</div>
+                    <div class = "bottomRows"  id = "modeSelection"  data-rownum = 8>Mode Selection</div>
+                  </div>
                 </div>
                 <div class = "modeScreen" id = "modeScreen" style="display: none;">
                   <div class = "modeTitle">Mode Selection</div>
@@ -325,7 +329,9 @@
                       <div class = "modeName">OOO</div>
                     </div>
                   </div>
+                  <div class = "bottomRowsSection">
                   <div class = "bottomRows" id = "backOption" data-rownum = 8>Back</div>
+                </div>
                 </div>
                 <div class = "lockScreenWrap" id = "lockScreen" style="display: none;">
                   <div class = 'lockScreenInner'>
@@ -344,12 +350,35 @@
                     <p>Caution: Pacing is suspended</p>
                   </div>
                 </div>
+
+                <div class = "RAPscreen" id = "RAPscreen" style="display: none;">
+                  <div class = "barRow" id = "RAPrateRow" data-rownum = 0>
+                    <div class = "labelRow">
+                      <div class = "rowName">RAP Rate</div>
+                      <div class = "value" id = "RAPrateValue">250 ppm</div>
+                    </div>
+                    <div class = "bar"><meter class = "meterBar" id = "RAPrateMeter" value="30" min="0" max="100"></meter>
+                    </div>
+                  </div>
+                    <p id="RAPtext">
+                    <br>
+                      Hold <img style="height: 0.8em;" src="assets/arrowEnter.svg"> to
+                      <br>
+                      DELIVER
+                      <br>
+                      Rapid Atrial Pacing
+                      </p>
+                  <div class = "bottomRowsSection" id = "bottomRowsSectionRAP">
+                    <div class = "bottomRows" id = "backOption" data-rownum = 1>Back</div>
+                  </div>
+                </div>
               </div>
+              
               
             </div>
             
             <div class = "bottomKnobs">
-              <img class='rightSideButtonImgs' src="assets/enterButton-white-black.svg" onclick="animateButton(this); enterClick()" draggable="false">
+              <img class='rightSideButtonImgs' id = "enterButton" src="assets/enterButton-white-black.svg" draggable="false">
               <img class='rightSideButtonImgs' src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()" draggable="false">
               <img class='rightSideButtonImgs' src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()" draggable="false">
               <div class="knobClass" id = "bottomKnobDiv" draggable="false">
