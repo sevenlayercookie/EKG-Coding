@@ -235,6 +235,10 @@
 					canvas.style.width = this._width + 'px';
 					canvas.height = Math.floor(this._height * scale);
 					canvas.width = Math.floor(this._width * scale);
+					//* harrison added
+					canvas.parentElement.style.height = this._height + 'px';
+					canvas.parentElement.style.width = this._width + 'px';
+					//***
 					ctx.scale(scale, scale);
 				},
 
@@ -596,6 +600,10 @@
 					canvas.style.width = this._width + 'px';
 					canvas.height = Math.floor(this._height * scale);
 					canvas.width = Math.floor(this._width * scale);
+						//* harrison added
+						canvas.parentElement.style.height = this._height + 'px';
+						canvas.parentElement.style.width = this._width + 'px';
+						//***
 					ctx.scale(scale, scale);
 				},
 

@@ -2086,7 +2086,7 @@ function pacingFunction()
 // every x amount of time, refresh pacer GUI
 if (dataClock%500==0)
 {
-  updateAllGUIValues()
+  //updateAllGUIValues()
 }
 
   }
@@ -2148,6 +2148,8 @@ function windowSizeChange() {
   paintHR();
   //ctx1.clearRect(0,0,canvas1.width,canvas1.height); //clears previous HR 
   //drawPacemaker();
+
+  //resize meters
 
 }
 
@@ -2260,6 +2262,22 @@ function updateAllGUIValues()
       document.getElementById("URLMeter").value = calculateMeter(upperRateLimit,URLmin,URLmax)
       document.getElementById("RAPrateMeter").value = calculateMeter(RAPrate,RAPrateMin,RAPrateMax)
       
+      // pureknob update
+      /*
+      knob._width = knobElem.offsetWidth
+      knob._height = knobElem.offsetHeight
+      knob.redraw()
+      
+
+      knob2._width = knobElem2.offsetWidth
+      knob2._height = knobElem2.offsetHeight
+      knob2.redraw()
+
+      knob3._width = knobElem3.offsetWidth
+      knob3._height = knobElem3.offsetHeight
+      knob3.redraw()
+
+      */
       // update visual rate indicator top screen
       knob.setValue(pacingRate);
       knob2.setValue(aPacerOutput);
@@ -2673,7 +2691,7 @@ function RAPclick()
   updateAllGUIValues()
 }
 
-document.getElementById('enterButton').addEventListener('mousedown', enterClick)
+document.getElementById('enterButton').addEventListener('touchstart', enterClick)
 document.getElementById('enterButton').addEventListener('touchstart', enterClick)
 
 function deliverRAP(event)
@@ -2689,8 +2707,9 @@ function deliverRAP(event)
   pacerMode = 'AOO'
   pacingRate = RAPrate
 
-  document.getElementById("enterButton").addEventListener("mouseup",endRAP)
+  document.getElementById("enterButton").addEventListener("mouseup touchend",endRAP)
   document.getElementById("enterButton").addEventListener("touchend",endRAP)
+
   updateAllGUIValues()
   let RAPscreen = document.getElementById("RAPscreen")
   
@@ -2706,6 +2725,7 @@ function deliverRAP(event)
 
   function endRAP(event)
   {
+    let eventType = event.type
     let enterButton = event.target
     pacerMode = priorMode
     pacingRate = priorRate
@@ -2715,6 +2735,7 @@ function deliverRAP(event)
     document.getElementById("bottomRowsSectionRAP").style.visibility = ''
 
     enterButton.style.transform = 'scale(100%)';
+    event.preventDefault()
     // call function that determines if patient converts from flutter
   }
 
@@ -3008,7 +3029,7 @@ function enterClick(event)
         {
           if (e.lastElementChild.lastElementChild.innerHTML == "Automatic")
           {
-            e.lastElementChild.lastElementChild.innerHTML = 'Manual'  // set all rate-dependent settings to manual
+            e.lastElementChild.lastElementChild.innerHTML = 'Manual(*)'  // set all rate-dependent settings to manual
             manAVI = manURL = manPVARP = true;
           }
           else if (e.lastElementChild.lastElementChild.innerHTML == "Manual(*)")
@@ -3041,6 +3062,7 @@ function enterClick(event)
   
     }
     updateAllGUIValues()
+    event.preventDefault()
 }
 
 function backClick()
@@ -3289,18 +3311,27 @@ else
       // onParameterChange()
       updateAllGUIValues()
     }
+
+    dragEvent.preventDefault()
   }
 
   function knobOff(event){
     window.removeEventListener('mousemove',mousemove)
     window.removeEventListener('touchmove',mousemove)
+
+    window.removeEventListener('touchend',knobOff)
+    window.removeEventListener('mouseup',knobOff)
+
     clickTarget.lastDeg = undefined;
+    event.preventDefault()
   }
 
   window.addEventListener('mousemove', mousemove);
   window.addEventListener('touchmove', mousemove);
   window.addEventListener('mouseup', knobOff);
   window.addEventListener('touchend', knobOff);
+
+  clickEvent.preventDefault()
 }
 
 // initialze knob parameters
@@ -3469,6 +3500,7 @@ function bottomKnobFunction(knobResult)
   updateAllGUIValues()
 }
 
+/*
 function rescaleFonts () 
 {
   const pacemakerGraphic = document.getElementsByClassName("pacemakerGraphic")[0]
@@ -3525,6 +3557,7 @@ function rescaleFonts ()
  // rightLabel
 
 }
+*/
 
 function rescaleFonts () 
 {
@@ -3534,6 +3567,19 @@ function rescaleFonts ()
   let newfont = (currentPacemakerHeight*ratio).toFixed(1) + 'px'
   pacemakerGraphic.style.fontSize = newfont
   let temp =0
+
+  knob._width = knobElem.offsetWidth
+  knob._height = knobElem.offsetHeight
+  knob.redraw()
+  
+
+  knob2._width = knobElem2.offsetWidth
+  knob2._height = knobElem2.offsetHeight
+  knob2.redraw()
+
+  knob3._width = knobElem3.offsetWidth
+  knob3._height = knobElem3.offsetHeight
+  knob3.redraw()
 
 }
 
