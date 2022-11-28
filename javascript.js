@@ -121,10 +121,15 @@ var testClock=0;
 var setHR = 60;
 var CHB = false;
 var dataFeedLength=500;
+///
 var teleCanvas = document.getElementById("tele");
 var teleCtx = teleCanvas.getContext("2d");
 var HRCanvas = document.getElementById("HRLayer");
 var HRctx = HRCanvas.getContext("2d");
+var caliperCanvas = document.getElementById("caliperCanvas");
+var caliperCtx = caliperCanvas.getContext("2d");
+///
+let speed = .2 // .2 pixels per data point. speed of the cursor across the screen; affects "squeeze" of waves
 var HRchanged = false;
 var paceSpike=false;
 var px=0;
@@ -298,6 +303,7 @@ function onload() {
   dataFeed.fill(0,0,1000);
   document.getElementById("tele").width = window.innerWidth;
   document.getElementById("HRLayer").width = window.innerWidth;
+  document.getElementById("caliperCanvas").width = window.innerWidth;
   PRInterval = parseInt(document.getElementById("PRbox").value)
   var w = tele.width,
     
@@ -310,7 +316,6 @@ function onload() {
     compressHfactor = 20,
     
     opx = 0,
-    speed = .2, // speed of the cursor across the screen; affects "squeeze" of waves
     isPainted = true;
     timestamp = performance.now();
     paintCount = 1;
@@ -3870,4 +3875,108 @@ function arrowClick(event)
   knobAngleToResult(event,bottomKnobImg)
 
 }
+let wasDragged=true
+function drawCaliper(clickEvent)
+{
+  
+  let clickTarget = document.getElementById('caliperCanvas')
+  clickTarget.rect = clickTarget.getBoundingClientRect()
+  // [clickTarget.knobRect.left + (clickTarget.knobRect.width / 2), clickTarget.knobRect.top + (clickTarget.knobRect.height / 2)]
 
+
+  
+  let fromX = clickEvent.pageX - clickTarget.rect.left 
+  let fromY = clickEvent.pageY - clickTarget.rect.top
+
+  let startingY = fromY
+  let startingX = fromX
+
+  caliperCtx.strokeStyle = "#a1a2ff";
+  caliperCtx.lineWidth = 2;
+
+  caliperCtx.font = "18px Arial";
+  caliperCtx.fillStyle = "#a1a2ff";
+  caliperCtx.textAlign = "center";
+
+  if (wasDragged == false)
+  {
+    clearCaliper()
+  }
+  else
+  {
+  wasDragged = false
+
+  // draw starting vertical boundary
+  clearCaliper()
+  caliperCtx.beginPath()
+  clearCaliper()
+  drawVerticalLine(startingX)
+  }
+  
+  function clearCaliper()
+  {
+    caliperCtx.clearRect(0,0,caliperCanvas.width,caliperCanvas.height)
+    caliperCtx.beginPath()
+  }
+
+  function drawVerticalLine(posX)
+  {
+    caliperCtx.moveTo(posX,0)
+    caliperCtx.lineTo(posX,clickTarget.rect.bottom)
+    caliperCtx.stroke();
+  }
+
+  function mousemove(dragEvent)
+  {
+    wasDragged=true
+    clearCaliper()
+    drawVerticalLine(startingX)
+    toX = dragEvent.pageX - clickTarget.rect.left 
+    toY = dragEvent.pageY - clickTarget.rect.top 
+    caliperCtx.moveTo(startingX,toY)
+    caliperCtx.lineTo(toX,toY)
+    caliperCtx.stroke()
+    drawVerticalLine(toX)
+
+    // draw label   
+    let pixels = Math.abs(toX-startingX)  // # of pixels between the markers
+    let ms = Math.abs(((pixels/dataHertz)/speed)*1000)
+    let bpm = Math.abs(1/(ms/60000))
+
+    let label1 = ''
+    let label2
+
+    labelMode = 'ms/bpm'    // pixels, ms, bpm
+    
+    if (labelMode == 'pixels') {label1 = pixels.toFixed(0) + " px"}
+    if (labelMode == 'ms') {label1 = ms.toFixed(0) + " ms"}
+    if (labelMode == 'bpm') {label1 = bpm.toFixed(0) + " bpm"}
+    if (labelMode == 'ms/bpm') 
+    {
+      label1 = ms.toFixed(0) + " ms"
+      label2 = bpm.toFixed(0) + " bpm"
+    }
+
+
+    caliperCtx.fillText(label1, startingX+(toX-startingX)/2,(toY-10))
+    if (label2!=undefined)
+    {
+    caliperCtx.fillText(label2, startingX+(toX-startingX)/2,(toY+20))
+    }
+
+    fromX=toX
+    fromY=toY
+  }
+
+  function endClick(touchevent)
+  {
+    document.getElementById('caliperCanvas').removeEventListener('mousemove',mousemove)
+    document.getElementById('caliperCanvas').removeEventListener('mouseup',endClick)
+  }
+
+  document.getElementById('caliperCanvas').addEventListener('mousemove',mousemove)
+  document.getElementById('caliperCanvas').addEventListener('mouseup',endClick)
+  
+}
+
+document.getElementById('caliperCanvas').addEventListener('mousedown',drawCaliper)
