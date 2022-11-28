@@ -39,7 +39,7 @@ cursor:crosshair;
   position: fixed;
   z-index: 1;
   top: 0;
-  overflow-x: hidden;
+  /*overflow-x: hidden;*/
   /*overflow-y: hidden;*/
   /*padding-top: 20px;*/
 }
@@ -55,7 +55,7 @@ cursor:crosshair;
   right: 0;
   width: 30%;    
   height:100%;
-  overflow-y: hidden;
+  /*overflow-y: hidden;*/
 }
 
 
@@ -467,6 +467,14 @@ color:#fff
   cursor:grabbing;
 }
 
+  .pacemakerWrapper {
+    /*
+    overflow: hidden;
+    resize: both;
+    /////////////////////////////// enable if I want to enable user resizing pacemaker
+    */
+  }
+
 /* Media queries */
 
 @media screen and (max-width: 480px) {
@@ -495,11 +503,12 @@ color:#fff
     -webkit-touch-callout: none;
     min-height: 600px;
     resize:both;
-    overflow: auto;
+    /*overflow: auto;*/
   }
   .left {
     width:100%
   }
+
   .pacemakerGraphic {
     /*
     height: min(65vh,95%);
@@ -508,6 +517,7 @@ color:#fff
     aspect-ratio: 3/7;
     height: 100%;
     font-size: 1em;
+    resize: both;
    }
    .wholeBox  {
     border-radius: min(3vh, 30px);
