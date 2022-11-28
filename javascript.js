@@ -1541,8 +1541,8 @@ function DOObuttonClick(DOObutton) {
   document.getElementById("pacingBoxAOutput").innerText=aPacerOutput;
   vPacerOutput = document.getElementById("vOutputBox").value = 25;
   document.getElementById("pacingBoxVOutput").innerText=vPacerOutput;
-  aPacerSensitivity = document.getElementById("aSensitivityBox").value = 10;
-  vPacerSensitivity = document.getElementById("vSensitivityBox").value = 20;
+  //aPacerSensitivity = document.getElementById("aSensitivityBox").value = 10;
+  //vPacerSensitivity = document.getElementById("vSensitivityBox").value = 20;
   pacingModeBoxChange();
   updateAllGUIValues()
   animateButton(DOObutton)
@@ -2756,6 +2756,7 @@ testvar+=1
     document.onkeyup = null
     keyDown = false;
     // call function that determines if patient converts from flutter
+    updateAllGUIValues()
   }
 
   document.getElementById("enterButton").removeEventListener("mousedown",endRAP)
