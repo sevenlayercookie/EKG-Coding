@@ -3203,7 +3203,7 @@ function calcKnobParams(knobImage)
   
   if (isNaN(knobImage.cumulativeDegrees)) {knobImage.cumulativeDegrees=0}
   if (isNaN(knobImage.revolutions)) {knobImage.revolutions=0}
-  if (isNaN(knobImage.lastDeg)) {knobImage.lastDeg=0}
+  //if (isNaN(knobImage.lastDeg)) {knobImage.lastDeg=0}
   
 
 }
@@ -3211,9 +3211,10 @@ function calcKnobParams(knobImage)
 // Harrison Knob
 function knobClick (clickEvent)
 {
+ 
   getBottomDialParameters()
   var clickTarget = clickEvent.target
-
+  clickTarget.moveSteps = 0
 
   // calcute center of knob
   clickTarget.knobRect = clickTarget.getBoundingClientRect()
@@ -3223,13 +3224,24 @@ function knobClick (clickEvent)
 
   calcKnobParams(clickTarget)
 
+  if (isNaN(clickTarget.lastDeg)) // if it's undefined, then it must be the first run
+  {
+    if (isNaN(clickTarget.deg))
+    {
+      clickTarget.deg = clickTarget.lastDeg = 0
+    }
+    else
+    {
+      clickTarget.lastDeg = clickTarget.deg
+    }
 
+  }
 
   //clickTarget.cumulativeDegrees = clickTarget.turnFactor
 
   function mousemove(dragEvent)
   {
-
+    clickTarget.moveSteps += 1
     // calculate position of mouse relative to center of knob
     if (dragEvent.type=='touchmove')
     {
@@ -3239,16 +3251,19 @@ function knobClick (clickEvent)
     {
     clickTarget.mouseRelativetoKnobCenter = [dragEvent.pageX - clickTarget.centerPos[0], clickTarget.centerPos[1]- dragEvent.pageY]
     }
-    // find initial degree when first clicked
-    if (isNaN(clickTarget.lastDeg)) // if it's undefined, then it must be the first run
-    {
-      clickTarget.lastDeg = Math.round(Math.atan2(clickTarget.mouseRelativetoKnobCenter[0], clickTarget.mouseRelativetoKnobCenter[1]) * (180/Math.PI)); // x,y -> rad -> degree
-    }
 
- 
     // convert coordinates to angle in degrees
     clickTarget.deg = Math.round(Math.atan2(clickTarget.mouseRelativetoKnobCenter[0], clickTarget.mouseRelativetoKnobCenter[1]) * (180/Math.PI)); // x,y -> rad -> degree
     if (clickTarget.deg<0){clickTarget.deg+=360}
+
+    
+    if (isNaN(clickTarget.lastDeg)) // if it's undefined, then it must be the first run
+    {
+      clickTarget.lastDeg = clickTarget.deg
+    }
+
+ 
+    
    // console.log('degree: ' + clickTarget.deg)
     //rotateKnobImage(clickTarget, clickTarget.deg)
     knobAngleToResult(clickEvent, clickTarget) // (event, knob image)
@@ -3411,7 +3426,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
   {
     knobImage.deg = knobImage.deg - 360
   }
-  else if (knobImage.deg < 360)
+  else if (knobImage.deg < 0)
   {
     knobImage.deg = knobImage.deg + 360
   }
@@ -3420,16 +3435,31 @@ function knobAngleToResult(event, knobImage)  // working here ***
 
   calcKnobParams(knobImage)
 
+  if (isNaN(knobImage.lastDeg))
+  {
+    knobImage.lastDeg = knobImage.deg
+  }
   if (!pacerLocked) // let knob spin but do nothing else if pacer is locked
 {
 //////////////////
  // manage knob limits
 let newRev = false
 
-knobImage.revolutions = Math.floor(knobImage.cumulativeDegrees / 360)
+//knobImage.revolutions = Math.floor(knobImage.cumulativeDegrees / 360)
 
 let revolution = 0;
 
+if (knobImage.moveSteps == 1)
+{
+  knobImage.lastDeg = knobImage.deg 
+}
+
+knobImage.deltaDeg = knobImage.lastDeg-knobImage.deg 
+
+if (Math.abs(knobImage.deltaDeg) > 50)
+{
+  let test = 'Breakpoint because deltaDeg should only be greater than '
+}
 if (knobImage.lastDeg-knobImage.deg > 300 ) // if number passes through 0/360, add or subtract a rotation
 {
   if (!knobImage.maxLock)
