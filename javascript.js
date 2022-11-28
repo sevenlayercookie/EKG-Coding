@@ -196,7 +196,6 @@ var vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.
 var knobTurnFactor = 1/36 // how fast does the dial change the value (e.g 1/36 = 36 degrees to 1 bpm, one rotation = 10 bpm)
 var dialToRateB
 var rotationToHR = dialToRateB = pacingRate
-var currentRotation = 0
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -2692,12 +2691,13 @@ function RAPclick()
 }
 
 document.getElementById('enterButton').addEventListener('touchstart', enterClick)
-document.getElementById('enterButton').addEventListener('touchstart', enterClick)
+document.getElementById('enterButton').addEventListener('mousedown', enterClick)
+let testvar = 0
 
 function deliverRAP(event)
 {
-  
-  let enterButton = event.target
+  keyDown = true;
+  let enterButton = document.getElementById('enterButton')
   enterButton.style.transform = 'scale(85%)';
   // remember pacemaker settings
   let priorMode = pacerMode
@@ -2707,9 +2707,10 @@ function deliverRAP(event)
   pacerMode = 'AOO'
   pacingRate = RAPrate
 
-  document.getElementById("enterButton").addEventListener("mouseup touchend",endRAP)
+  document.getElementById("enterButton").addEventListener("mouseup",endRAP)
   document.getElementById("enterButton").addEventListener("touchend",endRAP)
 
+testvar+=1
   updateAllGUIValues()
   let RAPscreen = document.getElementById("RAPscreen")
   
@@ -2723,10 +2724,19 @@ function deliverRAP(event)
 
   document.getElementById("bottomRowsSectionRAP").style.visibility = 'hidden'
 
+  document.onkeyup = function (e) {
+    e = e || window.event;
+
+    if (e.key == 'Enter')
+    {
+      endRAP()
+    }
+  };
+
+
   function endRAP(event)
   {
-    let eventType = event.type
-    let enterButton = event.target
+    let enterButton = document.getElementById('enterButton')
     pacerMode = priorMode
     pacingRate = priorRate
     RAPtextSection.innerHTML = priorText
@@ -2735,11 +2745,21 @@ function deliverRAP(event)
     document.getElementById("bottomRowsSectionRAP").style.visibility = ''
 
     enterButton.style.transform = 'scale(100%)';
+    if (event != undefined)
+    {
     event.preventDefault()
+    }
+
+    document.getElementById("enterButton").removeEventListener("mouseup",endRAP)
+    document.getElementById("enterButton").removeEventListener("touchend",endRAP)
+
+    document.onkeyup = null
+    keyDown = false;
     // call function that determines if patient converts from flutter
   }
 
-  
+  document.getElementById("enterButton").removeEventListener("mousedown",endRAP)
+  document.getElementById("enterButton").removeEventListener("touchstart",endRAP)
   
 }
 
@@ -2963,10 +2983,36 @@ function drawBordersAndArrow()
   }
 }
 
+function getSelectedRow ()
+{
+  getSelectableRows()
+  reassignRowNumbers()
+  
+  if (currentBottomScreen=='mainmenu')
+  {var ancestor = document.getElementById('mainScreen');}
+  else if (currentBottomScreen=='modeScreen')
+  {var ancestor = document.getElementById('modeScreen');}
+  else if (currentBottomScreen=='RAPscreen')
+  {var ancestor = document.getElementById('RAPscreen');}
+  
+  var descendents = ancestor.getElementsByTagName('*');
+    // gets all rows
+
+    var i, e, d;
+    for (i = 0; i < descendents.length; ++i) 
+    {
+      e = descendents[i];
+      if (e.dataset.rownum == currentlySelectedRowNumber)
+      {
+        return e;
+      }
+    }
+}
+
 function enterClick(event)
 {
 
-  let enterButton = event.target
+  let enterButton = document.getElementById('enterButton')
   if (currentBottomScreen=='mainmenu')
   {var ancestor = document.getElementById('mainScreen');}
   else if (currentBottomScreen=='modeScreen')
@@ -3062,7 +3108,16 @@ function enterClick(event)
   
     }
     updateAllGUIValues()
+    if (event!=undefined)
+    {
     event.preventDefault()
+    }
+
+    if (e.id != "RAPrateRow")
+    {
+      keyDown=false
+    }
+
 }
 
 function backClick()
@@ -3127,42 +3182,53 @@ function modeSelectionClick()
   }
 }
 
+function calcKnobParams(knobImage)
+{
+  knobImage.minLock = false
+  knobImage.maxLock = false
+
+  
+  // calculate minDegree and maxDegree for the knob clicked
+  if (knobImage.reverseKnob)
+  {
+  knobImage.maxDegree = -(knobImage.minValue - knobImage.startValue)/knobImage.turnFactor
+  knobImage.minDegree = -(knobImage.maxValue - knobImage.startValue)/knobImage.turnFactor
+  }
+  else
+  {
+    knobImage.minDegree = (knobImage.minValue - knobImage.startValue)/knobImage.turnFactor
+    knobImage.maxDegree = (knobImage.maxValue - knobImage.startValue)/knobImage.turnFactor
+  }
+
+  
+  if (isNaN(knobImage.cumulativeDegrees)) {knobImage.cumulativeDegrees=0}
+  if (isNaN(knobImage.revolutions)) {knobImage.revolutions=0}
+  if (isNaN(knobImage.lastDeg)) {knobImage.lastDeg=0}
+  
+
+}
+
 // Harrison Knob
 function knobClick (clickEvent)
 {
   getBottomDialParameters()
   var clickTarget = clickEvent.target
-  var minLock = false
-  var maxLock = false
 
-  // calculate minDegree and maxDegree for the knob clicked
-  if (clickTarget.reverseKnob)
-  {
-  clickTarget.maxDegree = -(clickTarget.minValue - clickTarget.startValue)/clickTarget.turnFactor
-  clickTarget.minDegree = -(clickTarget.maxValue - clickTarget.startValue)/clickTarget.turnFactor
-  }
-  else
-  {
-    clickTarget.minDegree = (clickTarget.minValue - clickTarget.startValue)/clickTarget.turnFactor
-    clickTarget.maxDegree = (clickTarget.maxValue - clickTarget.startValue)/clickTarget.turnFactor
-  }
+
   // calcute center of knob
   clickTarget.knobRect = clickTarget.getBoundingClientRect()
   clickTarget.centerPos = [clickTarget.knobRect.left + (clickTarget.knobRect.width / 2), clickTarget.knobRect.top + (clickTarget.knobRect.height / 2)]
   //if (isNaN(clickTarget.lastDeg))
   //{clickTarget.lastDeg = 0}
 
-  if (isNaN(clickTarget.cumulativeDegrees)) {clickTarget.cumulativeDegrees=0}
-  if (isNaN(clickTarget.revolutions)) 
-  {clickTarget.revolutions=0}
-  
-  
+  calcKnobParams(clickTarget)
 
 
 
   //clickTarget.cumulativeDegrees = clickTarget.turnFactor
 
-  function mousemove(dragEvent){
+  function mousemove(dragEvent)
+  {
 
     // calculate position of mouse relative to center of knob
     if (dragEvent.type=='touchmove')
@@ -3178,31 +3244,33 @@ function knobClick (clickEvent)
     {
       clickTarget.lastDeg = Math.round(Math.atan2(clickTarget.mouseRelativetoKnobCenter[0], clickTarget.mouseRelativetoKnobCenter[1]) * (180/Math.PI)); // x,y -> rad -> degree
     }
+
  
     // convert coordinates to angle in degrees
     clickTarget.deg = Math.round(Math.atan2(clickTarget.mouseRelativetoKnobCenter[0], clickTarget.mouseRelativetoKnobCenter[1]) * (180/Math.PI)); // x,y -> rad -> degree
     if (clickTarget.deg<0){clickTarget.deg+=360}
    // console.log('degree: ' + clickTarget.deg)
+    //rotateKnobImage(clickTarget, clickTarget.deg)
+    knobAngleToResult(clickEvent, clickTarget) // (event, knob image)
 
     // rotate the knob
-    function turn(image, degree) 
-    {
-      image.setAttribute('style', 'transform: rotate(' + degree + 'deg)');
-    }
-    turn(clickTarget, clickTarget.deg)
+ 
+    //rotateKnobImage(clickTarget, clickTarget.deg)
+
+/*
 if (!pacerLocked)
 {
 //////////////////
  // manage knob limits
-var newRev = false
+let newRev = false
 
 clickTarget.revolutions = Math.floor(clickTarget.cumulativeDegrees / 360)
 
-var revolution = 0;
+let revolution = 0;
 
 if (clickTarget.lastDeg-clickTarget.deg > 300 ) // if number passes through 0/360, add or subtract a rotation
 {
-  if (!maxLock)
+  if (!clickTarget.maxLock)
   {
   revolution = 360
   }
@@ -3210,32 +3278,32 @@ if (clickTarget.lastDeg-clickTarget.deg > 300 ) // if number passes through 0/36
 }
 if (clickTarget.lastDeg-clickTarget.deg < -300)
 {
-  if (!minLock)
+  if (!clickTarget.minLock)
   {
   revolution = -360
   }
   newRev = true
 }
     
-    var testCumulative = clickTarget.cumulativeDegrees + (clickTarget.deg - clickTarget.lastDeg) + revolution
-    var testValue = Math.round(clickTarget.startValue+clickTarget.cumulativeDegrees*clickTarget.turnFactor)
+    let testCumulative = clickTarget.cumulativeDegrees + (clickTarget.deg - clickTarget.lastDeg) + revolution
+    let testValue = Math.round(clickTarget.startValue+clickTarget.cumulativeDegrees*clickTarget.turnFactor)
     
     //console.log(testCumulative)
     if (testCumulative >= clickTarget.maxDegree)
     {
-      maxLock = true;
+      clickTarget.maxLock = true;
     }
 
     if (testCumulative <= clickTarget.minDegree)
     {
-      minLock = true;
+      clickTarget.minLock = true;
     }
 
-    if (maxLock)
+    if (clickTarget.maxLock)
     {
       if (testCumulative < clickTarget.maxDegree && !newRev && clickTarget.lastDeg - clickTarget.deg > 0) // break the max lock?
       {
-        maxLock = false
+        clickTarget.maxLock = false
       }
       else // if can't break lock..
       {
@@ -3243,11 +3311,11 @@ if (clickTarget.lastDeg-clickTarget.deg < -300)
       }
     }
 
-    if (minLock)
+    if (clickTarget.minLock)
     {
       if (testCumulative > clickTarget.minDegree && !newRev && clickTarget.lastDeg - clickTarget.deg < 0) // break the min lock?
       {
-        minLock = false
+        clickTarget.minLock = false
       }
       else // if can't break lock..
       {
@@ -3255,7 +3323,7 @@ if (clickTarget.lastDeg-clickTarget.deg < -300)
       }
     }
 
-    if (!minLock && !maxLock)
+    if (!clickTarget.minLock && !clickTarget.maxLock)
     {
       clickTarget.cumulativeDegrees = testCumulative
     }
@@ -3263,26 +3331,11 @@ if (clickTarget.lastDeg-clickTarget.deg < -300)
 
 ///////////////////
       clickTarget.lastDeg = clickTarget.deg
-      //console.log('cumulative degrees: ' + clickTarget.cumulativeDegrees)
-     // console.log('revolutions: ' + clickTarget.revolutions)
-/*
-     if (selectedOption!="AsenseRow" && selectedOption != "VsenseRow")
-     {
-     var result = clickTarget.startValue+clickTarget.cumulativeDegrees*clickTarget.turnFactor
-     }
-    if (selectedOption=="AsenseRow")
-    {
-      var result = 2.4 + clickTarget.startValue-clickTarget.cumulativeDegrees*clickTarget.turnFactor
-    }
-    if (selectedOption=="VsenseRow")
-    {
-      var result = 12.8 +clickTarget.startValue-clickTarget.cumulativeDegrees*clickTarget.turnFactor
-    }
-*/
+   
 
-var result = clickTarget.startValue + (clickTarget.cumulativeDegrees * clickTarget.turnFactor)
+let result = clickTarget.startValue + (clickTarget.cumulativeDegrees * clickTarget.turnFactor)
+let negresult = clickTarget.startValue + (-clickTarget.cumulativeDegrees * clickTarget.turnFactor)
 
-var negresult = clickTarget.startValue + (-clickTarget.cumulativeDegrees * clickTarget.turnFactor)
 if (clickTarget.reverseKnob)
 {clickTarget.currentValue = result = negresult}
 else
@@ -3311,6 +3364,7 @@ else
       // onParameterChange()
       updateAllGUIValues()
     }
+    */
 
     dragEvent.preventDefault()
   }
@@ -3332,6 +3386,146 @@ else
   window.addEventListener('touchend', knobOff);
 
   clickEvent.preventDefault()
+ 
+}
+
+
+function knobAngleToResult(event, knobImage)  // working here ***
+{
+  
+  //let knobImage = event.target
+
+  if (isNaN(knobImage.deg) || knobImage.deg == undefined)
+  {knobImage.deg = 0}
+
+  if (event.key=='ArrowLeft')
+  {
+    knobImage.deg -= 10
+  }
+  if (event.key=='ArrowRight')
+  {
+    knobImage.deg += 10
+  }
+
+  if (knobImage.deg > 360)
+  {
+    knobImage.deg = knobImage.deg - 360
+  }
+  else if (knobImage.deg < 360)
+  {
+    knobImage.deg = knobImage.deg + 360
+  }
+
+  knobImage.setAttribute('style', 'transform: rotate(' + knobImage.deg + 'deg)');
+
+  calcKnobParams(knobImage)
+
+  if (!pacerLocked) // let knob spin but do nothing else if pacer is locked
+{
+//////////////////
+ // manage knob limits
+let newRev = false
+
+knobImage.revolutions = Math.floor(knobImage.cumulativeDegrees / 360)
+
+let revolution = 0;
+
+if (knobImage.lastDeg-knobImage.deg > 300 ) // if number passes through 0/360, add or subtract a rotation
+{
+  if (!knobImage.maxLock)
+  {
+  revolution = 360
+  }
+  newRev = true
+}
+if (knobImage.lastDeg-knobImage.deg < -300)
+{
+  if (!knobImage.minLock)
+  {
+  revolution = -360
+  }
+  newRev = true
+}
+    
+    let testCumulative = knobImage.cumulativeDegrees + (knobImage.deg - knobImage.lastDeg) + revolution
+    let testValue = Math.round(knobImage.startValue+knobImage.cumulativeDegrees*knobImage.turnFactor)
+    
+    //console.log(testCumulative)
+    if (testCumulative >= knobImage.maxDegree)
+    {
+      knobImage.maxLock = true;
+    }
+
+    if (testCumulative <= knobImage.minDegree)
+    {
+      knobImage.minLock = true;
+    }
+
+    if (knobImage.maxLock)
+    {
+      if (testCumulative < knobImage.maxDegree && !newRev && knobImage.lastDeg - knobImage.deg > 0) // break the max lock?
+      {
+        knobImage.maxLock = false
+      }
+      else // if can't break lock..
+      {
+        knobImage.cumulativeDegrees = knobImage.maxDegree
+      }
+    }
+
+    if (knobImage.minLock)
+    {
+      if (testCumulative > knobImage.minDegree && !newRev && knobImage.lastDeg - knobImage.deg < 0) // break the min lock?
+      {
+        knobImage.minLock = false
+      }
+      else // if can't break lock..
+      {
+        knobImage.cumulativeDegrees = knobImage.minDegree
+      }
+    }
+
+    if (!knobImage.minLock && !knobImage.maxLock)
+    {
+      knobImage.cumulativeDegrees = testCumulative
+    }
+
+
+///////////////////
+      knobImage.lastDeg = knobImage.deg
+   
+
+let result = knobImage.startValue + (knobImage.cumulativeDegrees * knobImage.turnFactor)
+let negresult = knobImage.startValue + (-knobImage.cumulativeDegrees * knobImage.turnFactor)
+
+if (knobImage.reverseKnob)
+{knobImage.currentValue = result = negresult}
+else
+{knobImage.currentValue = result}
+
+
+      if (knobImage.id=="rateDialImg")
+      {
+        pacingRate = Math.round(result)
+      }
+
+      if (knobImage.id=="vOutputDialImg")
+      {
+        vPacerOutput = Math.round(result)
+      }
+
+      if (knobImage.id=="aOutputDialImg")
+      {
+        aPacerOutput = Math.round(result) 
+      }
+
+      if (knobImage.id=="bottomKnobImg")
+      {
+        bottomKnobFunction(result)
+      }
+      // onParameterChange()
+      updateAllGUIValues()
+    }
 }
 
 // initialze knob parameters
@@ -3383,7 +3577,8 @@ function getBottomDialParameters()
     elem.turnFactor = knobTurnFactor/3
     elem.reverseKnob = true
     elem.currentValue = aPacerSensitivity
-
+    elem.maxLock = false;
+    elem.minLock = false;
   }
 
   if (selectedOption=="VsenseRow")
@@ -3395,6 +3590,8 @@ function getBottomDialParameters()
     elem.turnFactor = knobTurnFactor/2
     elem.reverseKnob = true
     elem.currentValue = vPacerSensitivity
+    elem.maxLock = false;
+    elem.minLock = false;
   }
 
   if (selectedOption=="AVIrow")
@@ -3406,6 +3603,8 @@ function getBottomDialParameters()
     elem.turnFactor = knobTurnFactor*3
     elem.reverseKnob = false
     elem.currentValue = AVInterval
+    elem.maxLock = false;
+    elem.minLock = false;
   }
 
   if (selectedOption=="PVARProw")
@@ -3417,6 +3616,8 @@ function getBottomDialParameters()
     elem.turnFactor = knobTurnFactor*3
     elem.reverseKnob = false
     elem.currentValue = PVARP
+    elem.maxLock = false;
+    elem.minLock = false;
   }
 
   if (selectedOption=="URLrow")
@@ -3428,6 +3629,8 @@ function getBottomDialParameters()
     elem.turnFactor = knobTurnFactor*3
     elem.reverseKnob = false
     elem.currentValue = upperRateLimit
+    elem.maxLock = false;
+    elem.minLock = false;
   }
 
   if (selectedOption=="RAPrateRow")
@@ -3439,6 +3642,8 @@ function getBottomDialParameters()
     elem.turnFactor = knobTurnFactor*3
     elem.reverseKnob = false
     elem.currentValue = RAPrate
+    elem.maxLock = false;
+    elem.minLock = false;
   }
 }
 getBottomDialParameters()
@@ -3584,5 +3789,47 @@ function rescaleFonts ()
 }
 
 new ResizeObserver(rescaleFonts).observe(document.getElementById('pacemakerGraphic'))
+let keyDown = false;
 
+document.onkeydown = function (e) {
+  e = e || window.event;
+
+
+  if (e.key == 'ArrowUp')
+  {
+    upArrowClick()
+  }
+  if (e.key == 'ArrowDown')
+  {
+    downArrowClick()
+  }
+  if (e.key == 'Enter')
+  {
+    if (keyDown == false)
+    {
+    enterClick()
+    }
+  }
+
+  if (e.key == 'ArrowLeft' || e.key == 'ArrowRight')
+  {
+    arrowClick(e)
+  }
+};
+
+function arrowClick(event)
+{
+  let currentlySelectedRow = getSelectedRow()
+  let aSenseRow = document.getElementById("AsenseRow")
+  let vSenseRow = document.getElementById("VsenseRow")
+  let AVIrow = document.getElementById("AVIrow")
+  let PVARProw = document.getElementById("PVARProw")
+  let URLrow = document.getElementById("URLrow")
+
+  let bottomKnobImg = document.getElementById('bottomKnobImg')
+  getBottomDialParameters()
+
+  knobAngleToResult(event,bottomKnobImg)
+
+}
 

@@ -71,11 +71,8 @@ cursor:crosshair;
   margin-left: 1%;
   touch-action: none;
   padding-bottom: 10%;
-
-  -moz-user-select: none;
--webkit-user-select: none;
-user-select: none;
  }
+
  .wholeBox  {
   border-radius: min(2vw, 30px);
   position:relative;
@@ -407,6 +404,9 @@ user-select: none;
 .mainDiv {
   display: flex;
   height: 100%;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .lockScreenInner {
