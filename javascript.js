@@ -3212,9 +3212,13 @@ function calcKnobParams(knobImage)
 // Harrison Knob
 function knobClick (clickEvent)
 {
- 
+  
   getBottomDialParameters()
   var clickTarget = clickEvent.target
+
+  document.getElementById('mainDiv').classList.add('grabbed')
+  clickTarget.classList.add('grabbed')
+
   clickTarget.moveSteps = 0
 
   // calcute center of knob
@@ -3386,6 +3390,9 @@ else
   }
 
   function knobOff(event){
+    document.getElementById('mainDiv').classList.remove('grabbed')
+  clickTarget.classList.remove('grabbed')
+
     window.removeEventListener('mousemove',mousemove)
     window.removeEventListener('touchmove',mousemove)
 

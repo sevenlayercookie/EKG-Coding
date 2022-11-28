@@ -15,6 +15,10 @@ cursor:crosshair;
   justify-content: space-between;
 }
 
+.allButtons {
+  cursor:pointer;
+}
+
 .container {
   display: flex;
   justify-content: space-between;
@@ -388,6 +392,8 @@ cursor:crosshair;
   padding:3%;
 }
 
+
+
 .arrow {
   height: 100%; 
   display: contents;
@@ -457,6 +463,9 @@ background-color: #000;
 color:#fff
 }
 
+.grabbed {
+  cursor:grabbing;
+}
 
 /* Media queries */
 
@@ -485,6 +494,8 @@ color:#fff
     height: 2vh;
     -webkit-touch-callout: none;
     min-height: 600px;
+    resize:both;
+    overflow: auto;
   }
   .left {
     width:100%

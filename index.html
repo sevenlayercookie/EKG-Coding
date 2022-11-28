@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width" />
 </head>
 <body>
-  <div class="mainDiv">
+  <div class="mainDiv" id="mainDiv">
     <div class="split left">
         <div class="textBoxes">
           <label for="PRbox">native PR interval</label> <input type="number" id="PRbox" value=150 size ="2" max="1000" min="0" >
@@ -117,8 +117,8 @@
       <div class="pacemakerGraphic" id="pacemakerGraphic">
         <div class="wholeBox">
           <div class="topButtons">
-            <img class='topButtonImgs' src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick(this)" draggable="false">
-            <img class='topButtonImgs' src="assets/powerButton-white-blackback.svg"  onclick="animateButton(this); paceButtonClick()" draggable="false">
+            <img class='topButtonImgs allButtons' src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick(this)" draggable="false">
+            <img class='topButtonImgs allButtons' src="assets/powerButton-white-blackback.svg"  onclick="animateButton(this); paceButtonClick()" draggable="false">
           </div>
     
           <div class ="topHalf">
@@ -219,7 +219,7 @@
               
               </div>
               <div class = "lockButton">
-                <img class = "rightSideButtonImgs" src="assets/lockButton-white-blackback.svg" onclick="animateButton(this); lockButtonClick()" draggable="false"> 
+                <img class = "rightSideButtonImgs allButtons" src="assets/lockButton-white-blackback.svg" onclick="animateButton(this); lockButtonClick()" draggable="false"> 
               </div>
             </div>
           
@@ -378,14 +378,14 @@
             </div>
             
             <div class = "bottomKnobs">
-              <img class='rightSideButtonImgs' id = "enterButton" src="assets/enterButton-white-black.svg" draggable="false">
-              <img class='rightSideButtonImgs' src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()" draggable="false">
-              <img class='rightSideButtonImgs' src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()" draggable="false">
+              <img class='rightSideButtonImgs allButtons' id = "enterButton" src="assets/enterButton-white-black.svg" draggable="false">
+              <img class='rightSideButtonImgs allButtons' src="assets/uparrow-white-black.svg" onclick="animateButton(this); upArrowClick()" draggable="false">
+              <img class='rightSideButtonImgs allButtons' src="assets/downarrow-white-black.svg" onclick="animateButton(this); downArrowClick()" draggable="false">
               <div class="knobClass" id = "bottomKnobDiv" draggable="false">
                 <img draggable="false" id = "bottomKnobImg"src="assets/knob-full-gradient.svg">
               </div>
               <div id = 'pauseButtonDiv'>
-              <img class='rightSideButtonImgs' id = "pauseButton" src="assets/pauseButton-white-black.svg" draggable="false">
+              <img class='rightSideButtonImgs allButtons' id = "pauseButton" src="assets/pauseButton-white-black.svg" draggable="false">
             </div>
             </div>
           
