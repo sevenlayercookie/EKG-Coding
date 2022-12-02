@@ -187,14 +187,13 @@ var autoAV = true
 var meanRatePacer = 60
 
 // pacer thresholds
-var vCaptureThreshold = 5; // default V capture threshold (mA)
-var aCaptureThreshold = 2; // default A capture threshold (mA)
+var vCaptureThresholdBaseline = vCaptureThreshold = 5; // default V capture threshold (mA)
+var aCaptureThresholdBaseline = aCaptureThreshold = 2; // default A capture threshold (mA)
 // The sensing threshold is the least sensitive mV setting at which the temporary pacemaker can detect a heartbeat
-var aOversenseThreshold = 1 // threhsold below which pacer will oversense (e.g. T wave)
-var aUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see P wave)
-var vOversenseThreshold = 2 // threhsold below which pacer will oversense (e.g. T wave)
-var vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
-
+var aOversenseThresholdBaseline = aOversenseThreshold = 1 // threhsold below which pacer will oversense (e.g. T wave)
+var aUndersenseThresholdBaseline = aUndersenseThreshold = 6 // threshold above which pacer will undersense (e.g. won't see P wave)
+var vOversenseThresholdBaseline = vOversenseThreshold = 2 // threhsold below which pacer will oversense (e.g. T wave)
+var vUndersenseThresholdBaseline = vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
 
 // knob intialization
 
@@ -1605,9 +1604,10 @@ var manAVInterval = 120;
 let captureOverride = false;
 var sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
 
-
+var timesPacingFunctionRun = 0
 function pacingFunction()
 {
+  timesPacingFunctionRun +=1
   if (!pacerPaused)
   {
   AVInterval = parseInt(document.getElementById("AVInterval").value); // delay between atrial and vent pace
@@ -1617,7 +1617,7 @@ function pacingFunction()
   let goalPacerMs = Math.round(((1/pacingRate)*60000)/2)*2; // goal how many ms between R waves
   let element = document.getElementById("pacingMode")
   //pacerMode = element.options[element.selectedIndex].text;
-  document.getElementById("pacingBoxRate").innerText=pacerate.value;
+  //document.getElementById("pacingBoxRate").innerText=pacerate.value;
    
     // AAI (A pace, A sense (ignore V) )
 
@@ -2080,8 +2080,9 @@ function pacingFunction()
     
   }
   if (pacingFeedback) // is learning feedback mode enabled?
+
   {
-    if (dataClock%100 == 0)
+    if (dataClock%1000 == 0)
     {
       feedbackFunction();
     }
@@ -2215,8 +2216,10 @@ function calculateMeter(value,min,max)
   return parseFloat(result)
 }
 
+var timesRun = 0 
 function updateAllGUIValues()
 {
+  timesRun += 1;
   if (pacerLocked)
   {
     document.getElementById('mainScreen').style.display='none'
@@ -2490,41 +2493,38 @@ function clickCHB() {
   }
 }
 
+var aOversenseThresholdRandomRange
+var aUndersenseThresholdRandomRange
+var vOversenseThresholdRandomRange
+var vUndersenseThresholdRandomRange
+var aCaptureThresholdRandomRange
+var vCaptureThresholdRandomRange
+
 function randomizeThresholds() // randomize a bit capture, oversense, undersense thresholds
 {
+  let random = Math.random()
+  let randomFactor = (random - 0.5)*2  //      +/- 1
+  let randomRangeMin = (0 - 0.5)*2
+  let randomRangeMax = (1 - 0.5)*2
   // capture thresholds (default A=2, V=5)
-  vCaptureThreshold = 5 + (Math.random() - 0.5)*2 //      +/- 1
-  aCaptureThreshold = 2 + (Math.random() - 0.5)*2 //      +/- 1
+  vCaptureThreshold = vCaptureThresholdBaseline + randomFactor
+  aCaptureThreshold = aCaptureThresholdBaseline + randomFactor
 
   // sensitivity Thresholds (default A=1.5, 10   and V=1.5, 10)
-  aOversenseThreshold = 1.5 + (Math.random() - 0.5)*2 //      +/- 1
-  aUndersenseThreshold = 10 + (Math.random() - 0.5)*2 //      +/- 1
-  vOversenseThreshold = 1.5 + (Math.random() - 0.5)*2 //      +/- 1
-  vUndersenseThreshold = 10 + (Math.random() - 0.5)*2 //      +/- 1
+  aOversenseThreshold = aOversenseThresholdBaseline + randomFactor
+  aUndersenseThreshold = aUndersenseThresholdBaseline + randomFactor
+  vOversenseThreshold = vOversenseThresholdBaseline + randomFactor
+  vUndersenseThreshold = vUndersenseThresholdBaseline + randomFactor
+
+  // calculate random ranges for each
+  aOversenseThresholdRandomRange = [aOversenseThresholdBaseline - randomRangeMin, aOversenseThresholdBaseline + randomRangeMax]
+  aUndersenseThresholdRandomRange = [aUndersenseThresholdBaseline - randomRangeMin, aUndersenseThresholdBaseline + randomRangeMax]
+  vOversenseThresholdRandomRange = [vOversenseThresholdBaseline - randomRangeMin, vOversenseThresholdBaseline + randomRangeMax]
+  vUndersenseThresholdRandomRange = [vUndersenseThresholdBaseline - randomRangeMin, vUndersenseThresholdBaseline + randomRangeMax]
+  aCaptureThresholdRandomRange = [aCaptureThresholdBaseline - randomRangeMin, aCaptureThresholdBaseline + randomRangeMax]
+  vCaptureThresholdRandomRange = [vCaptureThresholdBaseline - randomRangeMin, vCaptureThresholdBaseline + randomRangeMax]
   
 }
-
-
-// ------- PACEMAKER CANVAS ---------
-/*
-var pacemakerCanvas = document.getElementById("pacemakerCanvas");
-var pacemakerHeight = pacemakerCanvas.height = document.getElementById("pacemakerDiv").offsetHeight
-var pacemakerWidth = pacemakerCanvas.width = document.getElementById("pacemakerDiv").offsetWidth
-
-var pacemakerCtx = pacemakerCanvas.getContext("2d");
-var pacemakerImg = new Image();
-pacemakerImg.src = "assets/pacemaker.svg";
-pacemakerImg.onload = function() {
-  drawPacemaker()
-};
-
-function drawPacemaker()
-{
-  pacemakerHeight = pacemakerCanvas.height = document.getElementById("pacemakerDiv").offsetHeight
-  pacemakerWidth = pacemakerCanvas.width = document.getElementById("pacemakerDiv").offsetWidth
-  pacemakerCtx.drawImage(pacemakerImg,0,0);
-}
-*/
 
 function noiseToggle()
 {noiseFlag=!noiseFlag}
@@ -2540,9 +2540,10 @@ function noiseFunction()
 
 function feedbackFunction() // provides feedback on settings
 {
+  
   if (currentRhythm != 'aFib' && currentRhythm != 'aFlutter')
   {
-    if (aPacerSensitivity < aUndersenseThreshold && aPacerSensitivity > aOversenseThreshold && vPacerSensitivity < vUndersenseThreshold && vPacerSensitivity > vOversenseThreshold && aPacerOutput > aCaptureThreshold && vPacerOutput > vCaptureThreshold) // sensitivity settings
+    if (aPacerSensitivity < aUndersenseThresholdRandomRange[0] && aPacerSensitivity > aOversenseThresholdRandomRange[1] && vPacerSensitivity < vUndersenseThresholdRandomRange[0] && vPacerSensitivity > vOversenseThresholdRandomRange[1] && aPacerOutput > aCaptureThresholdRandomRange[1] && vPacerOutput > vCaptureThresholdRandomRange[1]) // sensitivity settings
     {
       
         settingsCorrect=true;
@@ -2560,7 +2561,7 @@ function feedbackFunction() // provides feedback on settings
   else if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter')
   {
     
-    if (aPacerSensitivity < aUndersenseThreshold && aPacerSensitivity > aOversenseThreshold && vPacerSensitivity < vUndersenseThreshold && vPacerSensitivity > vOversenseThreshold && vPacerOutput > vCaptureThreshold) // sensitivity settings
+    if (aPacerSensitivity < aUndersenseThresholdBaseline && aPacerSensitivity > aOversenseThresholdBaseline && vPacerSensitivity < vUndersenseThresholdBaseline && vPacerSensitivity > vOversenseThresholdBaseline && vPacerOutput > vCaptureThresholdBaseline) // sensitivity settings
     {
         settingsCorrect=true;
         document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
