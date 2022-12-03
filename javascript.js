@@ -2502,28 +2502,25 @@ var vCaptureThresholdRandomRange
 
 function randomizeThresholds() // randomize a bit capture, oversense, undersense thresholds
 {
-  let random = Math.random()
-  let randomFactor = (random - 0.5)*2  //      +/- 1
   let randomRangeMin = (0 - 0.5)*2
   let randomRangeMax = (1 - 0.5)*2
   // capture thresholds (default A=2, V=5)
-  vCaptureThreshold = vCaptureThresholdBaseline + randomFactor
-  aCaptureThreshold = aCaptureThresholdBaseline + randomFactor
+  vCaptureThreshold = vCaptureThresholdBaseline + (Math.random() - 0.5)*2  //      +/- 1
+  aCaptureThreshold = aCaptureThresholdBaseline + (Math.random() - 0.5)*2  //      +/- 1
 
   // sensitivity Thresholds (default A=1.5, 10   and V=1.5, 10)
-  aOversenseThreshold = aOversenseThresholdBaseline + randomFactor
-  aUndersenseThreshold = aUndersenseThresholdBaseline + randomFactor
-  vOversenseThreshold = vOversenseThresholdBaseline + randomFactor
-  vUndersenseThreshold = vUndersenseThresholdBaseline + randomFactor
+  aOversenseThreshold = aOversenseThresholdBaseline + (Math.random() - 0.5)*2  //      +/- 1
+  aUndersenseThreshold = aUndersenseThresholdBaseline + (Math.random() - 0.5)*2  //      +/- 1
+  vOversenseThreshold = vOversenseThresholdBaseline + (Math.random() - 0.5)*2  //      +/- 1
+  vUndersenseThreshold = vUndersenseThresholdBaseline + (Math.random() - 0.5)*2  //      +/- 1
 
   // calculate random ranges for each
-  aOversenseThresholdRandomRange = [aOversenseThresholdBaseline - randomRangeMin, aOversenseThresholdBaseline + randomRangeMax]
-  aUndersenseThresholdRandomRange = [aUndersenseThresholdBaseline - randomRangeMin, aUndersenseThresholdBaseline + randomRangeMax]
-  vOversenseThresholdRandomRange = [vOversenseThresholdBaseline - randomRangeMin, vOversenseThresholdBaseline + randomRangeMax]
-  vUndersenseThresholdRandomRange = [vUndersenseThresholdBaseline - randomRangeMin, vUndersenseThresholdBaseline + randomRangeMax]
-  aCaptureThresholdRandomRange = [aCaptureThresholdBaseline - randomRangeMin, aCaptureThresholdBaseline + randomRangeMax]
-  vCaptureThresholdRandomRange = [vCaptureThresholdBaseline - randomRangeMin, vCaptureThresholdBaseline + randomRangeMax]
-  
+  aOversenseThresholdRandomRange = [aOversenseThresholdBaseline + randomRangeMin, aOversenseThresholdBaseline + randomRangeMax]
+  aUndersenseThresholdRandomRange = [aUndersenseThresholdBaseline + randomRangeMin, aUndersenseThresholdBaseline + randomRangeMax]
+  vOversenseThresholdRandomRange = [vOversenseThresholdBaseline + randomRangeMin, vOversenseThresholdBaseline + randomRangeMax]
+  vUndersenseThresholdRandomRange = [vUndersenseThresholdBaseline + randomRangeMin, vUndersenseThresholdBaseline + randomRangeMax]
+  aCaptureThresholdRandomRange = [aCaptureThresholdBaseline + randomRangeMin, aCaptureThresholdBaseline + randomRangeMax]
+  vCaptureThresholdRandomRange = [vCaptureThresholdBaseline + randomRangeMin, vCaptureThresholdBaseline + randomRangeMax]
 }
 
 function noiseToggle()
@@ -2540,53 +2537,100 @@ function noiseFunction()
 
 function feedbackFunction() // provides feedback on settings
 {
-  
-  if (currentRhythm != 'aFib' && currentRhythm != 'aFlutter')
-  {
-    if (aPacerSensitivity < aUndersenseThresholdRandomRange[0] && aPacerSensitivity > aOversenseThresholdRandomRange[1] && vPacerSensitivity < vUndersenseThresholdRandomRange[0] && vPacerSensitivity > vOversenseThresholdRandomRange[1] && aPacerOutput > aCaptureThresholdRandomRange[1] && vPacerOutput > vCaptureThresholdRandomRange[1]) // sensitivity settings
-    {
-      
-        settingsCorrect=true;
-        document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
-        document.getElementById("feedbackBox").style.backgroundColor = ""
-      
-    }
-    else
-      {
-        settingsCorrect=false;
-        document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
-        document.getElementById("feedbackBox").style.backgroundColor = "red"
-      }
-  }
-  else if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter')
-  {
-    
-    if (aPacerSensitivity < aUndersenseThresholdBaseline && aPacerSensitivity > aOversenseThresholdBaseline && vPacerSensitivity < vUndersenseThresholdBaseline && vPacerSensitivity > vOversenseThresholdBaseline && vPacerOutput > vCaptureThresholdBaseline) // sensitivity settings
-    {
-        settingsCorrect=true;
-        document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
-        document.getElementById("feedbackBox").style.backgroundColor = ""
-    }
-    else
-      {
-        settingsCorrect=false;
-        document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
-        document.getElementById("feedbackBox").style.backgroundColor = "red"
-      }
-    if (pacerMode=='DDD')
-      {
-        document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nBe careful of A-tracking supraventricular arrhythmias while in DDD mode")
-        document.getElementById("feedbackBox").style.backgroundColor = "yellow"
-      }
-    if (pacerMode == 'AAI')
-    {
-      document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nMode: Atrial capture is not possible with atrial fib/flutter.")
+  /*
+        PACING FEEDBACK LEVEL OPTIONS
+        'noFeedback' == hides all feedback (maybe I'll control this in the pacing function?)
+        'lowFeedback' == three feedback results: "INCORRECT", "ACCEPTABLE, but not optimized", "OPTIMIZED"
+        'medFeedback'== hints at which option should be corrected (e.g. "Check outputs", etc.)
+        'highFeedback' == comprehensive explanation of error and how to fix it
+  */
 
-        document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat('\nMode: Atrial sensing is not reliable/useful with atrial fib/flutter')
-  
+  let feedbackLevel = 'lowFeedback'
+
+  let aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdRandomRange[1]
+  let aSensitivityTooLow = aPacerSensitivity > aUndersenseThresholdRandomRange[1]
+  let vSensitivityTooHigh = vPacerSensitivity < vOversenseThresholdRandomRange[1]
+  let vSensitivityTooLow = vPacerSensitivity > vUndersenseThresholdRandomRange[1]
+  let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdRandomRange[1]
+  let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline*3 // overly high output is not optimal (should be around 2x greater than capture threshold)
+  let vPacerOutputTooLow = vPacerOutput < vCaptureThresholdRandomRange[1]
+  let vPacerOutputTooHigh = vPacerOutput > vCaptureThresholdBaseline*3// overly high output is not optimal (should be around 2x greater than capture threshold)
+
+  let optimized = !aPacerOutputTooHigh && !vPacerOutputTooHigh
+
+
+  let allParametersCorrect = !aSensitivityTooHigh && !aSensitivityTooLow && !vSensitivityTooHigh && !vSensitivityTooLow && !aPacerOutputTooLow & !vPacerOutputTooLow
+  if (feedbackLevel == 'lowFeedback')
+  {
+    if (allParametersCorrect && optimized)
+    {
+      settingsCorrect=true;
+      document.getElementById("feedbackBox").innerText = "OPTIMAL"
+      document.getElementById("feedbackBox").style.backgroundColor = "green"
+    }
+    else if (!allParametersCorrect)
+    {
+      settingsCorrect=false;
+      document.getElementById("feedbackBox").innerText = "INCORRECT"
       document.getElementById("feedbackBox").style.backgroundColor = "red"
     }
+    else if (allParametersCorrect && !optimized)
+    {
+      document.getElementById("feedbackBox").innerText = "NOT OPTIMAL (outputs too high?)"
+      document.getElementById("feedbackBox").style.backgroundColor = "yellow"
+    }
   }
+  else if (feedbackLevel == 'medFeedback')
+  {
+
+
+      if (currentRhythm != 'aFib' && currentRhythm != 'aFlutter')
+      {
+        if (aPacerSensitivity < aUndersenseThresholdRandomRange[0] && aPacerSensitivity > aOversenseThresholdRandomRange[1] && vPacerSensitivity < vUndersenseThresholdRandomRange[0] && vPacerSensitivity > vOversenseThresholdRandomRange[1] && aPacerOutput > aCaptureThresholdRandomRange[1] && vPacerOutput > vCaptureThresholdRandomRange[1]) // sensitivity settings
+        {
+          
+            settingsCorrect=true;
+            document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
+            document.getElementById("feedbackBox").style.backgroundColor = "green"
+          
+        }
+        else
+          {
+            settingsCorrect=false;
+            document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
+            document.getElementById("feedbackBox").style.backgroundColor = "red"
+          }
+      }
+      else if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter')
+      {
+        
+        if (aPacerSensitivity < aUndersenseThresholdBaseline && aPacerSensitivity > aOversenseThresholdBaseline && vPacerSensitivity < vUndersenseThresholdBaseline && vPacerSensitivity > vOversenseThresholdBaseline && vPacerOutput > vCaptureThresholdBaseline) // sensitivity settings
+        {
+            settingsCorrect=true;
+            document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
+            document.getElementById("feedbackBox").style.backgroundColor = "green"
+        }
+        else
+          {
+            settingsCorrect=false;
+            document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
+            document.getElementById("feedbackBox").style.backgroundColor = "red"
+          }
+        if (pacerMode=='DDD')
+          {
+            document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nBe careful of A-tracking supraventricular arrhythmias while in DDD mode")
+            document.getElementById("feedbackBox").style.backgroundColor = "yellow"
+          }
+        if (pacerMode == 'AAI')
+        {
+          document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nMode: Atrial capture is not possible with atrial fib/flutter.")
+
+            document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat('\nMode: Atrial sensing is not reliable/useful with atrial fib/flutter')
+      
+          document.getElementById("feedbackBox").style.backgroundColor = "red"
+        }
+      }
+    }
 }
 
 
