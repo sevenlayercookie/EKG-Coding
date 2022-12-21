@@ -3806,6 +3806,7 @@ function rescaleFonts ()
 
 }
 */
+/*
 
 function adjustPacemakerGraphic() {
   // Get the current width and height of the window
@@ -3835,9 +3836,53 @@ function adjustPacemakerGraphic() {
     pacemakerGraphic.style.height = newHeight + 'px';
   }
 }
+*/
+// Call the function when the window is resized
+//window.addEve
+
+function adjustPacemakerGraphic() {
+  // Get the current width and height of the window
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+
+  // Get the element to adjust
+  const pacemakerGraphic = document.querySelector('.pacemakerGraphic');
+
+  // Calculate the aspect ratio of the element
+  const aspectRatio = pacemakerGraphic.offsetWidth / pacemakerGraphic.offsetHeight;
+
+  // If the aspect ratio is less than 3:7, adjust the element to achieve a 3:7 aspect ratio
+  if (aspectRatio < 3 / 7) {
+    // Calculate the new width and height of the element
+    let newWidth = windowHeight * 3 / 7;
+    let newHeight = windowHeight;
+
+    // If the new width is greater than the window width, adjust the width and height again
+    if (newWidth > windowWidth) {
+      newWidth = windowWidth;
+      newHeight = windowWidth * 7 / 3;
+    }
+
+    // Check if the element would extend off the right side of the screen
+    if (newWidth + pacemakerGraphic.offsetLeft > windowWidth) {
+      // Calculate the maximum width allowed based on the position of the element
+      const maxWidth = windowWidth - pacemakerGraphic.offsetLeft;
+
+      // Adjust the width and height based on the maximum allowed width
+      newWidth = maxWidth;
+      newHeight = maxWidth * 7 / 3;
+    }
+
+    // Set the width and height of the element
+    pacemakerGraphic.style.width = newWidth + 'px';
+    pacemakerGraphic.style.height = newHeight + 'px';
+  }
+}
 
 // Call the function when the window is resized
 //window.addEventListener('resize', adjustPacemakerGraphic);
+
+
 
 
 function rescaleFonts () 
@@ -3861,7 +3906,7 @@ function rescaleFonts ()
   knob3._width = knobElem3.offsetWidth
   knob3._height = knobElem3.offsetHeight
   knob3.redraw()
-// adjustPacemakerGraphic()
+ adjustPacemakerGraphic()
 }
 
 new ResizeObserver(rescaleFonts).observe(document.getElementById('pacemakerGraphic'))
