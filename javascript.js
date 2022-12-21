@@ -3876,6 +3876,7 @@ function adjustPacemakerGraphic() {
     // Set the width and height of the element
     pacemakerGraphic.style.width = newWidth + 'px';
     pacemakerGraphic.style.height = newHeight + 'px';
+    
   }
 }
 

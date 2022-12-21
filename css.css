@@ -67,6 +67,7 @@ cursor:crosshair;
   height: 68vmin;
   width: 29vmin;
   */
+  position: relative;
   aspect-ratio: 3/7;
   min-height: 0;
   max-height: 95%;
