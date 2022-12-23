@@ -3876,9 +3876,35 @@ function adjustPacemakerGraphic() {
     // Set the width and height of the element
     pacemakerGraphic.style.width = newWidth + 'px';
     pacemakerGraphic.style.height = newHeight + 'px';
-    
+  } 
+  // If the aspect ratio is greater than 3:7, adjust the element to achieve a 3:7 aspect ratio
+  else if (aspectRatio > 3 / 7) {
+    // Calculate the new width and height of the element
+    let newHeight = pacemakerGraphic.offsetWidth * 7 / 3;
+    let newWidth = pacemakerGraphic.offsetWidth;
+
+    // If the new height is greater than the window height, adjust the width and height again
+    if (newHeight > windowHeight) {
+      newHeight = windowHeight;
+      newWidth = windowHeight * 3 / 7;
+    }
+
+    // Check if the element would extend off the bottom of the screen
+    if (newHeight + pacemakerGraphic.offsetTop > windowHeight) {
+      // Calculate the maximum height allowed based on the position of the element
+      const maxHeight = windowHeight - pacemakerGraphic.offsetTop;
+        // Adjust the width and height based on the maximum allowed height
+  newHeight = maxHeight;
+  newWidth = maxHeight * 3 / 7;
+}
+
+// Set the width and height of the element
+pacemakerGraphic.style.width = newWidth + 'px';
+pacemakerGraphic.style.height = newHeight + 'px';
   }
 }
+
+
 
 // Call the function when the window is resized
 //window.addEventListener('resize', adjustPacemakerGraphic);
