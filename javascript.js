@@ -3940,7 +3940,7 @@ pacemakerGraphicWidth = pacemakerGraphicWidth.toFixed(5);
 
 
 
-/*
+
 function rescaleFonts () 
 {
   const pacemakerGraphic = document.getElementsByClassName("pacemakerGraphic")[0]
@@ -3967,7 +3967,10 @@ function rescaleFonts ()
  //adjustPacemakerGraphic()
   }
 }
-*/
+
+
+
+/*
 const pacemakerGraphic = document.getElementsByClassName("pacemakerGraphic")[0]
 let beforeHeight = pacemakerGraphic.offsetHeight
 let afterHeight = pacemakerGraphic.offsetHeight
@@ -4003,6 +4006,8 @@ function rescaleFonts ()
  //adjustPacemakerGraphic()
   }
 }
+
+*/
 
 new ResizeObserver(rescaleFonts).observe(document.getElementById('pacemakerGraphic'))
 if (navigator.userAgent.includes("Safari"))
