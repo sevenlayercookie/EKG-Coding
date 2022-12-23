@@ -3933,7 +3933,7 @@ function rescaleFonts ()
   knob3._width = knobElem3.offsetWidth
   knob3._height = knobElem3.offsetHeight
   knob3.redraw()
- //adjustPacemakerGraphic()
+ adjustPacemakerGraphic()
 }
 
 new ResizeObserver(rescaleFonts).observe(document.getElementById('pacemakerGraphic'))
