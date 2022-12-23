@@ -3879,6 +3879,7 @@ function adjustPacemakerGraphic() {
     // Set the width and height of the element
     pacemakerGraphic.style.width = newWidth + 'px';
     pacemakerGraphic.style.height = newHeight + 'px';
+    rescaleFonts()
   } 
   // If the aspect ratio is greater than 3:7, adjust the element to achieve a 3:7 aspect ratio
   else if (aspectRatio > 3 / 7) {
@@ -3908,6 +3909,7 @@ function adjustPacemakerGraphic() {
     // Set the width and height of the element
     pacemakerGraphic.style.width = newWidth + 'px';
     pacemakerGraphic.style.height = newHeight + 'px';
+    rescaleFonts()
   }
 }
 
