@@ -3863,10 +3863,13 @@ function adjustPacemakerGraphic() {
       newHeight = windowWidth * 7 / 3;
     }
 
+    // Get the absolute left position of the element
+    const elementLeft = pacemakerGraphic.getBoundingClientRect().left;
+
     // Check if the element would extend off the right side of the screen
-    if (newWidth + pacemakerGraphic.offsetLeft > windowWidth) {
+    if (newWidth + elementLeft > windowWidth) {
       // Calculate the maximum width allowed based on the position of the element
-      const maxWidth = windowWidth - pacemakerGraphic.offsetLeft;
+      const maxWidth = windowWidth - elementLeft;
 
       // Adjust the width and height based on the maximum allowed width
       newWidth = maxWidth;
@@ -3889,20 +3892,25 @@ function adjustPacemakerGraphic() {
       newWidth = windowHeight * 3 / 7;
     }
 
-    // Check if the element would extend off the bottom of the screen
-    if (newHeight + pacemakerGraphic.offsetTop > windowHeight) {
-      // Calculate the maximum height allowed based on the position of the element
-      const maxHeight = windowHeight - pacemakerGraphic.offsetTop;
-        // Adjust the width and height based on the maximum allowed height
-  newHeight = maxHeight;
-  newWidth = maxHeight * 3 / 7;
-}
+    // Get the absolute top position of the element
+    const elementTop = pacemakerGraphic.getBoundingClientRect().top;
 
-// Set the width and height of the element
-pacemakerGraphic.style.width = newWidth + 'px';
-pacemakerGraphic.style.height = newHeight + 'px';
+    // Check if the element would extend off the bottom of the screen
+    if (newHeight + elementTop > windowHeight) {
+      // Calculate the maximum height allowed based on the position of the element
+      const maxHeight = windowHeight - elementTop;
+
+      // Adjust the width and height based on the maximum allowed height
+      newHeight = maxHeight;
+      newWidth = maxHeight * 3 / 7;
+    }
+
+    // Set the width and height of the element
+    pacemakerGraphic.style.width = newWidth + 'px';
+    pacemakerGraphic.style.height = newHeight + 'px';
   }
 }
+
 
 
 
