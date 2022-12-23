@@ -3974,7 +3974,7 @@ let afterHeight = pacemakerGraphic.offsetHeight
 function rescaleFonts () 
 {
   afterHeight = pacemakerGraphic.offsetHeight
-  const percentageChange = (afterHeight - beforeHeight) / beforeHeight * 100;
+  const percentageChange = (afterHeight - beforeHeight) / beforeHeight * 100 + 1;
   beforeHeight = afterHeight;
 
   //const pacemakerGraphic = document.getElementsByClassName("pacemakerGraphic")[0]
