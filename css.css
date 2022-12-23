@@ -76,6 +76,7 @@ cursor:crosshair;
   margin-left: 1%;
   touch-action: none;
   padding-bottom: 70%;
+  font-size: 100%;
  }
 
  .wholeBox  {
