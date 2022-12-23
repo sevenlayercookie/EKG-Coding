@@ -1617,7 +1617,7 @@ function pacingFunction()
   let goalPacerMs = Math.round(((1/pacingRate)*60000)/2)*2; // goal how many ms between R waves
   let element = document.getElementById("pacingMode")
   //pacerMode = element.options[element.selectedIndex].text;
-  document.getElementById("pacingBoxRate").innerText=pacerate.value;
+  //document.getElementById("pacingBoxRate").innerText=pacerate.value;
    
     // AAI (A pace, A sense (ignore V) )
 
