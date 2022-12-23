@@ -3941,7 +3941,10 @@ function rescaleFonts ()
   knob3._width = knobElem3.offsetWidth
   knob3._height = knobElem3.offsetHeight
   knob3.redraw()
+  if (navigator.userAgent.includes("Safari"))
+  {
  adjustPacemakerGraphic()
+  }
 }
 
 new ResizeObserver(rescaleFonts).observe(document.getElementById('pacemakerGraphic'))
