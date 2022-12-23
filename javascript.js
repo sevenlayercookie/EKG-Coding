@@ -3981,7 +3981,7 @@ function rescaleFonts ()
   let currentPacemakerHeight = pacemakerGraphic.offsetHeight // add padding into calculation?
   let ratio = 0.022767
   let oldfont = pacemakerGraphic.style.fontSize
-  oldTime = oldfont.replace("px",'')
+  oldfont = oldfont.replace("px",'')
   let newfont = oldfont*percentageChange + "px"
   pacemakerGraphic.style.fontSize = newfont
   let temp =0
