@@ -3847,7 +3847,7 @@ function adjustPacemakerGraphic() {
 
   // Get the element to adjust
   const pacemakerGraphic = document.querySelector('.pacemakerGraphic');
-  
+
   let pacemakerGraphicWidth = pacemakerGraphic.style.width;
 
 // Remove 'px' from the end of the string
@@ -3940,13 +3940,49 @@ pacemakerGraphicWidth = pacemakerGraphicWidth.toFixed(5);
 
 
 
-
+/*
 function rescaleFonts () 
 {
   const pacemakerGraphic = document.getElementsByClassName("pacemakerGraphic")[0]
   let currentPacemakerHeight = pacemakerGraphic.offsetHeight // add padding into calculation?
   let ratio = 0.022767
   let newfont = (currentPacemakerHeight*ratio).toFixed(1) + 'px'
+  pacemakerGraphic.style.fontSize = newfont
+  let temp =0
+
+  knob._width = knobElem.offsetWidth
+  knob._height = knobElem.offsetHeight
+  knob.redraw()
+  
+
+  knob2._width = knobElem2.offsetWidth
+  knob2._height = knobElem2.offsetHeight
+  knob2.redraw()
+
+  knob3._width = knobElem3.offsetWidth
+  knob3._height = knobElem3.offsetHeight
+  knob3.redraw()
+  if (navigator.userAgent.includes("Safari"))
+  {
+ //adjustPacemakerGraphic()
+  }
+}
+*/
+const pacemakerGraphic = document.getElementsByClassName("pacemakerGraphic")[0]
+let beforeHeight = pacemakerGraphic.offsetHeight
+let afterHeight = pacemakerGraphic.offsetHeight
+function rescaleFonts () 
+{
+  afterHeight = pacemakerGraphic.offsetHeight
+  const percentageChange = (afterHeight - beforeHeight) / beforeHeight * 100;
+  beforeHeight = afterHeight;
+
+  //const pacemakerGraphic = document.getElementsByClassName("pacemakerGraphic")[0]
+  let currentPacemakerHeight = pacemakerGraphic.offsetHeight // add padding into calculation?
+  let ratio = 0.022767
+  let oldfont = pacemakerGraphic.style.fontSize
+  oldTime = oldfont.replace("px",'')
+  let newfont = oldfont*percentageChange + "px"
   pacemakerGraphic.style.fontSize = newfont
   let temp =0
 
