@@ -3845,7 +3845,9 @@ function adjustPacemakerGraphic() {
   const windowWidth = window.innerWidth;
   const windowHeight = window.innerHeight;
 
-
+  // Get the element to adjust
+  const pacemakerGraphic = document.querySelector('.pacemakerGraphic');
+  
   let pacemakerGraphicWidth = pacemakerGraphic.style.width;
 
 // Remove 'px' from the end of the string
@@ -3857,8 +3859,7 @@ pacemakerGraphicWidth = parseFloat(pacemakerGraphicWidth);
 // Limit the decimal places to 5
 pacemakerGraphicWidth = pacemakerGraphicWidth.toFixed(5);
 
-  // Get the element to adjust
-  const pacemakerGraphic = document.querySelector('.pacemakerGraphic');
+
   
   // Calculate the aspect ratio of the element
   const aspectRatio = pacemakerGraphic.offsetWidth / pacemakerGraphic.offsetHeight;
