@@ -3948,8 +3948,10 @@ function rescaleFonts ()
 }
 
 new ResizeObserver(rescaleFonts).observe(document.getElementById('pacemakerGraphic'))
+if (navigator.userAgent.includes("Safari"))
+{
 new ResizeObserver(adjustPacemakerGraphic).observe(document.getElementById('right'))
-
+}
 let keyDown = false;
 
 document.onkeydown = function (e) {
