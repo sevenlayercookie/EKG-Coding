@@ -3845,6 +3845,18 @@ function adjustPacemakerGraphic() {
   const windowWidth = window.innerWidth;
   const windowHeight = window.innerHeight;
 
+
+  let pacemakerGraphicWidth = pacemakerGraphic.style.width;
+
+// Remove 'px' from the end of the string
+pacemakerGraphicWidth = pacemakerGraphicWidth.replace('px', '');
+
+// Convert the string to a floating point number
+pacemakerGraphicWidth = parseFloat(pacemakerGraphicWidth);
+
+// Limit the decimal places to 5
+pacemakerGraphicWidth = pacemakerGraphicWidth.toFixed(5);
+
   // Get the element to adjust
   const pacemakerGraphic = document.querySelector('.pacemakerGraphic');
   
@@ -3877,7 +3889,7 @@ function adjustPacemakerGraphic() {
     }
 
     // Set the width and height of the element
-    if (pacemakerGraphic.style.width != newWidth + 'px')
+    if (pacemakerGraphicWidth != newWidth.toFixed(5))
     {
     pacemakerGraphic.style.width = newWidth + 'px';
     pacemakerGraphic.style.height = newHeight + 'px';
@@ -3910,7 +3922,7 @@ function adjustPacemakerGraphic() {
     }
 
     // Set the width and height of the element
-    if (pacemakerGraphic.style.width != newWidth + 'px')
+    if (pacemakerGraphicWidth != newWidth.toFixed(5))
     {
     pacemakerGraphic.style.width = newWidth + 'px';
     pacemakerGraphic.style.height = newHeight + 'px';
