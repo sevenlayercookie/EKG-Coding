@@ -1491,10 +1491,17 @@ function drawPacingSpike() {
 
 const atrium = "atrium";
 const vent = "vent";
+function attemptPace(target) // target : atrium or vent
+{
 
+
+}
+
+
+// attempts to pace ventricle or atrium and handles all "capture" logic 
 function paceIt(target) // target : atrium, or vent
 {
-  // VISUAL PACING INDICATOR PACER BOX
+  // VISUAL PACING INDICATOR PACER BOX (whether or not capture occurs)
   if (target==atrium)
   {
     document.getElementById("aPaceLight").src = "assets/paceLightOn.svg" // turn pace light on
@@ -1505,10 +1512,13 @@ function paceIt(target) // target : atrium, or vent
     document.getElementById("vPaceLight").src = "assets/paceLightOn.svg" // turn pace light on
     setTimeout(function(){document.getElementById("vPaceLight").src = "assets/paceLightOff.svg"},"250") // turn light off after time period
   }
+
   pacedBeatFlag=true;
-  if (pacerCapturing(target))
+  drawPacingSpike();  // draw pacing spike regardless of capture
+
+  if (pacerCapturing(target)) // is capture occurring?
   {
-    drawPacingSpike();  // draw pacing spike
+    
     if (target==atrium)
       {
         drawPWave();
@@ -1520,7 +1530,6 @@ function paceIt(target) // target : atrium, or vent
   }
   else // if not capturing
   {
-    drawPacingSpike();
     if (target==atrium)
       {
         senseP('inhibitSenseLight')
@@ -1665,18 +1674,13 @@ function pacingFunction()
         
         if (vPacerSensitivity >= vOversenseThreshold) // is pacer not oversensing?
         {
-    
+          
           if (ventBlankingPeriod <= 0) // if pacer fires, should have a timeout period
           {
-            if (pacerCapturing(vent))
-            {
-            paceIt(vent);
-            PRtimer=-1; // stop PRtimer
-            }
-            else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
-            {
-              drawPacingSpike();
-            }
+            
+            paceIt(vent); // attempt pace
+            
+            // PRtimer=-1; // stop PRtimer
             ventBlankingPeriod = goalPacerMs; // with capture or not, start pacertimeout
           }
     }
@@ -1993,19 +1997,18 @@ function pacingFunction()
     if (AAtimer == 0) // when AAtimer runs out, pace
     {
       
-          if (pacerCapturing(atrium)) // is output high enough?
+          //if (pacerCapturing(atrium)) // is output high enough?
+          //{
+          if (!CHB) // is conduction intact?
           {
-            if (!CHB) // is conduction intact?
-            {
-              drawQRS = true; // signal that QRS should be drawn next
-            }
-          paceIt(atrium);
+            drawQRS = true; // signal that QRS should be drawn next
+          }
+
+          paceIt(atrium); //attempt atrial pace
           AAtimer=goalPacerMs;
-          }
-          else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
-          {
-            drawPacingSpike();
-          }
+
+          //}
+          
     }
     if (AAtimer<0)
     {
@@ -2021,14 +2024,16 @@ function pacingFunction()
   {
     if (VVtimer == 0 || VVtimer == 1) // when VVtimer runs out, pace
     {
-          if (pacerCapturing(vent))
-          {
+          //if (pacerCapturing(vent))
+          //{
           paceIt(vent);
-          }
+          //}
+          /*
           else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
           {
             drawPacingSpike();
           }
+          */
           VVtimer=goalPacerMs
     }
     if (VVtimer<0)
@@ -2045,15 +2050,17 @@ function pacingFunction()
            
       if (AAtimer == 0) // when AAtimer runs out, pace
       {
-            if (pacerCapturing(atrium)) // is output high enough?
-            {
-            paceIt(atrium);
+            //if (pacerCapturing(atrium)) // is output high enough?
+            //{
+            paceIt(atrium); // attempt atrial pace
             AAtimer=goalPacerMs;
-            }
+            //}
+            /*
             else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
             {
               drawPacingSpike();
             }
+            */
             AVtimer=AVInterval
       }
       if (AAtimer<0)
@@ -2065,14 +2072,17 @@ function pacingFunction()
       // vent logic; pace V after AV timer runs out
       if (AVtimer == 0 || AVtimer == 1) // when VVtimer runs out, pace
     {
-          if (pacerCapturing(vent))
-          {
-          paceIt(vent);
-          }
+          //if (pacerCapturing(vent))
+          //{
+          paceIt(vent); //attempt v-pace
+          //}
+
+          /*
           else if (!pacerCapturing(vent)) // if not capturing, just draw a pacing spike and do nothing else
           {
             drawPacingSpike();
           }
+          */
           AVtimer=goalPacerMs
     }
 
