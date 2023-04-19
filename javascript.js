@@ -1639,18 +1639,20 @@ function pacingFunction()
         {
           if (atrialRefactoryPeriod <= 0) // if pacer fires, should have a 'refractory period' where it will not pace again
           {
-            if (pacerCapturing(atrium)) // is output high enough?
-            {
+            //if (pacerCapturing(atrium)) // is output high enough?
+            //{
               if (!CHB) // is conduction intact?
               {
                 drawQRS = true; // signal that QRS should be drawn next
               }
-            paceIt(atrium);
-            }
+            paceIt(atrium); //attempt pace
+            //}
+            /*
             else if (!pacerCapturing(atrium)) // if not capturing, just draw a pacing spike and do nothing else
             {
               drawPacingSpike();
             }
+            */
             atrialRefactoryPeriod = goalPacerMs; // with capture or not, start pacertimeout
           }
      
