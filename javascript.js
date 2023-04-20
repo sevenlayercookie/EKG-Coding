@@ -487,7 +487,7 @@ document.getElementById('capturing').onchange = function ()
 
 // --------------------- end onLoad() ------------------------------
 
-function senseP(inhibitSenseLight) // if inhibitSenseLight = 'inhibitSenseLight', don't sense the beat
+function senseP(inhibitSenseLight) // if inhibitSenseLight == 'inhibitSenseLight', don't sense the beat
 {
   let testvar = typeof inhibitSenseLight
   if (typeof inhibitSenseLight == undefined || inhibitSenseLight != 'inhibitSenseLight')
@@ -568,13 +568,15 @@ function drawPWave(morphOnly,width,height,invert) { // morphOnly='morphOnly' or 
     // RECORD KEEPING
     if (morphOnly!='morphOnly') // not morphology only, so normal behaviour
     {
-      histPTimes.push(dataClock);  // add to absolute record of all P activity
+      histPTimes.push(dataClock);  // add to absolute record of all P activity (for rhythm purposes)
       if (histPTimes.length>10)
       {
         histPTimes.shift();
       }
       
-      if (pacerOn && aPacerSensitivity <= aUndersenseThreshold || pacedBeatFlag) // not undersensed OR if a known paced  beat
+      // should pacer record the P wave?
+      // YES: if pacer set to an A-sensing mode, AND not undersensing, AND if pacer paced the P
+      if (pacerOn && (pacerMode == "DDD" || pacerMode == "DDI" || pacerMode == "AAI") && (aPacerSensitivity <= aUndersenseThreshold || pacedBeatFlag)) // not undersensed OR if a known paced  beat
       {
           if (pacedBeatFlag)
           {
@@ -642,14 +644,16 @@ function drawQRST(width, invertT, invertQRS) {   // width: 0=normal, 1=double, 2
   {
     ventRefractoryTimer = 0 // make ventricle refractory
 
-    // mark event according to data clock
+    // mark event for rhythm purposes according to data clock
     histVentTimes.push(dataClock);
     if (histVentTimes.length>10)
     {
     histVentTimes.shift();
     }
 
-    if (vPacerSensitivity <= vUndersenseThreshold || pacedBeatFlag) // not undersensing OR known paced beat-> mark real V
+    // will pacer sense the V?
+    // YES: if pacer is on, AND set to a V-sensing mode, AND not undersensing, OR if pacer paced the V
+    if (pacerOn && (pacerMode == "DDD" || pacerMode == "DDI" || pacerMode == "VVI") && (vPacerSensitivity <= vUndersenseThreshold || pacedBeatFlag)) // not undersensing OR known paced beat-> mark real V
     {
       if (pacedBeatFlag)
       {
