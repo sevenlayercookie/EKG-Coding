@@ -408,6 +408,10 @@ cursor:crosshair;
   display:block;
 }
 
+.textBoxes {
+  display:none;
+}
+
 .mainDiv {
   display: flex;
   height: 100%;
@@ -470,6 +474,7 @@ color:#fff
 
 /* Media queries */
 
+/* small screens */
 @media screen and (max-width: 480px) {
   .mainDiv {
     display: flex;
