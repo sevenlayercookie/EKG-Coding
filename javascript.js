@@ -163,14 +163,14 @@ var pacerOn = false; // does pacer start on or off?
 var pacingRate = 80;
 var minPaceRate = 30
 var maxPaceRate = 200
-var aPacerSensitivity = document.getElementById("aSensitivityBox").value = 4; // default
+var aPacerSensitivity = document.getElementById("aSensitivityBox").value = 0.5; // default
 var aPacerMaxSensitivity = 0.4
 var aPacerMinSensitivity = 10
-var vPacerSensitivity = document.getElementById("vSensitivityBox").value = 4; // default
+var vPacerSensitivity = document.getElementById("vSensitivityBox").value = 2; // default
 var vPacerMaxSensitivity = 0.8
 var vPacerMinSensitivity = 20
 var aPacerOutput = document.getElementById("aOutputBox").value = 10;
-var vPacerOutput = document.getElementById("vOutputBox").value = 20;
+var vPacerOutput = document.getElementById("vOutputBox").value = 10;
 var aPacerMaxOutput = 20
 var vPacerMaxOutput = 25
 var AVImax = 300
@@ -184,7 +184,7 @@ var URLmax = 230
 
 var manAVI, manURL, manPVARP = false;
 
-var HRadjustedAV = Math.round((300 - (1.67 * pacingRate)) / 2) * 2
+var HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/10)*10 // round to nearest tens    // from manual
 
 var autoAV = true
 
@@ -194,10 +194,13 @@ var meanRatePacer = 60
 var vCaptureThresholdBaseline = vCaptureThreshold = 5; // default V capture threshold (mA)
 var aCaptureThresholdBaseline = aCaptureThreshold = 2; // default A capture threshold (mA)
 // The sensing threshold is the least sensitive mV setting at which the temporary pacemaker can detect a heartbeat
-var aOversenseThresholdBaseline = aOversenseThreshold = 1 // threhsold below which pacer will oversense (e.g. T wave)
+var aOversenseThresholdBaseline = aOversenseThreshold = 0.3 // threhsold below which pacer will oversense (e.g. T wave)
 var aUndersenseThresholdBaseline = aUndersenseThreshold = 6 // threshold above which pacer will undersense (e.g. won't see P wave)
-var vOversenseThresholdBaseline = vOversenseThreshold = 2 // threhsold below which pacer will oversense (e.g. T wave)
+var vOversenseThresholdBaseline = vOversenseThreshold = 1 // threhsold below which pacer will oversense (e.g. T wave)
 var vUndersenseThresholdBaseline = vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
+
+// feedback
+var feedbackLevel = 'lowFeedback'
 
 // knob intialization
 
@@ -464,6 +467,17 @@ function onload() {
       currentRhythm = value;
     } else {
       currentRhythm = 'NSR';
+    }
+  }
+
+  document.getElementById("feedbackList").onchange = function () {
+
+    const value = document.getElementById("feedbackList").value;
+
+    if (value) {
+      feedbackLevel = value;
+    } else {
+      feedbackLevel = 'noFeedback';
     }
   }
 
@@ -1942,7 +1956,8 @@ function pacingFunction() {
     if (pacerMode == 'DDI')  // sensing fixed
     {
       //autoAV = AVIntervalHRAdjustBox.checked;
-      HRadjustedAV = Math.round((300 - (1.67 * pacingRate)) / 2) * 2
+      HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/10)*10 // round to nearest tens    // from manual
+      
 
       if (HRadjustedAV < 50) { HRadjustedAV = 50 }
       if (HRadjustedAV > 250) { HRadjustedAV = 250 }
@@ -2087,7 +2102,7 @@ function pacingFunction() {
       //autoAV = AVIntervalHRAdjustBox.checked;
       let lowerRateLimit = VAItimer + AVInterval
       let VAinterval = goalPacerMs - AVInterval
-      HRadjustedAV = Math.round((300 - (1.67 * pacingRate)) / 2) * 2
+      HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/10)*10 // round to nearest tens    // from manual
 
       if (HRadjustedAV < 50) { HRadjustedAV = 50 }
       if (HRadjustedAV > 250) { HRadjustedAV = 250 }
@@ -2483,7 +2498,7 @@ function updateAllGUIValues() {
   document.getElementById("boxURL").innerText = upperRateLimit.toFixed(0) + " ppm"
   document.getElementById("RAPrateValue").innerText = RAPrate.toFixed(0) + " ppm"
 
-  HRadjustedAV = Math.round((300 - (1.67 * pacingRate)) / 2) * 2
+  HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/10)*10 // round to nearest tens    // from manual
   if (HRadjustedAV < 50) { HRadjustedAV = 50 }
   if (HRadjustedAV > 250) { HRadjustedAV = 250 }
 
@@ -2556,7 +2571,7 @@ function updateAllGUIValues() {
     document.getElementById('PVARProw').style.display = 'none';
     document.getElementById('aTracking').style.display = 'none';
     document.getElementById('URLrow').style.display = 'none';
-    document.getElementById('settings').style.display = '';
+    document.getElementById('settings').style.display = 'none';
   }
   if (pacerMode == 'AOO') {
     document.getElementById('aOutputRow').style.visibility = '';
@@ -2578,7 +2593,7 @@ function updateAllGUIValues() {
     document.getElementById('PVARProw').style.display = 'none';
     document.getElementById('aTracking').style.display = 'none';
     document.getElementById('URLrow').style.display = 'none';
-    document.getElementById('settings').style.display = '';
+    document.getElementById('settings').style.display = 'none';
   }
   if (pacerMode == 'VOO') {
     document.getElementById('aOutputRow').style.visibility = 'hidden';
@@ -2671,14 +2686,14 @@ function randomizeThresholds() // randomize a bit capture, oversense, undersense
   let randomRangeMin = (0 - 0.5) * 2
   let randomRangeMax = (1 - 0.5) * 2
   // capture thresholds (default A=2, V=5)
-  vCaptureThreshold = vCaptureThresholdBaseline + (Math.random() - 0.5) * 2  //      +/- 1
-  aCaptureThreshold = aCaptureThresholdBaseline + (Math.random() - 0.5) * 2  //      +/- 1
+  vCaptureThreshold = vCaptureThresholdBaseline + (Math.random() - 0.5) * vCaptureThresholdBaseline  //      +/- 1
+  aCaptureThreshold = aCaptureThresholdBaseline + (Math.random() - 0.5) * aCaptureThresholdBaseline  //      +/- 1
 
   // sensitivity Thresholds (default A=1.5, 10   and V=1.5, 10)
-  aOversenseThreshold = aOversenseThresholdBaseline + (Math.random() - 0.5) * 2  //      +/- 1
-  aUndersenseThreshold = aUndersenseThresholdBaseline + (Math.random() - 0.5) * 2  //      +/- 1
-  vOversenseThreshold = vOversenseThresholdBaseline + (Math.random() - 0.5) * 2  //      +/- 1
-  vUndersenseThreshold = vUndersenseThresholdBaseline + (Math.random() - 0.5) * 2  //      +/- 1
+  aOversenseThreshold = aOversenseThresholdBaseline + (Math.random() - 0.5) * aOversenseThresholdBaseline  //      +/- 1
+  aUndersenseThreshold = aUndersenseThresholdBaseline + (Math.random() - 0.5) * aUndersenseThresholdBaseline  //      +/- 1
+  vOversenseThreshold = vOversenseThresholdBaseline + (Math.random() - 0.5) * vOversenseThresholdBaseline  //      +/- 1
+  vUndersenseThreshold = vUndersenseThresholdBaseline + (Math.random() - 0.5) * vUndersenseThresholdBaseline  //      +/- 1
 
   // calculate random ranges for each
   aOversenseThresholdRandomRange = [aOversenseThresholdBaseline + randomRangeMin, aOversenseThresholdBaseline + randomRangeMax]
@@ -2708,22 +2723,123 @@ function feedbackFunction() // provides feedback on settings
         'highFeedback' == comprehensive explanation of error and how to fix it
   */
 
-  let feedbackLevel = 'lowFeedback'
-
-  let aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdRandomRange[1]
+/*
+  let aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdRandomRange[0]
   let aSensitivityTooLow = aPacerSensitivity > aUndersenseThresholdRandomRange[1]
-  let vSensitivityTooHigh = vPacerSensitivity < vOversenseThresholdRandomRange[1]
+  let vSensitivityTooHigh = vPacerSensitivity < vOversenseThresholdRandomRange[0]
   let vSensitivityTooLow = vPacerSensitivity > vUndersenseThresholdRandomRange[1]
   let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdRandomRange[1]
   let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline * 3 // overly high output is not optimal (should be around 2x greater than capture threshold)
   let vPacerOutputTooLow = vPacerOutput < vCaptureThresholdRandomRange[1]
   let vPacerOutputTooHigh = vPacerOutput > vCaptureThresholdBaseline * 3// overly high output is not optimal (should be around 2x greater than capture threshold)
+*/
+
+
+  let aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdBaseline + 0.5 * aOversenseThresholdBaseline
+  let aSensitivityTooLow = aPacerSensitivity > aUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline
+  let vSensitivityTooHigh = vPacerSensitivity < vOversenseThresholdBaseline + 0.5 * vOversenseThresholdBaseline
+  let vSensitivityTooLow = vPacerSensitivity > vUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline
+  let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdBaseline + 0.5 * aCaptureThresholdBaseline
+  let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline * 5 // overly high output is not optimal (should be around 2x greater than capture threshold)
+  let vPacerOutputTooLow = vPacerOutput < vCaptureThresholdBaseline + 0.5 * vCaptureThresholdBaseline
+  let vPacerOutputTooHigh = vPacerOutput > vCaptureThresholdBaseline * 4 // overly high output is not optimal (should be around 2x greater than capture threshold)
+  
+
 
   let optimized = !aPacerOutputTooHigh && !vPacerOutputTooHigh
 
+  let allParametersCorrect = true
 
-  let allParametersCorrect = !aSensitivityTooHigh && !aSensitivityTooLow && !vSensitivityTooHigh && !vSensitivityTooLow && !aPacerOutputTooLow & !vPacerOutputTooLow
-  if (feedbackLevel == 'lowFeedback') {
+  if (pacerMode=='DDD' || pacerMode=='DDI')
+  {
+  allParametersCorrect = 
+    !aSensitivityTooHigh && !aSensitivityTooLow && 
+    !vSensitivityTooHigh && !vSensitivityTooLow && 
+    !aPacerOutputTooLow && 
+    !vPacerOutputTooLow
+  }
+  if (pacerMode=='DOO')
+  {
+  allParametersCorrect =  
+    !aPacerOutputTooLow && 
+    !vPacerOutputTooLow
+    // if a setting isn't relevant to this pacing mode, set it as correct
+    aSensitivityTooHigh=false;
+    aSensitivityTooLow=false;
+    vSensitivityTooHigh=false;
+    vSensitivityTooLow=false;
+    
+  }
+  if (pacerMode=='AAI')
+  {
+  allParametersCorrect = 
+    !aSensitivityTooHigh && !aSensitivityTooLow && 
+    !aPacerOutputTooLow
+//
+    vPacerOutputTooHigh=false;
+    vPacerOutputTooLow=false;
+    vSensitivityTooHigh=false;
+    vSensitivityTooLow=false;
+  }
+  if (pacerMode=='VVI')
+  {
+  allParametersCorrect =  
+    !vSensitivityTooHigh && !vSensitivityTooLow &&  
+    !vPacerOutputTooLow
+    //
+    aPacerOutputTooHigh=false
+    aPacerOutputTooLow=false
+    aSensitivityTooHigh=false
+    aSensitivityTooLow=false
+  }
+  if (pacerMode=='AOO')
+  {
+  allParametersCorrect = 
+    !aPacerOutputTooLow
+    //
+    aSensitivityTooHigh=false
+    aSensitivityTooLow=false
+    vSensitivityTooHigh=false
+    vSensitivityTooLow=false
+    vPacerOutputTooLow=false
+    vPacerOutputTooHigh=false
+  }
+  if (pacerMode=='VOO')
+  {
+  allParametersCorrect = 
+    !vPacerOutputTooLow
+    //
+    aSensitivityTooHigh=false
+    aSensitivityTooLow=false
+    vSensitivityTooHigh=false
+    vSensitivityTooLow=false
+    aPacerOutputTooLow=false
+    aPacerOutputTooHigh=false
+  }
+  if (pacerMode=='OOO')
+  {
+  allParametersCorrect = true;
+    vPacerOutputTooHigh=false;
+    vPacerOutputTooLow=false;
+    aSensitivityTooHigh=false
+    aSensitivityTooLow=false
+    vSensitivityTooHigh=false
+    vSensitivityTooLow=false
+    aPacerOutputTooLow=false
+    aPacerOutputTooHigh=false
+  }
+
+  let arrayOfBad = ["","","","","","","",""]
+  let i = 0;
+  if (aSensitivityTooHigh) {arrayOfBad[i]="Atrial sensitivity is too high. May cause oversensing"; i++}
+  if (aSensitivityTooLow) {arrayOfBad[i]="Atrial sensitivity is too low. May cause undersensing"; i++}
+  if (vSensitivityTooHigh) {arrayOfBad[i]="Ventricular sensitivity is too high. May cause oversensing"; i++}
+  if (vSensitivityTooLow) {arrayOfBad[i]="Ventricular sensitivity is too low. May cause undersensing"; i++}
+  if (aPacerOutputTooLow) {arrayOfBad[i]="Atrial output is too low. May lose capture"; i++}
+  if (vPacerOutputTooLow) {arrayOfBad[i]="Ventricular output is too low. May lose capture"; i++}
+  
+  
+    if (feedbackLevel == 'lowFeedback') {
     if (allParametersCorrect && optimized) {
       settingsCorrect = true;
       document.getElementById("feedbackBox").innerText = "OPTIMAL"
@@ -2735,54 +2851,117 @@ function feedbackFunction() // provides feedback on settings
       document.getElementById("feedbackBox").style.backgroundColor = "red"
     }
     else if (allParametersCorrect && !optimized) {
-      document.getElementById("feedbackBox").innerText = "NOT OPTIMAL (outputs too high?)"
+      document.getElementById("feedbackBox").innerText = "NOT OPTIMAL"
       document.getElementById("feedbackBox").style.backgroundColor = "yellow"
     }
   }
-  else if (feedbackLevel == 'medFeedback') {
+    else if (feedbackLevel == 'medFeedback') {
 
 
-    if (currentRhythm != 'aFib' && currentRhythm != 'aFlutter') {
-      if (aPacerSensitivity < aUndersenseThresholdRandomRange[0] && aPacerSensitivity > aOversenseThresholdRandomRange[1] && vPacerSensitivity < vUndersenseThresholdRandomRange[0] && vPacerSensitivity > vOversenseThresholdRandomRange[1] && aPacerOutput > aCaptureThresholdRandomRange[1] && vPacerOutput > vCaptureThresholdRandomRange[1]) // sensitivity settings
+      // sensitivities and outputs
+      if (!aSensitivityTooHigh && !aSensitivityTooLow && !vSensitivityTooHigh && !vSensitivityTooLow && !aPacerOutputTooLow && !vPacerOutputTooLow) // sensitivity settings
       {
-
-        settingsCorrect = true;
-        document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
-        document.getElementById("feedbackBox").style.backgroundColor = "green"
+        if (aPacerOutputTooHigh || vPacerOutputTooHigh) {
+          document.getElementById("feedbackBox").innerText = "sensing/output: outputs are unnecessarily high"
+          document.getElementById("feedbackBox").style.backgroundColor = "yellow"
+        }
+        else {
+          settingsCorrect = true;
+          document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
+          document.getElementById("feedbackBox").style.backgroundColor = "green"
+        }
 
       }
       else {
         settingsCorrect = false;
-        document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
+        document.getElementById("feedbackBox").innerHTML = '';
+        for (let i = 0; i < arrayOfBad.length; i++) {
+          if (arrayOfBad[i] != '') {
+            document.getElementById("feedbackBox").append(arrayOfBad[i])
+            document.getElementById("feedbackBox").append(document.createElement("br"))
+          }
+        }
+        //document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
         document.getElementById("feedbackBox").style.backgroundColor = "red"
       }
-    }
-    else if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter') {
+      // MORE SPECIFIC ISSUES
 
-      if (aPacerSensitivity < aUndersenseThresholdBaseline && aPacerSensitivity > aOversenseThresholdBaseline && vPacerSensitivity < vUndersenseThresholdBaseline && vPacerSensitivity > vOversenseThresholdBaseline && vPacerOutput > vCaptureThresholdBaseline) // sensitivity settings
+      // A-fib specific 
+      if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter') {
+
+        if (pacerMode == 'DDD') {
+          let newDiv = document.createElement("div")
+          newDiv.append("Be careful of A-tracking supraventricular arrhythmias while in DDD mode")
+          newDiv.append(document.createElement("br"))
+          newDiv.style.backgroundColor = "yellow"
+          document.getElementById("feedbackBox").append(newDiv)
+        }
+        // atrial capture in a-fib
+        if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI" || pacerMode == "AOO" || pacerMode == "DOO") {
+          let newDiv = document.createElement("div")
+          newDiv.append("Mode: Atrial capture is not generally possible with atrial fib/flutter.")
+          newDiv.append(document.createElement("br"))
+          newDiv.style.backgroundColor = "red"
+          document.getElementById("feedbackBox").append(newDiv)
+
+
+          //document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nMode: Atrial capture is not generally possible with atrial fib/flutter.")
+
+          //document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat('\nMode: Atrial sensing is not reliable/useful with atrial fib/flutter')
+        }
+        // atrial sensing in a-fib
+        if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI") {
+          let newDiv = document.createElement("div")
+          if (currentRhythm == "aFib") {
+            newDiv.append("Mode: Atrial sensing is not reliable with atrial fibrillation")
+            newDiv.append(document.createElement("br"))
+            newDiv.style.backgroundColor = "yellow"
+            document.getElementById("feedbackBox").append(newDiv)
+          }
+        }
+      }
+
+      // complete heart block (A-pacing alone not sufficient; try to keep AV synchrony)
+      if (currentRhythm=="completeBlock")
       {
-        settingsCorrect = true;
-        document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
-        document.getElementById("feedbackBox").style.backgroundColor = "green"
+        if (pacerMode == "AAI" || pacerMode == "AOO")
+        {
+          let newDiv = document.createElement("div")
+          newDiv.append("Atrial-only pacing will not conduct to ventricles in CHB")
+          newDiv.append(document.createElement("br"))
+          newDiv.style.backgroundColor = "red"
+          document.getElementById("feedbackBox").append(newDiv)
+        }
+        if (pacerMode == "VVI" || pacerMode == "VOO")
+        {
+          let newDiv = document.createElement("div")
+          newDiv.append("Ventricle-only pacing and sensing will not maintain AV synchrony in CHB")
+          newDiv.append(document.createElement("br"))
+          newDiv.style.backgroundColor = "yellow"
+          document.getElementById("feedbackBox").append(newDiv)
+        }
       }
-      else {
-        settingsCorrect = false;
-        document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
-        document.getElementById("feedbackBox").style.backgroundColor = "red"
-      }
-      if (pacerMode == 'DDD') {
-        document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nBe careful of A-tracking supraventricular arrhythmias while in DDD mode")
-        document.getElementById("feedbackBox").style.backgroundColor = "yellow"
-      }
-      if (pacerMode == 'AAI') {
-        document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nMode: Atrial capture is not possible with atrial fib/flutter.")
-
-        document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat('\nMode: Atrial sensing is not reliable/useful with atrial fib/flutter')
-
-        document.getElementById("feedbackBox").style.backgroundColor = "red"
+      // high degree AV blocks
+      if (currentRhythm=="2ndtypeII" || currentRhythm == "highDegreeBlock")
+      {
+        if (pacerMode == "AAI" || pacerMode == "AOO")
+        {
+          let newDiv = document.createElement("div")
+          newDiv.append("Atrial-only pacing may not always conduct to ventricles in high degree AV blocks")
+          newDiv.append(document.createElement("br"))
+          newDiv.style.backgroundColor = "yellow"
+          document.getElementById("feedbackBox").append(newDiv)
+        }
+        if (pacerMode == "VVI" || pacerMode == "VOO")
+        {
+          let newDiv = document.createElement("div")
+          newDiv.append("Ventricle-only pacing and sensing will not maintain AV synchrony in high degree AV blocks")
+          newDiv.append(document.createElement("br"))
+          newDiv.style.backgroundColor = "yellow"
+          document.getElementById("feedbackBox").append(newDiv)
+        }
       }
     }
-  }
 }
 
 
@@ -2997,6 +3176,23 @@ function getSelectableRows() {
 }
 
 function reassignRowNumbers() {
+
+  // CLEAR ALL ROW NUMBERS
+  if (currentBottomScreen == 'mainmenu') { var ancestor = document.getElementById('mainScreen'); }
+  else if (currentBottomScreen == 'modeScreen') { var ancestor = document.getElementById('modeScreen'); }
+  else if (currentBottomScreen == 'RAPscreen') { var ancestor = document.getElementById('RAPscreen'); }
+
+  var descendents = ancestor.getElementsByTagName('*');
+  
+  for (let i = 0; i < descendents.length; ++i) {
+    e = descendents[i];
+    if (e.dataset.rownum != null)
+    {
+      e.dataset.rownum = null
+    }
+  }
+
+  // REASSIGN ALL ROW NUMBERS
   let i = 0
   for (i = 0; i < selectableRows.length; i++) {
     const element = selectableRows[i];
@@ -3158,6 +3354,10 @@ function enterClick(event) {
   var i, e, d;
   for (i = 0; i < descendents.length; ++i) {
     e = descendents[i];
+    if (i==41)
+    {
+      let stop = "STOP"
+    }
     if (e.dataset.rownum == currentlySelectedRowNumber) {
       if (e.id != "RAPrateRow" && e.id != "pauseButton") {
         animateButton(enterButton)
@@ -3372,118 +3572,7 @@ function knobClick(clickEvent) {
     //rotateKnobImage(clickTarget, clickTarget.deg)
     knobAngleToResult(clickEvent, clickTarget) // (event, knob image)
 
-    // rotate the knob
-
-    //rotateKnobImage(clickTarget, clickTarget.deg)
-
-    /*
-    if (!pacerLocked)
-    {
-    //////////////////
-     // manage knob limits
-    let newRev = false
-    
-    clickTarget.revolutions = Math.floor(clickTarget.cumulativeDegrees / 360)
-    
-    let revolution = 0;
-    
-    if (clickTarget.lastDeg-clickTarget.deg > 300 ) // if number passes through 0/360, add or subtract a rotation
-    {
-      if (!clickTarget.maxLock)
-      {
-      revolution = 360
-      }
-      newRev = true
-    }
-    if (clickTarget.lastDeg-clickTarget.deg < -300)
-    {
-      if (!clickTarget.minLock)
-      {
-      revolution = -360
-      }
-      newRev = true
-    }
-        
-        let testCumulative = clickTarget.cumulativeDegrees + (clickTarget.deg - clickTarget.lastDeg) + revolution
-        let testValue = Math.round(clickTarget.startValue+clickTarget.cumulativeDegrees*clickTarget.turnFactor)
-        
-        //console.log(testCumulative)
-        if (testCumulative >= clickTarget.maxDegree)
-        {
-          clickTarget.maxLock = true;
-        }
-    
-        if (testCumulative <= clickTarget.minDegree)
-        {
-          clickTarget.minLock = true;
-        }
-    
-        if (clickTarget.maxLock)
-        {
-          if (testCumulative < clickTarget.maxDegree && !newRev && clickTarget.lastDeg - clickTarget.deg > 0) // break the max lock?
-          {
-            clickTarget.maxLock = false
-          }
-          else // if can't break lock..
-          {
-            clickTarget.cumulativeDegrees = clickTarget.maxDegree
-          }
-        }
-    
-        if (clickTarget.minLock)
-        {
-          if (testCumulative > clickTarget.minDegree && !newRev && clickTarget.lastDeg - clickTarget.deg < 0) // break the min lock?
-          {
-            clickTarget.minLock = false
-          }
-          else // if can't break lock..
-          {
-            clickTarget.cumulativeDegrees = clickTarget.minDegree
-          }
-        }
-    
-        if (!clickTarget.minLock && !clickTarget.maxLock)
-        {
-          clickTarget.cumulativeDegrees = testCumulative
-        }
-    
-    
-    ///////////////////
-          clickTarget.lastDeg = clickTarget.deg
-       
-    
-    let result = clickTarget.startValue + (clickTarget.cumulativeDegrees * clickTarget.turnFactor)
-    let negresult = clickTarget.startValue + (-clickTarget.cumulativeDegrees * clickTarget.turnFactor)
-    
-    if (clickTarget.reverseKnob)
-    {clickTarget.currentValue = result = negresult}
-    else
-    {clickTarget.currentValue = result}
-    
-    
-          if (clickTarget.id=="rateDialImg")
-          {
-            pacingRate = Math.round(result)
-          }
-    
-          if (clickTarget.id=="vOutputDialImg")
-          {
-            vPacerOutput = Math.round(result)
-          }
-    
-          if (clickTarget.id=="aOutputDialImg")
-          {
-            aPacerOutput = Math.round(result) 
-          }
-    
-          if (clickTarget.id=="bottomKnobImg")
-          {
-            bottomKnobFunction(result)
-          }
-          // onParameterChange()
-          updateAllGUIValues()
-        }
-        */
+  
 
     dragEvent.preventDefault()
   }
@@ -3778,7 +3867,7 @@ function bottomKnobFunction(knobResult) {
   }
 
   if (selectedOption == "AVIrow") {
-    AVInterval = makeItEven(knobResult)
+    AVInterval = Math.round(knobResult/10)*10   // round to nearest 10s
     manAVI = true
   }
 
