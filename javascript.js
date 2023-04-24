@@ -3629,7 +3629,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
   if (isNaN(knobImage.lastDeg)) {
     knobImage.lastDeg = knobImage.deg
   }
-  if (!pacerLocked && !pacerOn) // let knob spin but do nothing else if pacer is locked OR if pacer is off
+  if (!pacerLocked && pacerOn) // let knob spin but do nothing else if pacer is locked OR if pacer is off
   {
     //////////////////
     // manage knob limits
