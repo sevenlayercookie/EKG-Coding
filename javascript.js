@@ -1761,7 +1761,7 @@ function paceIt(target) // target : atrium, or vent
 
 function DOObuttonClick(DOObutton) {
   pacingRate = 80
-
+  pacerOn=true;
   let element = document.getElementById("pacingMode")
   document.getElementById("pacingBoxMode").innerText = "DOO"
   element.selectedIndex = 2;
