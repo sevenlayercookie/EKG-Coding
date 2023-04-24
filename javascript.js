@@ -936,7 +936,7 @@ function masterRhythmFunction() {
 
     if (timeSinceLastV() >= aFibMS) {
       drawQRST(); // this works, but maybe should allow for physiologic occasional V's capturing or being sensed
-      histPTimes.push(dataClock - AVInterval); // let a P "conduct" and be "sensed" by pacer
+      histPTimes.push(dataClock - AVInterval); // let a P "conduct" and be sensed
       if (histPTimes.length > 10) {
         histPTimes.shift();
       }
@@ -1824,7 +1824,8 @@ function pacingModeBoxChange() {
   //onParameterChange()
 }
 
-var AVInterval = 170; // pacemaker interval between atrial and v pace
+var AVInterval = 120; // pacemaker interval between atrial and v pace
+var manAVInterval = 120;
 let captureOverride = false;
 var sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
 
@@ -3497,8 +3498,6 @@ function calcKnobParams(knobImage) {
 
   // calculate minDegree and maxDegree for the knob clicked
   if (knobImage.reverseKnob) {
-
-    // DEBUGGING 4/21/23 *** when startvalue changes (every time knob is clicked), the min and maxdegrees change (that shouldn't be)
     knobImage.maxDegree = -(knobImage.minValue - knobImage.startValue) / knobImage.turnFactor
     knobImage.minDegree = -(knobImage.maxValue - knobImage.startValue) / knobImage.turnFactor
   }
@@ -3507,7 +3506,7 @@ function calcKnobParams(knobImage) {
     knobImage.maxDegree = (knobImage.maxValue - knobImage.startValue) / knobImage.turnFactor
   }
 
-  // initialize cumdegrees and revs
+
   if (isNaN(knobImage.cumulativeDegrees)) { knobImage.cumulativeDegrees = 0 }
   if (isNaN(knobImage.revolutions)) { knobImage.revolutions = 0 }
   //if (isNaN(knobImage.lastDeg)) {knobImage.lastDeg=0}
@@ -3534,10 +3533,9 @@ function knobClick(clickEvent) {
 
   calcKnobParams(clickTarget)
 
-  // DEBUG 4/21/2023 **** this should be == undefined, NOT isNaN (this always returns false as it is written)
-  if (isNaN(clickTarget.lastDeg ||typeof clickTarget.lastDeg === 'undefined')) // if it's undefined, then it must be the first run
+  if (isNaN(clickTarget.lastDeg)) // if it's undefined, then it must be the first run
   {
-    if (isNaN(clickTarget.deg || clickTarget.deg == undefined)) {
+    if (isNaN(clickTarget.deg)) {
       clickTarget.deg = clickTarget.lastDeg = 0
     }
     else {
@@ -3562,7 +3560,7 @@ function knobClick(clickEvent) {
     clickTarget.deg = Math.round(Math.atan2(clickTarget.mouseRelativetoKnobCenter[0], clickTarget.mouseRelativetoKnobCenter[1]) * (180 / Math.PI)); // x,y -> rad -> degree
     if (clickTarget.deg < 0) { clickTarget.deg += 360 }
 
-    // DEBUG 4/21/2023 - this is where lastDeg is actually first initialized
+
     if (isNaN(clickTarget.lastDeg)) // if it's undefined, then it must be the first run
     {
       clickTarget.lastDeg = clickTarget.deg
@@ -3628,7 +3626,6 @@ function knobAngleToResult(event, knobImage)  // working here ***
 
   calcKnobParams(knobImage)
 
-  // DEBUG 4/21/2023 - lastDeg has already been initialized by this point
   if (isNaN(knobImage.lastDeg)) {
     knobImage.lastDeg = knobImage.deg
   }
@@ -3664,21 +3661,9 @@ function knobAngleToResult(event, knobImage)  // working here ***
       }
       newRev = true
     }
-    knobImage.currentValue
+
     let testCumulative = knobImage.cumulativeDegrees + (knobImage.deg - knobImage.lastDeg) + revolution
-    let testValue = Math.round(knobImage.startValue + knobImage.cumulativeDegrees * knobImage.turnFactor) // convert degrees to output value
-
-    // 4/21/2023 new math test (use difference of start and end cum and add to value)
-      let oldCum = knobImage.cumulativeDegrees
-      let newCum = testCumulative
-      let differenceCum = newCum - oldCum
-          // 4/21/2023 new Math
-          let newtestresult = knobImage.currentValue + differenceCum * knobImage.turnFactor
-          let newtestnegresult = knobImage.currentValue - differenceCum * knobImage.turnFactor
-          // NEED TO FINISH THE MIN AND MAX LOCK (probably switch to maxValue instead of maxDegree etc.)
-          // rest of this is finished down below
-    //
-
+    let testValue = Math.round(knobImage.startValue + knobImage.cumulativeDegrees * knobImage.turnFactor)
 
     //console.log(testCumulative)
     if (testCumulative >= knobImage.maxDegree) {
@@ -3719,12 +3704,9 @@ function knobAngleToResult(event, knobImage)  // working here ***
     ///////////////////
     knobImage.lastDeg = knobImage.deg
 
-    // 4/21/2023 new Math
-      let result = knobImage.currentValue + differenceCum * knobImage.turnFactor
-      let negresult = knobImage.currentValue - differenceCum * knobImage.turnFactor
 
-    let OLDresult = knobImage.startValue + (knobImage.cumulativeDegrees * knobImage.turnFactor)
-    let OLDnegresult = knobImage.startValue + (-knobImage.cumulativeDegrees * knobImage.turnFactor)
+    let result = knobImage.startValue + (knobImage.cumulativeDegrees * knobImage.turnFactor)
+    let negresult = knobImage.startValue + (-knobImage.cumulativeDegrees * knobImage.turnFactor)
 
     if (knobImage.reverseKnob) { knobImage.currentValue = result = negresult }
     else { knobImage.currentValue = result }
@@ -3756,7 +3738,7 @@ var elem
 // set rateDial parameters
 elem = document.getElementById('rateDialImg')
 elem.minValue = minPaceRate
-elem.startValue = pacingRate  // this can be set to pacingRate because it is only run once during program
+elem.startValue = pacingRate
 elem.maxValue = maxPaceRate
 elem.turnFactor = knobTurnFactor
 
@@ -3792,7 +3774,7 @@ function getBottomDialParameters() {
   if (selectedOption == "AsenseRow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = aPacerMaxSensitivity
-    elem.startValue = 0.5   // this needs to be a constant that is == the default for the pacer
+    elem.startValue = 4
     elem.maxValue = aPacerMinSensitivity
     elem.turnFactor = knobTurnFactor / 3
     elem.reverseKnob = true
@@ -3804,7 +3786,7 @@ function getBottomDialParameters() {
   if (selectedOption == "VsenseRow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = vPacerMaxSensitivity
-    elem.startValue = 2.0
+    elem.startValue = 4
     elem.maxValue = vPacerMinSensitivity
     elem.turnFactor = knobTurnFactor / 2
     elem.reverseKnob = true
@@ -3816,7 +3798,7 @@ function getBottomDialParameters() {
   if (selectedOption == "AVIrow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = AVImin
-    elem.startValue = 170 /// ***
+    elem.startValue = 120
     elem.maxValue = AVImax
     elem.turnFactor = knobTurnFactor * 3
     elem.reverseKnob = false
@@ -3826,7 +3808,7 @@ function getBottomDialParameters() {
   }
 
   if (selectedOption == "PVARProw") {
-    var elem = document.getElementById('bottomKnobImg') // select the knob and set its attributes
+    var elem = document.getElementById('bottomKnobImg')
     elem.minValue = PVARPmin
     elem.startValue = 300
     elem.maxValue = PVARPmax
