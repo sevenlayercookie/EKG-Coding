@@ -74,7 +74,7 @@ cursor:crosshair;
   margin-left: 1%;
   margin-right: 2%;
   margin-left: 1%;
-  touch-action: none;
+  /* touch-action: none; */
   padding-bottom: 10%;
  }
 
@@ -85,7 +85,7 @@ cursor:crosshair;
   background-color:#34422f;
   padding-left: 10%;
   padding-bottom: 10%;
-  touch-action: none;
+  /* touch-action: none; */
  }
  
  .topButtons {
@@ -170,6 +170,7 @@ cursor:crosshair;
   align-items: center;
   flex-direction: column;
   width: 50%;
+  
  }
 
  .rightLabel {
@@ -214,6 +215,7 @@ cursor:crosshair;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+  touch-action: none;
  }
 
  .topKnobs {
@@ -263,6 +265,7 @@ cursor:crosshair;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  touch-action: none;
 }
  
 .modeTitle {
