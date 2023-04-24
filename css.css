@@ -215,7 +215,7 @@ cursor:crosshair;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  touch-action: none;
+  /* touch-action: none; */
  }
 
  .topKnobs {
@@ -265,7 +265,7 @@ cursor:crosshair;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  touch-action: none;
+  /* touch-action: none; */
 }
  
 .modeTitle {
@@ -394,6 +394,7 @@ cursor:crosshair;
 .knobClass {
   cursor:grab;
   padding:3%;
+  touch-action: none;
 }
 
 
