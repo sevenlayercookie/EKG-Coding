@@ -3632,7 +3632,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
   if (isNaN(knobImage.lastDeg)) {
     knobImage.lastDeg = knobImage.deg
   }
-  if (!pacerLocked) // let knob spin but do nothing else if pacer is locked
+  if (!pacerLocked && pacerOn) // let knob spin but do nothing else if pacer is locked OR if pacer is off
   {
     //////////////////
     // manage knob limits
@@ -3664,7 +3664,11 @@ function knobAngleToResult(event, knobImage)  // working here ***
       }
       newRev = true
     }
-    knobImage.currentValue
+    if (knobImage.currentValue == undefined || isNaN(knobImage.currentValue))
+    {
+      knobImage.currentValue = knobImage.startValue
+    }
+    
     let testCumulative = knobImage.cumulativeDegrees + (knobImage.deg - knobImage.lastDeg) + revolution
     let testValue = Math.round(knobImage.startValue + knobImage.cumulativeDegrees * knobImage.turnFactor) // convert degrees to output value
 
@@ -3676,11 +3680,48 @@ function knobAngleToResult(event, knobImage)  // working here ***
           let newtestresult = knobImage.currentValue + differenceCum * knobImage.turnFactor
           let newtestnegresult = knobImage.currentValue - differenceCum * knobImage.turnFactor
           // NEED TO FINISH THE MIN AND MAX LOCK (probably switch to maxValue instead of maxDegree etc.)
+          
           // rest of this is finished down below
     //
 
 
     //console.log(testCumulative)
+    
+
+    if (newtestresult >= knobImage.maxValue) {
+      knobImage.maxLock = true;
+    }
+
+    if (newtestresult <= knobImage.minValue) {
+      knobImage.minLock = true;
+    }
+
+    
+    if (knobImage.maxLock) {
+      if (newtestresult < knobImage.maxValue && !newRev && knobImage.lastDeg - knobImage.deg > 0) // break the max lock?
+      {
+        knobImage.maxLock = false
+      }
+      else // if can't break lock..
+      {
+        knobImage.currentValue = knobImage.maxValue
+      }
+    }
+    
+
+    if (knobImage.minLock) {
+      if (newtestresult > knobImage.minValue && !newRev && knobImage.lastDeg - knobImage.deg < 0) // break the min lock?
+      {
+        knobImage.minLock = false
+      }
+      else // if can't break lock..
+      {
+        knobImage.currentValue = knobImage.minValue
+      }
+    }
+
+
+    /*
     if (testCumulative >= knobImage.maxDegree) {
       knobImage.maxLock = true;
     }
@@ -3711,9 +3752,18 @@ function knobAngleToResult(event, knobImage)  // working here ***
       }
     }
 
+    */
+
     if (!knobImage.minLock && !knobImage.maxLock) {
       knobImage.cumulativeDegrees = testCumulative
-    }
+
+      // break if big jump in value
+      if (Math.abs(newtestresult - knobImage.currentValue)>2)
+      {
+        let test = "STOP"
+      }
+
+    
 
 
     ///////////////////
@@ -3747,6 +3797,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
     }
     // onParameterChange()
     updateAllGUIValues()
+  }
   }
 }
 
