@@ -3647,8 +3647,8 @@ function modeSelectionClick() {
 }
 
 function calcKnobParams(knobImage) {
-  knobImage.minLock = false
-  knobImage.maxLock = false
+  //knobImage.minLock = false
+  //knobImage.maxLock = false
 
 
   // calculate minDegree and maxDegree for the knob clicked
@@ -3820,14 +3820,14 @@ function knobAngleToResult(event, knobImage)  // working here ***
     if (Math.abs(knobImage.deltaDeg) > 50) {
       let test = 'Breakpoint because deltaDeg should only be greater than '
     }
-    if (knobImage.lastDeg - knobImage.deg > 300) // if number passes through 0/360, add or subtract a rotation
+    if (knobImage.lastDeg - knobImage.deg > 30) // if number passes through 0/360, add or subtract a rotation
     {
-      if (!knobImage.maxLock) {
+      if (true){ //!knobImage.maxLock) {
         revolution = 360
       }
       newRev = true
     }
-    if (knobImage.lastDeg - knobImage.deg < -300) {
+    if (knobImage.lastDeg - knobImage.deg < -30) {
       if (!knobImage.minLock) {
         revolution = -360
       }
@@ -3857,37 +3857,50 @@ function knobAngleToResult(event, knobImage)  // working here ***
     //console.log(testCumulative)
     
 
-    if (newtestresult >= knobImage.maxValue) {
+    if (testCumulative >= knobImage.maxDegree) {
       knobImage.maxLock = true;
     }
 
-    if (newtestresult <= knobImage.minValue) {
+    if (testCumulative <= knobImage.minDegree) {
       knobImage.minLock = true;
     }
 
     
     if (knobImage.maxLock) {
-      if (newtestresult < knobImage.maxValue && !newRev && knobImage.lastDeg - knobImage.deg > 0) // break the max lock?
+      if (knobImage.maxDegree - testCumulative < 4 && knobImage.maxDegree - testCumulative > 0 && !newRev && knobImage.lastDeg - knobImage.deg > 0) // break the max lock?
       {
         knobImage.maxLock = false
       }
       else // if can't break lock..
       {
-        knobImage.currentValue = knobImage.maxValue
-        knobImage.cumulativeDegrees = knobImage.maxDegree
+        if (knobImage.reverseKnob)
+        {
+        knobImage.currentValue = knobImage.minValue
+        }
+        else{
+          knobImage.currentValue = knobImage.maxValue
+        }
+        knobImage.cumulativeDegrees = testCumulative = knobImage.maxDegree
       }
     }
     
 
     if (knobImage.minLock) {
-      if (newtestresult > knobImage.minValue && !newRev && knobImage.lastDeg - knobImage.deg < 0) // break the min lock?
+      if (testCumulative - knobImage.minDegree < 4 && testCumulative - knobImage.minDegree > 0 && !newRev && knobImage.lastDeg - knobImage.deg < 0) // break the min lock?
       {
         knobImage.minLock = false
       }
       else // if can't break lock..
       {
-        knobImage.currentValue = knobImage.minValue
-        knobImage.cumulativeDegrees = knobImage.minDegree
+        if (knobImage.reverseKnob)
+        {
+        knobImage.currentValue = knobImage.maxValue
+        }
+        else
+        {
+          knobImage.currentValue = knobImage.minValue
+        }
+        knobImage.cumulativeDegrees = testCumulative = knobImage.minDegree
       }
     }
 
@@ -3941,8 +3954,34 @@ function knobAngleToResult(event, knobImage)  // working here ***
     knobImage.lastDeg = knobImage.deg
 
 
-    let result = knobImage.startValue + (knobImage.cumulativeDegrees * knobImage.turnFactor)
-    let negresult = knobImage.startValue + (-knobImage.cumulativeDegrees * knobImage.turnFactor)
+    //let result = knobImage.startValue + (knobImage.cumulativeDegrees * knobImage.turnFactor)
+    //let negresult = knobImage.startValue + (-knobImage.cumulativeDegrees * knobImage.turnFactor)
+    let result = newtestresult = knobImage.currentValue + differenceCum * knobImage.turnFactor
+    let negresult = newtestnegresult = knobImage.currentValue - differenceCum * knobImage.turnFactor
+
+      // last line hard limits on value range
+      if (knobImage.reverseKnob)
+      {
+        if (result < knobImage.minValue)
+        {
+          result = knobImage.minValue
+        }
+        if (result > knobImage.maxValue)
+        {
+          result = knobImage.maxValue
+        }
+      }
+      else // normal knob
+      {
+        if (result < knobImage.minValue)
+        {
+          result = knobImage.minValue
+        }
+        if (result > knobImage.maxValue)
+        {
+          result = knobImage.maxValue
+        }
+      }
 
     if (knobImage.reverseKnob) { knobImage.currentValue = result = negresult }
     else { knobImage.currentValue = result }
