@@ -3866,8 +3866,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
     }
 
     
-    if (knobImage.maxLock) 
-    {
+    if (knobImage.maxLock) {
       if (newtestresult < knobImage.maxValue && !newRev && knobImage.lastDeg - knobImage.deg > 0) // break the max lock?
       {
         knobImage.maxLock = false
@@ -3926,51 +3925,47 @@ function knobAngleToResult(event, knobImage)  // working here ***
 
     */
 
-    if (!knobImage.minLock && !knobImage.maxLock) 
-    {
+    if (!knobImage.minLock && !knobImage.maxLock) {
       knobImage.cumulativeDegrees = testCumulative
 
       // break if big jump in value
-      if (Math.abs(newtestresult - knobImage.currentValue) > 2) {
+      if (Math.abs(newtestresult - knobImage.currentValue)>2)
+      {
         let test = "STOP"
       }
 
+    
 
 
-
-      ///////////////////
-      knobImage.lastDeg = knobImage.deg
-
-
-      let result = knobImage.startValue + (knobImage.cumulativeDegrees * knobImage.turnFactor)
-      let negresult = knobImage.startValue + (-knobImage.cumulativeDegrees * knobImage.turnFactor)
-
-      if (knobImage.reverseKnob) { knobImage.currentValue = result = negresult }
-      else { knobImage.currentValue = result }
+    ///////////////////
+    knobImage.lastDeg = knobImage.deg
 
 
-      if (knobImage.id == "rateDialImg") {
-        pacingRate = Math.round(result)
-      }
+    let result = knobImage.startValue + (knobImage.cumulativeDegrees * knobImage.turnFactor)
+    let negresult = knobImage.startValue + (-knobImage.cumulativeDegrees * knobImage.turnFactor)
 
-      if (knobImage.id == "vOutputDialImg") {
-        vPacerOutput = Math.round(result)
-      }
+    if (knobImage.reverseKnob) { knobImage.currentValue = result = negresult }
+    else { knobImage.currentValue = result }
 
-      if (knobImage.id == "aOutputDialImg") {
-        aPacerOutput = Math.round(result)
-      }
 
-      if (knobImage.id == "bottomKnobImg") {
-        bottomKnobFunction(result)
-      }
-      // onParameterChange()
-      updateAllGUIValues()
+    if (knobImage.id == "rateDialImg") {
+      pacingRate = Math.round(result)
     }
-    else /// if knob is locked DEBUG
-    {
-      let test = "KNOB LOCKED"
+
+    if (knobImage.id == "vOutputDialImg") {
+      vPacerOutput = Math.round(result)
     }
+
+    if (knobImage.id == "aOutputDialImg") {
+      aPacerOutput = Math.round(result)
+    }
+
+    if (knobImage.id == "bottomKnobImg") {
+      bottomKnobFunction(result)
+    }
+    // onParameterChange()
+    updateAllGUIValues()
+  }
   }
 }
 
