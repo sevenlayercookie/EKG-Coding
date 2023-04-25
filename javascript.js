@@ -555,7 +555,7 @@ function calcMeanHR() {
     meanRatePacer = Math.round(meanRatePacer / i)
   }
 
-  while (sensedVentTimes.length > 10) // trim old senses
+  while (sensedVentTimes.length > 5) // trim old senses
   {
     sensedVentTimes.shift()
   }
@@ -2434,8 +2434,8 @@ function pacingFunction() {
     }
 
     // every x amount of time, refresh pacer GUI
-    if (dataClock % 500 == 0) {
-      //updateAllGUIValues()
+    if (dataClock % 1000 == 0) {
+      updateAllGUIValues()
     }
 
   }
@@ -2553,6 +2553,8 @@ function calculateMeter(value, min, max) { // y = mx + b
 
 var timesRun = 0
 function updateAllGUIValues() {
+  // how long does it take to run?
+  let startTime = performance.now();
   timesRun += 1;
   if (pacerLocked) {
     document.getElementById('mainScreen').style.display = 'none'
@@ -2780,6 +2782,10 @@ function updateAllGUIValues() {
     document.getElementById("settingsValue").innerText = 'Automatic'
   }
 
+  // how long does it take to run?
+  let endTime = performance.now();
+  let timeToRunFunction = endTime - startTime
+  let test = "dfdaf"
 }
 updateAllGUIValues()
 
@@ -3857,17 +3863,17 @@ function knobAngleToResult(event, knobImage)  // working here ***
     //console.log(testCumulative)
     
 
-    if (testCumulative >= knobImage.maxDegree) {
+    if (testCumulative > knobImage.maxDegree) {
       knobImage.maxLock = true;
     }
 
-    if (testCumulative <= knobImage.minDegree) {
+    if (testCumulative < knobImage.minDegree) {
       knobImage.minLock = true;
     }
 
     
     if (knobImage.maxLock) {
-      if (knobImage.maxDegree - testCumulative < 4 && knobImage.maxDegree - testCumulative > 0 && !newRev && knobImage.lastDeg - knobImage.deg > 0) // break the max lock?
+      if (knobImage.maxDegree - testCumulative < 10 && knobImage.maxDegree - testCumulative > 0 && !newRev && knobImage.lastDeg - knobImage.deg > 0) // break the max lock?
       {
         knobImage.maxLock = false
       }
@@ -3886,7 +3892,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
     
 
     if (knobImage.minLock) {
-      if (testCumulative - knobImage.minDegree < 4 && testCumulative - knobImage.minDegree > 0 && !newRev && knobImage.lastDeg - knobImage.deg < 0) // break the min lock?
+      if (testCumulative - knobImage.minDegree < 10 && testCumulative - knobImage.minDegree > 0 && !newRev && knobImage.lastDeg - knobImage.deg < 0) // break the min lock?
       {
         knobImage.minLock = false
       }
@@ -3968,8 +3974,15 @@ function knobAngleToResult(event, knobImage)  // working here ***
         {
           result = knobImage.maxValue
         }
-      
 
+        if (negresult > knobImage.maxValue)
+        {
+          negresult = knobImage.maxValue
+        }
+        if (negresult < knobImage.minValue)
+        {
+          negresult = knobImage.minValue
+        }
 
     if (knobImage.reverseKnob) { knobImage.currentValue = result = negresult }
     else { knobImage.currentValue = result }
@@ -3991,6 +4004,25 @@ function knobAngleToResult(event, knobImage)  // working here ***
       bottomKnobFunction(result)
     }
     // onParameterChange()
+    updateAllGUIValues()
+  }
+  else // if max or minLocked
+  {
+    if (knobImage.id == "rateDialImg") {
+      pacingRate = Math.round(knobImage.currentValue)
+    }
+
+    if (knobImage.id == "vOutputDialImg") {
+      vPacerOutput = Math.round(knobImage.currentValue)
+    }
+
+    if (knobImage.id == "aOutputDialImg") {
+      aPacerOutput = Math.round(knobImage.currentValue)
+    }
+
+    if (knobImage.id == "bottomKnobImg") {
+      bottomKnobFunction(knobImage.currentValue)
+    }
     updateAllGUIValues()
   }
   }
