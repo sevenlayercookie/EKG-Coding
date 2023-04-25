@@ -3875,6 +3875,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
       else // if can't break lock..
       {
         knobImage.currentValue = knobImage.maxValue
+        knobImage.cumulativeDegrees = knobImage.maxDegree
       }
     }
     
@@ -3887,6 +3888,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
       else // if can't break lock..
       {
         knobImage.currentValue = knobImage.minValue
+        knobImage.cumulativeDegrees = knobImage.minDegree
       }
     }
 
