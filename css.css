@@ -392,9 +392,13 @@ cursor:crosshair;
 }
 
 .knobClass {
-  cursor:grab;
   padding:3%;
   touch-action: none;
+}
+
+.KnobImg
+{
+  cursor:grab;
 }
 
 

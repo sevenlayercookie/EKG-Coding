@@ -88,7 +88,7 @@ var rOLD = 0
 var AVExtension = 0
 var PRInterval;
 // pacemaker button related variables
-let RAPrate = 250
+let RAPrate = RAPrateDefault = 250
 let RAPrateMin = 80
 let RAPrateMax = 800
 var pacerLocked = false
@@ -169,6 +169,7 @@ var pacerOn = false; // does pacer start on or off?
 var pacingRate = pacingRateDefault = 80 // default
 var minPaceRate = 30
 var maxPaceRate = 200
+var AVInterval = AVIntervalDefault = 170; // pacemaker interval between atrial and v pace
 var aPacerSensitivity = aPacerSensitivityDefault = document.getElementById("aSensitivityBox").value = 0.5; // default
 var aPacerMaxSensitivity = 0.4
 var aPacerMinSensitivity = 10
@@ -181,10 +182,10 @@ var aPacerMaxOutput = 20
 var vPacerMaxOutput = 25
 var AVImax = 300
 var AVImin = 20
-var PVARP = 300
+var PVARP = PVARPDefault = 300
 var PVARPmin = 150
 var PVARPmax = 500
-var upperRateLimit = 110 //prevent atrial tracking of atrial tachyarrythmias
+var upperRateLimit = upperRateLimitDefault = 110 //prevent atrial tracking of atrial tachyarrythmias
 var URLmin = 80
 var URLmax = 230
 
@@ -1952,7 +1953,7 @@ function pacingModeBoxChange() {
   //onParameterChange()
 }
 
-var AVInterval = 120; // pacemaker interval between atrial and v pace
+
 var manAVInterval = 120;
 let captureOverride = false;
 var sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
@@ -3764,6 +3765,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
 
   if (event.key == 'ArrowLeft') {
     knobImage.deg -= 10
+   
   }
   if (event.key == 'ArrowRight') {
     knobImage.deg += 10
@@ -3776,13 +3778,29 @@ function knobAngleToResult(event, knobImage)  // working here ***
     knobImage.deg = knobImage.deg + 360
   }
 
-  knobImage.setAttribute('style', 'transform: rotate(' + knobImage.deg + 'deg)');
+  //knobImage.setAttribute('style', 'transform: rotate(' + knobImage.deg + 'deg)');
 
   calcKnobParams(knobImage)
 
   if (isNaN(knobImage.lastDeg)) {
     knobImage.lastDeg = knobImage.deg
+    knobImage.physicalRotationOld = knobImage.deg
   }
+  if (knobImage.moveSteps == 1) {
+    knobImage.lastDeg = knobImage.deg
+    knobImage.physicalRotationOld = knobImage.deg
+  }
+    knobImage.physicalRotationNew = knobImage.deg
+    let rotateAmt = knobImage.physicalRotationNew - knobImage.physicalRotationOld
+    // rotate knob //
+    //let deltaDeg = knobImage.deg - knobImage.lastDeg
+    //let rotateAmt = deltaDeg
+    
+
+    
+    knobImage.setAttribute('style', 'transform: rotate(' + rotateAmt + 'deg)');
+
+
   if (!pacerLocked && pacerOn) // let knob spin but do nothing else if pacer is locked OR if pacer is off
   {
     //////////////////
@@ -3928,7 +3946,7 @@ function getBottomDialParameters() {
   if (selectedOption == "AsenseRow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = aPacerMaxSensitivity
-    elem.startValue = 4
+    elem.startValue = aPacerSensitivityDefault
     elem.maxValue = aPacerMinSensitivity
     elem.turnFactor = knobTurnFactor / 3
     elem.reverseKnob = true
@@ -3940,7 +3958,7 @@ function getBottomDialParameters() {
   if (selectedOption == "VsenseRow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = vPacerMaxSensitivity
-    elem.startValue = 4
+    elem.startValue = vPacerSensitivityDefault
     elem.maxValue = vPacerMinSensitivity
     elem.turnFactor = knobTurnFactor / 2
     elem.reverseKnob = true
@@ -3952,7 +3970,7 @@ function getBottomDialParameters() {
   if (selectedOption == "AVIrow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = AVImin
-    elem.startValue = 120
+    elem.startValue = AVIntervalDefault
     elem.maxValue = AVImax
     elem.turnFactor = knobTurnFactor * 3
     elem.reverseKnob = false
@@ -3964,7 +3982,7 @@ function getBottomDialParameters() {
   if (selectedOption == "PVARProw") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = PVARPmin
-    elem.startValue = 300
+    elem.startValue = PVARPDefault
     elem.maxValue = PVARPmax
     elem.turnFactor = knobTurnFactor * 3
     elem.reverseKnob = false
@@ -3976,7 +3994,7 @@ function getBottomDialParameters() {
   if (selectedOption == "URLrow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = URLmin
-    elem.startValue = 110
+    elem.startValue = upperRateLimitDefault
     elem.maxValue = URLmax
     elem.turnFactor = knobTurnFactor * 3
     elem.reverseKnob = false
@@ -3988,7 +4006,7 @@ function getBottomDialParameters() {
   if (selectedOption == "RAPrateRow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = RAPrateMin
-    elem.startValue = 250
+    elem.startValue = RAPrateDefault
     elem.maxValue = RAPrateMax
     elem.turnFactor = knobTurnFactor * 3
     elem.reverseKnob = false
