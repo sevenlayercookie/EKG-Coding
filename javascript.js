@@ -1023,7 +1023,7 @@ function masterRhythmFunction() {
   // 3. The RR interval between the first and second conducted beats is the largest and between the last conducted beats, the shortest.
   // 4. There is progressive shortening of the RR intervals.
 
-  if (currentRhythm != '2ndtypeI' || currentRhythm != '2ndtypeII') {
+  if (currentRhythm != '2ndtypeI' || currentRhythm != '2ndtypeII' || currentRhythm != 'highGradeBlock') {
     document.getElementById("wenckStuff").hidden = true
     //document.getElementById("CHBbox").disabled=false
   }
@@ -1118,7 +1118,7 @@ function masterRhythmFunction() {
 
   }
 
-  if (currentRhythm == 'highDegreeBlock') // high degree AV block (fixed ratios )
+  if (currentRhythm == 'highGradeBlock') // high degree AV block (fixed ratios )
 
   // fixed ratio blocks (anything 3:1 or higher is "high degree")
   // 2:1 could possibly be a Wenkbach
@@ -1130,7 +1130,13 @@ function masterRhythmFunction() {
     document.getElementById("nativePR").hidden = false;
     // show wenck options
     document.getElementById("wenckStuff").hidden = false
-    wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value)
+    // limit block to 3:1 or higher (high degree)
+    if (parseInt(document.getElementById("wenckeDegreeBox").value)<3)
+    {
+      wenkDegree = document.getElementById("wenckeDegreeBox").value = 3
+    }
+    else
+    { wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value)}
     // update AV block label
     document.getElementById("AVblockLabel").innerText = (wenkDegree).toString() + ":" + 1
     // turn off CHB options
@@ -1194,6 +1200,9 @@ function masterRhythmFunction() {
 
   }
 
+  /// ============= THIS IS NOT CURRENTLY ENABLED =====================
+  /// I left out the random AV drops to simplify things
+  /// 
   if (currentRhythm != 'intermAVBlock') {
     document.getElementById("intermAVBlockStuff").hidden = true
   }
@@ -1241,10 +1250,6 @@ function masterRhythmFunction() {
     if (timeSinceP == 2 )
     {
       AVBlockRandom = Math.random();
-      if (AVBlockRandom <= ratioBlockedPs)
-      {
-        let blocked = true
-      }
     }
     testClock = dataClock;
     timeSinceP = timeSinceLastP()
@@ -1262,7 +1267,7 @@ function masterRhythmFunction() {
     if (drawQRS && PRtimer >= HRadjustedPR && !CHB && timeSinceLastV() > 150)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
     {
       //numBeats++ //debug var
-      if (AVBlockRandom > ratioBlockedPs) // 20% of time, drop a QRS
+      if (AVBlockRandom > ratioBlockedPs) // eg. 20% of time, drop a QRS
       {
         drawQRST();
         drawQRS = false;
@@ -1280,6 +1285,91 @@ function masterRhythmFunction() {
       drawQRS = false;
       PRtimer = -1;
     }
+  }
+
+
+  if (currentRhythm == '2ndtypeII') // Mobitz II, fixed-ratios, not high grade
+{
+  // fixed drop, such as P:QRS, 2:1, 3:2, 4:3, etc., no PR-prolongation
+    // show rate and PR interval boxes
+    document.getElementById("nativeRate").hidden = false;
+    document.getElementById("nativePR").hidden = false;
+    // show wenck options
+    document.getElementById("wenckStuff").hidden = false
+    wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value - 1) // if wenkDegree is 2, then there are 2 P waves per 1 QRS. if wenkDegree is 5, then there are 5 Ps per QRS
+    // update AV block label
+    document.getElementById("AVblockLabel").innerText = (wenkDegree + 1).toString() + ":" + (wenkDegree).toString()
+    // turn off CHB options
+    //document.getElementById("CHBbox").disabled=true
+    //document.getElementById("CHBbox").checked=false
+    //let timeSinceV = timeSinceLastV();
+    let timeSinceP = timeSinceLastP();
+    let timeSinceV = timeSinceLastV();
+
+    //HRadjustedPR = adjustPR(PRInterval,setHR)
+
+
+
+    if (timeSinceP >= goalMS && timeSinceV >= goalMS - HRadjustedPR && timeSinceLastV() > 200) 
+    {
+      /*
+      if (wenkCount < wenkDegree) {
+        currentWenkPR += wenkPRincreaseAmount
+      }
+      */
+      
+      drawPWave();
+      timeSinceP = timeSinceLastP();
+      
+      if (wenkCount < wenkDegree) {
+        drawQRS = true; // flag that QRS should come follow sinus P
+        //wenkCount++
+      }
+    }
+
+    testClock = dataClock;
+    timeSinceP = timeSinceLastP()
+    timeSinceV = timeSinceLastV()
+
+    if (timeSinceP == 0 || timeSinceP == 2) {
+      PRtimer = 0; // start P-R timer (QRS should follow a P wave, whether P is intrinsic or paced)
+      drawQRS = true;
+    }
+
+    if (PRtimer >= 0) {
+      PRtimer += 2;
+    }
+
+    // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
+    if (drawQRS && PRtimer >= HRadjustedPR && timeSinceLastV() > 150 && wenkCount < wenkDegree)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
+    {
+      drawQRST();
+      drawQRS = false;
+      PRtimer = -1; // stop PRtimer
+    }
+    else if (drawQRS && PRtimer >= HRadjustedPR) // if above never runs, then clear QRS and PR timer
+    {
+      drawQRS = false;
+      PRtimer = -1;
+    }
+    // debug
+    if (timeSinceLastP() == 0 || timeSinceLastP() == 2)
+    {
+      let test = "STOP"
+    }
+    //
+    if (timeSinceLastP() == 2) {
+      wenkCount++
+      if (wenkCount < wenkDegree) {
+      
+      }
+    }
+
+    if (wenkCount > wenkDegree)
+    {
+      wenkCount=0
+    }
+
   }
 
   if (currentRhythm != "completeBlock") {
@@ -2989,7 +3079,7 @@ function feedbackFunction() // provides feedback on settings
       }
     }
     // high degree AV blocks
-    if (currentRhythm == "2ndtypeII" || currentRhythm == "highDegreeBlock") {
+    if (currentRhythm == "2ndtypeII" || currentRhythm == "highGradeBlock") {
       if (pacerMode == "AAI" || pacerMode == "AOO") {
         let newDiv = document.createElement("div")
         newDiv.append("Atrial-only pacing may not always conduct to ventricles in high degree AV blocks")
