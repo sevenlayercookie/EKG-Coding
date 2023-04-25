@@ -3769,12 +3769,11 @@ function knobAngleToResult(event, knobImage)  // working here ***
 
   if (isNaN(knobImage.deg) || knobImage.deg == undefined) { knobImage.deg = 0 }
 
-  if (event.key == 'ArrowLeft') {
-    knobImage.deg -= 10
-   
-  }
   if (event.key == 'ArrowRight') {
     knobImage.deg += 10
+  }
+  if (event.key == 'ArrowLeft') {
+    knobImage.deg -= 10
   }
 
   if (knobImage.deg > 360) {
@@ -3796,12 +3795,17 @@ function knobAngleToResult(event, knobImage)  // working here ***
     knobImage.lastDeg = knobImage.deg
     knobImage.physicalRotationOld = knobImage.deg
   }
+
+
     knobImage.physicalRotationNew = knobImage.deg
-    let rotateAmt = knobImage.physicalRotationNew - knobImage.physicalRotationOld
+    if (event.key == 'ArrowRight') {
+      //knobImage.physicalRotationNew += 10
+    }
+    let rotateAmt = knobImage.physicalRotationNew //- knobImage.physicalRotationOld
     // rotate knob //
     //let deltaDeg = knobImage.deg - knobImage.lastDeg
     //let rotateAmt = deltaDeg
-    
+
 
     
     knobImage.setAttribute('style', 'transform: rotate(' + rotateAmt + 'deg)');
@@ -3844,8 +3848,12 @@ function knobAngleToResult(event, knobImage)  // working here ***
       knobImage.currentValue = knobImage.startValue
     }
     
+
     let testCumulative = knobImage.cumulativeDegrees + (knobImage.deg - knobImage.lastDeg) + revolution
+
     let testValue = Math.round(knobImage.startValue + knobImage.cumulativeDegrees * knobImage.turnFactor)
+
+  
 
     // 4/21/2023 new math test (use difference of start and end cum and add to value)
       let oldCum = knobImage.cumulativeDegrees
