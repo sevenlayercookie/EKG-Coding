@@ -50,6 +50,12 @@ var intermittentAVblock = false;
 var AVBlockRandom = 1 // random factor of AV block
 var lastBlocked = false;
 var ratioBlockedPs = .20 // 20% of P's will be blocked
+
+// debug vars to check if correct % being blocked over time
+var numBeats = 0
+var numBlockedBeats = 0
+//
+
 // a flutter vars
 var baselineFlutterConductionRatio = 4; // default 4:1 conduction ratio
 var currentFlutterConductionRatio = baselineFlutterConductionRatio; // this one can be varied for irregularity
@@ -82,12 +88,12 @@ var rOLD = 0
 var AVExtension = 0
 var PRInterval;
 // pacemaker button related variables
-let RAPrate = 250
+let RAPrate = RAPrateDefault = 250
 let RAPrateMin = 80
 let RAPrateMax = 800
 var pacerLocked = false
 var pacerPaused = false;
-var currentBottomScreen = "mainmenu"
+var currentBottomScreen = "modeScreen"  // default bottom screen
 var bottomRowsArray = []
 var currentlySelectedRowNumber = 0;
 var maxRowNumber = 8;
@@ -160,31 +166,32 @@ var sensedPTimes = [];   // each time implies a beat
 var aAmplitude = 0.290; // default amplitude of P-wave
 // default pacer parameters
 var pacerOn = false; // does pacer start on or off?
-var pacingRate = 80;
+var pacingRate = pacingRateDefault = 80 // default
 var minPaceRate = 30
 var maxPaceRate = 200
-var aPacerSensitivity = document.getElementById("aSensitivityBox").value = 0.5; // default
+var AVInterval = AVIntervalDefault = 170; // pacemaker interval between atrial and v pace
+var aPacerSensitivity = aPacerSensitivityDefault = document.getElementById("aSensitivityBox").value = 0.5; // default
 var aPacerMaxSensitivity = 0.4
 var aPacerMinSensitivity = 10
-var vPacerSensitivity = document.getElementById("vSensitivityBox").value = 2; // default
+var vPacerSensitivity = vPacerSensitivityDefault = document.getElementById("vSensitivityBox").value = 2; // default
 var vPacerMaxSensitivity = 0.8
 var vPacerMinSensitivity = 20
-var aPacerOutput = document.getElementById("aOutputBox").value = 10;
-var vPacerOutput = document.getElementById("vOutputBox").value = 10;
+var aPacerOutput = aPacerOutputDefault = document.getElementById("aOutputBox").value = 10;
+var vPacerOutput = vPacerOutputDefault = document.getElementById("vOutputBox").value = 10;
 var aPacerMaxOutput = 20
 var vPacerMaxOutput = 25
 var AVImax = 300
 var AVImin = 20
-var PVARP = 300
+var PVARP = PVARPDefault = 300
 var PVARPmin = 150
 var PVARPmax = 500
-var upperRateLimit = 110 //prevent atrial tracking of atrial tachyarrythmias
+var upperRateLimit = upperRateLimitDefault = 110 //prevent atrial tracking of atrial tachyarrythmias
 var URLmin = 80
 var URLmax = 230
 
 var manAVI, manURL, manPVARP = false;
 
-var HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/10)*10 // round to nearest tens    // from manual
+var HRadjustedAV = Math.round((300 - (1.67 * pacingRate)) / 10) * 10 // round to nearest tens    // from manual
 
 var autoAV = true
 
@@ -685,14 +692,12 @@ function drawQRST(width, invertT, invertQRS) {   // width: 0=normal, 1=double, 2
 var currentRhythm = "NSR";
 var drawQRS = false;
 var PRtimer = -1;
-function makeItEven(number)
-{
-  return Math.round(number/2)*2
+function makeItEven(number) {
+  return Math.round(number / 2) * 2
 }
 function masterRhythmFunction() {
 
-  function adjustPR(setPR, currentHR)
-  {
+  function adjustPR(setPR, currentHR) {
     // Harrison PR adjustment ****
     // assume the PR interval box is true at 60
     // minimum I want PR to be is 100. Maximum is PR interval box, at max rate 150 bpm
@@ -716,25 +721,23 @@ function masterRhythmFunction() {
       let slope = (y2 - y1) / (x2 - x1)
       let intercept = y2 - slope * x2
       HRadjustedPR = currentHR * slope + intercept
-      
-      
-  }
 
 
-  //HRadjustedPR = makeItEven(setHR*(-0.582) + PRInterval)
-  HRadjustedPR = makeItEven(HRadjustedPR)
-  
-  // PR limits
-  if (HRadjustedPR < 90)
-  {
-    HRadjustedPR = 90
-  }
-  if (HRadjustedPR > PRInterval)
-  {
-    HRadjustedPR = PRInterval
-  }
+    }
 
-  return HRadjustedPR
+
+    //HRadjustedPR = makeItEven(setHR*(-0.582) + PRInterval)
+    HRadjustedPR = makeItEven(HRadjustedPR)
+
+    // PR limits
+    if (HRadjustedPR < 90) {
+      HRadjustedPR = 90
+    }
+    if (HRadjustedPR > PRInterval) {
+      HRadjustedPR = PRInterval
+    }
+
+    return HRadjustedPR
   }
 
   if (dataClock % 100 == 0) {
@@ -742,9 +745,9 @@ function masterRhythmFunction() {
     setHR = document.getElementById("avgRateBox").value;
     //HRadjustedPR = makeItEven(PRInterval - 0.5 * setHR + 30);   // PR should decrease with increasing heart rates
     //HRadjustedPR = makeItEven(setHR*(-0.582) + 186.5)
-    
-    HRadjustedPR = adjustPR(PRInterval,setHR)
- 
+
+    HRadjustedPR = adjustPR(PRInterval, setHR)
+
     //goalMS = (1 / setHR) * 60000
     goalMS = Math.round((1 / (setHR / 60000)) / 2) * 2 // ensure goalMS is always an even number
     adjustRatio = realtimeProcessSpeed / ((1 / dataHertz) * 1000);
@@ -936,7 +939,7 @@ function masterRhythmFunction() {
 
     if (timeSinceLastV() >= aFibMS) {
       drawQRST(); // this works, but maybe should allow for physiologic occasional V's capturing or being sensed
-      histPTimes.push(dataClock - AVInterval); // let a P "conduct" and be "sensed" by pacer
+      histPTimes.push(dataClock - AVInterval); // let a P "conduct" and be sensed
       if (histPTimes.length > 10) {
         histPTimes.shift();
       }
@@ -1021,7 +1024,7 @@ function masterRhythmFunction() {
   // 3. The RR interval between the first and second conducted beats is the largest and between the last conducted beats, the shortest.
   // 4. There is progressive shortening of the RR intervals.
 
-  if (currentRhythm != '2ndtypeI' || currentRhythm != '2ndtypeII') {
+  if (currentRhythm != '2ndtypeI' || currentRhythm != '2ndtypeII' || currentRhythm != 'highGradeBlock') {
     document.getElementById("wenckStuff").hidden = true
     //document.getElementById("CHBbox").disabled=false
   }
@@ -1049,20 +1052,25 @@ function masterRhythmFunction() {
     }
 
 
-    if (timeSinceP >= goalMS && timeSinceV >= goalMS - currentWenkPR && timeSinceLastV() > 200) {
+    if (timeSinceP >= goalMS && timeSinceV >= goalMS - currentWenkPR && timeSinceLastV() > 200) 
+    {
+      /*
       if (wenkCount < wenkDegree) {
         currentWenkPR += wenkPRincreaseAmount
       }
+      */
+      
       drawPWave();
       timeSinceP = timeSinceLastP();
+      
       if (wenkCount < wenkDegree) {
         drawQRS = true; // flag that QRS should come follow sinus P
-        wenkCount++
+        //wenkCount++
       }
       else {
         //drawQRS=false;
         currentWenkPR = HRadjustedPR
-        wenkCount = 0
+        //wenkCount = 0
       }
     }
 
@@ -1074,6 +1082,7 @@ function masterRhythmFunction() {
       PRtimer = 0; // start P-R timer (QRS should follow a P wave, whether P is intrinsic or paced)
       drawQRS = true;
     }
+
     if (PRtimer >= 0) {
       PRtimer += 2;
     }
@@ -1090,10 +1099,27 @@ function masterRhythmFunction() {
       drawQRS = false;
       PRtimer = -1;
     }
+    // debug
+    if (timeSinceLastP() == 0 || timeSinceLastP() == 2)
+    {
+      let test = "STOP"
+    }
+    //
+    if (timeSinceLastP() == 2) {
+      wenkCount++
+      if (wenkCount < wenkDegree) {
+        currentWenkPR += wenkPRincreaseAmount
+      }
+    }
+
+    if (wenkCount > wenkDegree)
+    {
+      wenkCount=0
+    }
 
   }
 
-  if (currentRhythm == 'highDegreeBlock') // high degree AV block (fixed ratios )
+  if (currentRhythm == 'highGradeBlock') // high degree AV block (fixed ratios )
 
   // fixed ratio blocks (anything 3:1 or higher is "high degree")
   // 2:1 could possibly be a Wenkbach
@@ -1105,7 +1131,13 @@ function masterRhythmFunction() {
     document.getElementById("nativePR").hidden = false;
     // show wenck options
     document.getElementById("wenckStuff").hidden = false
-    wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value)
+    // limit block to 3:1 or higher (high degree)
+    if (parseInt(document.getElementById("wenckeDegreeBox").value)<3)
+    {
+      wenkDegree = document.getElementById("wenckeDegreeBox").value = 3
+    }
+    else
+    { wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value)}
     // update AV block label
     document.getElementById("AVblockLabel").innerText = (wenkDegree).toString() + ":" + 1
     // turn off CHB options
@@ -1169,6 +1201,9 @@ function masterRhythmFunction() {
 
   }
 
+  /// ============= THIS IS NOT CURRENTLY ENABLED =====================
+  /// I left out the random AV drops to simplify things
+  /// 
   if (currentRhythm != 'intermAVBlock') {
     document.getElementById("intermAVBlockStuff").hidden = true
   }
@@ -1208,9 +1243,14 @@ function masterRhythmFunction() {
       }
       else // if it wasn't blocked, keep generating new
       {
-        AVBlockRandom = Math.random();
+        //AVBlockRandom = Math.random();
       }
 
+    }
+
+    if (timeSinceP == 2 )
+    {
+      AVBlockRandom = Math.random();
     }
     testClock = dataClock;
     timeSinceP = timeSinceLastP()
@@ -1227,7 +1267,8 @@ function masterRhythmFunction() {
     // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
     if (drawQRS && PRtimer >= HRadjustedPR && !CHB && timeSinceLastV() > 150)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
     {
-      if (AVBlockRandom > ratioBlockedPs) // 20% of time, drop a QRS
+      //numBeats++ //debug var
+      if (AVBlockRandom > ratioBlockedPs) // eg. 20% of time, drop a QRS
       {
         drawQRST();
         drawQRS = false;
@@ -1235,8 +1276,9 @@ function masterRhythmFunction() {
       }
       else {
         lastBlocked = true
+       // numBlockedBeats++ //debug var
       }
-
+      //let percentBlocked = numBlockedBeats/numBeats
       PRtimer = -1; // stop PRtimer
     }
     else if (drawQRS && PRtimer >= HRadjustedPR && !CHB) // if above never runs, then clear QRS and PR timer
@@ -1244,6 +1286,91 @@ function masterRhythmFunction() {
       drawQRS = false;
       PRtimer = -1;
     }
+  }
+
+
+  if (currentRhythm == '2ndtypeII') // Mobitz II, fixed-ratios, not high grade
+{
+  // fixed drop, such as P:QRS, 2:1, 3:2, 4:3, etc., no PR-prolongation
+    // show rate and PR interval boxes
+    document.getElementById("nativeRate").hidden = false;
+    document.getElementById("nativePR").hidden = false;
+    // show wenck options
+    document.getElementById("wenckStuff").hidden = false
+    wenkDegree = parseInt(document.getElementById("wenckeDegreeBox").value - 1) // if wenkDegree is 2, then there are 2 P waves per 1 QRS. if wenkDegree is 5, then there are 5 Ps per QRS
+    // update AV block label
+    document.getElementById("AVblockLabel").innerText = (wenkDegree + 1).toString() + ":" + (wenkDegree).toString()
+    // turn off CHB options
+    //document.getElementById("CHBbox").disabled=true
+    //document.getElementById("CHBbox").checked=false
+    //let timeSinceV = timeSinceLastV();
+    let timeSinceP = timeSinceLastP();
+    let timeSinceV = timeSinceLastV();
+
+    //HRadjustedPR = adjustPR(PRInterval,setHR)
+
+
+
+    if (timeSinceP >= goalMS && timeSinceV >= goalMS - HRadjustedPR && timeSinceLastV() > 200) 
+    {
+      /*
+      if (wenkCount < wenkDegree) {
+        currentWenkPR += wenkPRincreaseAmount
+      }
+      */
+      
+      drawPWave();
+      timeSinceP = timeSinceLastP();
+      
+      if (wenkCount < wenkDegree) {
+        drawQRS = true; // flag that QRS should come follow sinus P
+        //wenkCount++
+      }
+    }
+
+    testClock = dataClock;
+    timeSinceP = timeSinceLastP()
+    timeSinceV = timeSinceLastV()
+
+    if (timeSinceP == 0 || timeSinceP == 2) {
+      PRtimer = 0; // start P-R timer (QRS should follow a P wave, whether P is intrinsic or paced)
+      drawQRS = true;
+    }
+
+    if (PRtimer >= 0) {
+      PRtimer += 2;
+    }
+
+    // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
+    if (drawQRS && PRtimer >= HRadjustedPR && timeSinceLastV() > 150 && wenkCount < wenkDegree)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
+    {
+      drawQRST();
+      drawQRS = false;
+      PRtimer = -1; // stop PRtimer
+    }
+    else if (drawQRS && PRtimer >= HRadjustedPR) // if above never runs, then clear QRS and PR timer
+    {
+      drawQRS = false;
+      PRtimer = -1;
+    }
+    // debug
+    if (timeSinceLastP() == 0 || timeSinceLastP() == 2)
+    {
+      let test = "STOP"
+    }
+    //
+    if (timeSinceLastP() == 2) {
+      wenkCount++
+      if (wenkCount < wenkDegree) {
+      
+      }
+    }
+
+    if (wenkCount > wenkDegree)
+    {
+      wenkCount=0
+    }
+
   }
 
   if (currentRhythm != "completeBlock") {
@@ -1300,8 +1427,7 @@ function masterRhythmFunction() {
     geminyRatio = parseInt(document.getElementById("geminiRatioBox").value)
     // temp debugging stuff DELETE THIS
     let temp = timeSinceLastV()
-    if (PPtimer > goalMS - 10 && PPtimer < goalMS)
-    {
+    if (PPtimer > goalMS - 10 && PPtimer < goalMS) {
       let stop = true;
     }
     // END DEBUG STUFF
@@ -1390,10 +1516,9 @@ function masterRhythmFunction() {
     let ectopyFreq = parseFloat(document.getElementById("ectopyFrequencyBox").value)
     //let ectopyFreqInverse = 1/ectopyFreq;
 
-    geminyRatio = Math.round(1/ectopyFreq + ectopyRandomFactor)
-    if (geminyRatio<1)
-    {
-      geminyRatio=1 // 1 should be the minimum
+    geminyRatio = Math.round(1 / ectopyFreq + ectopyRandomFactor)
+    if (geminyRatio < 1) {
+      geminyRatio = 1 // 1 should be the minimum
     }
 
     // compensPause: adjusts the time until the next P wave (changes based on ectopy type)
@@ -1410,96 +1535,81 @@ function masterRhythmFunction() {
 
     // draw ectopy
     if (geminyCount == geminyRatio && PVCtimer > goalMS / 1.5 && timeSinceLastV() > 200) {
-      if (ectopyType=="PVC")
-      {
+      if (ectopyType == "PVC") {
         // PVCs are generally completely compensated
         // so next P wave will be exactly 2x the P-P interval
 
         drawQRST(1, 1) // wide QRS, inverted T (a PVC)
-        compensPause=0; // completely compensated
+        compensPause = 0; // completely compensated
       }
-      if (ectopyType=="PAC")
-      {
+      if (ectopyType == "PAC") {
         drawPWave();
         // PACs are either completely or incompletely compensated, but are generally incompletely
         // complete compensation: next P wave will march out, exactly 2x the P-P interval
         // incomplete compensation: next P wave will be <2x the P-P interval
 
-        compensPause=Math.round((-200 + (Math.random()-0.5)*150)/2)*2; // incompletely compensated
+        compensPause = Math.round((-200 + (Math.random() - 0.5) * 150) / 2) * 2; // incompletely compensated
       }
-      if (ectopyType=="PJC")
-      {
+      if (ectopyType == "PJC") {
         drawQRST()  // normal QRS
-        
-        compensPause=Math.round((-200 + (Math.random()-0.5)*150)/2)*2; // incompletely compensated
+
+        compensPause = Math.round((-200 + (Math.random() - 0.5) * 150) / 2) * 2; // incompletely compensated
       }
       PVCtimer = 0
       geminyCount = 0
       randomizeEctopy();
     }
 
-    function randomizeEctopy () // randomize ectopy
+    function randomizeEctopy() // randomize ectopy
     {
       // randomize ratio
-      ectopyRandomFactor = Math.round((Math.random() - 0.5)*5); // add variance to frequency
+      ectopyRandomFactor = Math.round((Math.random() - 0.5) * 5); // add variance to frequency
       // determine next premature beat type (PVC vs PAC vs PJC)
       let numOptions = 0;
-      let checkedOptions = ["XXX","XXX","XXX"]
+      let checkedOptions = ["XXX", "XXX", "XXX"]
       let i = 0;
-      if (document.getElementById("PVCbox").checked)
-      {
+      if (document.getElementById("PVCbox").checked) {
         numOptions += 1
         checkedOptions[i] = "PVC"
         i++;
       }
-      if (document.getElementById("PACbox").checked)
-      {
+      if (document.getElementById("PACbox").checked) {
         numOptions += 1
         checkedOptions[i] = "PAC"
         i++;
       }
-      if (document.getElementById("PJCbox").checked)
-      {
+      if (document.getElementById("PJCbox").checked) {
         numOptions += 1
         checkedOptions[i] = "PJC"
         i++;
       }
 
       let theHat = Math.random();
-      if (numOptions == 0)
-      {
+      if (numOptions == 0) {
         ectopyType == "none"
       }
-      if (numOptions == 1)
-      {
+      if (numOptions == 1) {
         ectopyType = checkedOptions[0]
       }
-      if (numOptions == 2)
-      {
-        if (theHat <= .5)
-        {
+      if (numOptions == 2) {
+        if (theHat <= .5) {
           ectopyType = checkedOptions[0]
         }
-        else
-        {
+        else {
           ectopyType = checkedOptions[1]
         }
       }
-      if (numOptions == 3)
-      {
-        if (theHat <= .333)
-        {
+      if (numOptions == 3) {
+        if (theHat <= .333) {
           ectopyType = checkedOptions[0]
         }
-        else if (theHat > .333 && theHat <= .666)
-        {
-        ectopyType = checkedOptions[1]
+        else if (theHat > .333 && theHat <= .666) {
+          ectopyType = checkedOptions[1]
         }
-        else if (theHat > .666)
-        {
+        else if (theHat > .666) {
           ectopyType = checkedOptions[2]
         }
-      }      
+      }
     }
 
 
@@ -1524,7 +1634,7 @@ function masterRhythmFunction() {
       PRtimer = 0; // start P-R timer (QRS should follow a P wave, whether P is intrinsic or paced)
       drawNormalQRS = true;
       //// NEW ////
-      PVCtimer=0;
+      PVCtimer = 0;
     }
     if (PRtimer >= 0) {
       PRtimer += 2;
@@ -1761,7 +1871,11 @@ function paceIt(target) // target : atrium, or vent
 
 function DOObuttonClick(DOObutton) {
   pacingRate = 80
-
+  pacerOn = true;
+  pacerMode='DOO'
+  setPacerAutomatic(); //automatic settings
+  modeSelectionClick() // go to mode selection screen
+  setPacerGraphics(); // turn on/off pacer graphics
   let element = document.getElementById("pacingMode")
   document.getElementById("pacingBoxMode").innerText = "DOO"
   element.selectedIndex = 2;
@@ -1782,7 +1896,22 @@ function paceButtonClick() // runs whenever the power button is pressed OR when 
     pacerOn = false; // turn pacer off
   }
   else {
-    pacerOn = true; // turn pacer on 
+    pacerOn = true; // turn pacer on
+
+    // revert to pacer defaults and mode selection screen
+
+    // pacer defaults
+    modeSelectionClick()
+    pacingRate=pacingRateDefault
+    aPacerOutput=aPacerOutputDefault
+    vPacerOutput = vPacerOutputDefault
+    aPacerSensitivity = aPacerSensitivityDefault
+    vPacerSensitivity = vPacerSensitivityDefault
+    setPacerAutomatic() // automatic settings
+    updateAllGUIValues()
+    
+    // mode selection screen
+
   }
   setPacerGraphics(); // turn on/off pacer graphics
 
@@ -1824,7 +1953,8 @@ function pacingModeBoxChange() {
   //onParameterChange()
 }
 
-var AVInterval = 170; // pacemaker interval between atrial and v pace
+
+var manAVInterval = 120;
 let captureOverride = false;
 var sensing = 0; // 0: sensing appropriate, -1: undersensing, +1: oversensing
 
@@ -1955,8 +2085,8 @@ function pacingFunction() {
     if (pacerMode == 'DDI')  // sensing fixed
     {
       //autoAV = AVIntervalHRAdjustBox.checked;
-      HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/10)*10 // round to nearest tens    // from manual
-      
+      HRadjustedAV = Math.round((300 - (1.67 * pacingRate)) / 10) * 10 // round to nearest tens    // from manual
+
 
       if (HRadjustedAV < 50) { HRadjustedAV = 50 }
       if (HRadjustedAV > 250) { HRadjustedAV = 250 }
@@ -1974,7 +2104,7 @@ function pacingFunction() {
         VAItimer = goalPacerMs - usedAVinterval
         VVtimer = goalPacerMs
         VAITimerFlag = true;
-        
+
       }
 
       if (timeSinceLastSensedP() <= 2) {
@@ -1983,7 +2113,7 @@ function pacingFunction() {
 
         // if P is sensed, reset VAItimer
         VAItimer = goalPacerMs - usedAVinterval
-        
+
       }
 
       if (VVtimer == 0) {
@@ -1991,22 +2121,21 @@ function pacingFunction() {
 
         VVtimer = goalPacerMs
         // if V is paced, reset VAItimer
-        
+
         VAItimer = goalPacerMs - usedAVinterval
         VAITimerFlag = true;
       }
 
-      
-      if (VAItimer == 0)
-      {
+
+      if (VAItimer == 0) {
 
 
         paceIt(atrium);
 
         VAITimerFlag = false;
         VAItimer = goalPacerMs - usedAVinterval
-    }
-    
+      }
+
 
       // tick the timers down
       if (AVITimerFlag) {
@@ -2101,7 +2230,7 @@ function pacingFunction() {
       //autoAV = AVIntervalHRAdjustBox.checked;
       let lowerRateLimit = VAItimer + AVInterval
       let VAinterval = goalPacerMs - AVInterval
-      HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/10)*10 // round to nearest tens    // from manual
+      HRadjustedAV = Math.round((300 - (1.67 * pacingRate)) / 10) * 10 // round to nearest tens    // from manual
 
       if (HRadjustedAV < 50) { HRadjustedAV = 50 }
       if (HRadjustedAV > 250) { HRadjustedAV = 250 }
@@ -2497,7 +2626,7 @@ function updateAllGUIValues() {
   document.getElementById("boxURL").innerText = upperRateLimit.toFixed(0) + " ppm"
   document.getElementById("RAPrateValue").innerText = RAPrate.toFixed(0) + " ppm"
 
-  HRadjustedAV = Math.round((300 - (1.67 * pacingRate))/10)*10 // round to nearest tens    // from manual
+  HRadjustedAV = Math.round((300 - (1.67 * pacingRate)) / 10) * 10 // round to nearest tens    // from manual
   if (HRadjustedAV < 50) { HRadjustedAV = 50 }
   if (HRadjustedAV > 250) { HRadjustedAV = 250 }
 
@@ -2654,6 +2783,26 @@ function updateAllGUIValues() {
 }
 updateAllGUIValues()
 
+function setPacerAutomatic()
+{
+  //e.lastElementChild.lastElementChild.innerHTML = 'Automatic'
+  manAVI = manURL = manPVARP = false;
+  AVInterval = makeItEven(HRadjustedAV)
+  // URL
+  upperRateLimit = pacingRate + 30
+    if (upperRateLimit < 110) { upperRateLimit = 110 }
+    document.getElementById("boxURL").innerText = upperRateLimit.toFixed(0) + " ppm"
+  // PVARP
+  let rate
+  if (pacingRate >= meanRatePacer) { rate = pacingRate }
+  else { rate = meanRatePacer }
+  if (rate < 100) { PVARP = 300 }
+  else if (rate < 150) { PVARP = 250 }
+  else if (rate < 180) { PVARP = 230 }
+  else if (rate >= 180) { PVARP = 200 }
+}
+
+
 function updateVariablesFromGUI() {
 
 }
@@ -2722,16 +2871,16 @@ function feedbackFunction() // provides feedback on settings
         'highFeedback' == comprehensive explanation of error and how to fix it
   */
 
-/*
-  let aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdRandomRange[0]
-  let aSensitivityTooLow = aPacerSensitivity > aUndersenseThresholdRandomRange[1]
-  let vSensitivityTooHigh = vPacerSensitivity < vOversenseThresholdRandomRange[0]
-  let vSensitivityTooLow = vPacerSensitivity > vUndersenseThresholdRandomRange[1]
-  let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdRandomRange[1]
-  let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline * 3 // overly high output is not optimal (should be around 2x greater than capture threshold)
-  let vPacerOutputTooLow = vPacerOutput < vCaptureThresholdRandomRange[1]
-  let vPacerOutputTooHigh = vPacerOutput > vCaptureThresholdBaseline * 3// overly high output is not optimal (should be around 2x greater than capture threshold)
-*/
+  /*
+    let aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdRandomRange[0]
+    let aSensitivityTooLow = aPacerSensitivity > aUndersenseThresholdRandomRange[1]
+    let vSensitivityTooHigh = vPacerSensitivity < vOversenseThresholdRandomRange[0]
+    let vSensitivityTooLow = vPacerSensitivity > vUndersenseThresholdRandomRange[1]
+    let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdRandomRange[1]
+    let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline * 3 // overly high output is not optimal (should be around 2x greater than capture threshold)
+    let vPacerOutputTooLow = vPacerOutput < vCaptureThresholdRandomRange[1]
+    let vPacerOutputTooHigh = vPacerOutput > vCaptureThresholdBaseline * 3// overly high output is not optimal (should be around 2x greater than capture threshold)
+  */
 
 
   let aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdBaseline + 0.5 * aOversenseThresholdBaseline
@@ -2742,103 +2891,96 @@ function feedbackFunction() // provides feedback on settings
   let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline * 5 // overly high output is not optimal (should be around 2x greater than capture threshold)
   let vPacerOutputTooLow = vPacerOutput < vCaptureThresholdBaseline + 0.5 * vCaptureThresholdBaseline
   let vPacerOutputTooHigh = vPacerOutput > vCaptureThresholdBaseline * 4 // overly high output is not optimal (should be around 2x greater than capture threshold)
-  
+
 
 
   let optimized = !aPacerOutputTooHigh && !vPacerOutputTooHigh
 
   let allParametersCorrect = true
 
-  if (pacerMode=='DDD' || pacerMode=='DDI')
-  {
-  allParametersCorrect = 
-    !aSensitivityTooHigh && !aSensitivityTooLow && 
-    !vSensitivityTooHigh && !vSensitivityTooLow && 
-    !aPacerOutputTooLow && 
-    !vPacerOutputTooLow
+  if (pacerMode == 'DDD' || pacerMode == 'DDI') {
+    allParametersCorrect =
+      !aSensitivityTooHigh && !aSensitivityTooLow &&
+      !vSensitivityTooHigh && !vSensitivityTooLow &&
+      !aPacerOutputTooLow &&
+      !vPacerOutputTooLow
   }
-  if (pacerMode=='DOO')
-  {
-  allParametersCorrect =  
-    !aPacerOutputTooLow && 
-    !vPacerOutputTooLow
+  if (pacerMode == 'DOO') {
+    allParametersCorrect =
+      !aPacerOutputTooLow &&
+      !vPacerOutputTooLow
     // if a setting isn't relevant to this pacing mode, set it as correct
-    aSensitivityTooHigh=false;
-    aSensitivityTooLow=false;
-    vSensitivityTooHigh=false;
-    vSensitivityTooLow=false;
-    
+    aSensitivityTooHigh = false;
+    aSensitivityTooLow = false;
+    vSensitivityTooHigh = false;
+    vSensitivityTooLow = false;
+
   }
-  if (pacerMode=='AAI')
-  {
-  allParametersCorrect = 
-    !aSensitivityTooHigh && !aSensitivityTooLow && 
-    !aPacerOutputTooLow
-//
-    vPacerOutputTooHigh=false;
-    vPacerOutputTooLow=false;
-    vSensitivityTooHigh=false;
-    vSensitivityTooLow=false;
-  }
-  if (pacerMode=='VVI')
-  {
-  allParametersCorrect =  
-    !vSensitivityTooHigh && !vSensitivityTooLow &&  
-    !vPacerOutputTooLow
+  if (pacerMode == 'AAI') {
+    allParametersCorrect =
+      !aSensitivityTooHigh && !aSensitivityTooLow &&
+      !aPacerOutputTooLow
     //
-    aPacerOutputTooHigh=false
-    aPacerOutputTooLow=false
-    aSensitivityTooHigh=false
-    aSensitivityTooLow=false
+    vPacerOutputTooHigh = false;
+    vPacerOutputTooLow = false;
+    vSensitivityTooHigh = false;
+    vSensitivityTooLow = false;
   }
-  if (pacerMode=='AOO')
-  {
-  allParametersCorrect = 
-    !aPacerOutputTooLow
+  if (pacerMode == 'VVI') {
+    allParametersCorrect =
+      !vSensitivityTooHigh && !vSensitivityTooLow &&
+      !vPacerOutputTooLow
     //
-    aSensitivityTooHigh=false
-    aSensitivityTooLow=false
-    vSensitivityTooHigh=false
-    vSensitivityTooLow=false
-    vPacerOutputTooLow=false
-    vPacerOutputTooHigh=false
+    aPacerOutputTooHigh = false
+    aPacerOutputTooLow = false
+    aSensitivityTooHigh = false
+    aSensitivityTooLow = false
   }
-  if (pacerMode=='VOO')
-  {
-  allParametersCorrect = 
-    !vPacerOutputTooLow
+  if (pacerMode == 'AOO') {
+    allParametersCorrect =
+      !aPacerOutputTooLow
     //
-    aSensitivityTooHigh=false
-    aSensitivityTooLow=false
-    vSensitivityTooHigh=false
-    vSensitivityTooLow=false
-    aPacerOutputTooLow=false
-    aPacerOutputTooHigh=false
+    aSensitivityTooHigh = false
+    aSensitivityTooLow = false
+    vSensitivityTooHigh = false
+    vSensitivityTooLow = false
+    vPacerOutputTooLow = false
+    vPacerOutputTooHigh = false
   }
-  if (pacerMode=='OOO')
-  {
-  allParametersCorrect = true;
-    vPacerOutputTooHigh=false;
-    vPacerOutputTooLow=false;
-    aSensitivityTooHigh=false
-    aSensitivityTooLow=false
-    vSensitivityTooHigh=false
-    vSensitivityTooLow=false
-    aPacerOutputTooLow=false
-    aPacerOutputTooHigh=false
+  if (pacerMode == 'VOO') {
+    allParametersCorrect =
+      !vPacerOutputTooLow
+    //
+    aSensitivityTooHigh = false
+    aSensitivityTooLow = false
+    vSensitivityTooHigh = false
+    vSensitivityTooLow = false
+    aPacerOutputTooLow = false
+    aPacerOutputTooHigh = false
+  }
+  if (pacerMode == 'OOO') {
+    allParametersCorrect = true;
+    vPacerOutputTooHigh = false;
+    vPacerOutputTooLow = false;
+    aSensitivityTooHigh = false
+    aSensitivityTooLow = false
+    vSensitivityTooHigh = false
+    vSensitivityTooLow = false
+    aPacerOutputTooLow = false
+    aPacerOutputTooHigh = false
   }
 
-  let arrayOfBad = ["","","","","","","",""]
+  let arrayOfBad = ["", "", "", "", "", "", "", ""]
   let i = 0;
-  if (aSensitivityTooHigh) {arrayOfBad[i]="Atrial sensitivity is too high. May cause oversensing"; i++}
-  if (aSensitivityTooLow) {arrayOfBad[i]="Atrial sensitivity is too low. May cause undersensing"; i++}
-  if (vSensitivityTooHigh) {arrayOfBad[i]="Ventricular sensitivity is too high. May cause oversensing"; i++}
-  if (vSensitivityTooLow) {arrayOfBad[i]="Ventricular sensitivity is too low. May cause undersensing"; i++}
-  if (aPacerOutputTooLow) {arrayOfBad[i]="Atrial output is too low. May lose capture"; i++}
-  if (vPacerOutputTooLow) {arrayOfBad[i]="Ventricular output is too low. May lose capture"; i++}
-  
-  
-    if (feedbackLevel == 'lowFeedback') {
+  if (aSensitivityTooHigh) { arrayOfBad[i] = "Atrial sensitivity is too high. May cause oversensing"; i++ }
+  if (aSensitivityTooLow) { arrayOfBad[i] = "Atrial sensitivity is too low. May cause undersensing"; i++ }
+  if (vSensitivityTooHigh) { arrayOfBad[i] = "Ventricular sensitivity is too high. May cause oversensing"; i++ }
+  if (vSensitivityTooLow) { arrayOfBad[i] = "Ventricular sensitivity is too low. May cause undersensing"; i++ }
+  if (aPacerOutputTooLow) { arrayOfBad[i] = "Atrial output is too low. May lose capture"; i++ }
+  if (vPacerOutputTooLow) { arrayOfBad[i] = "Ventricular output is too low. May lose capture"; i++ }
+
+
+  if (feedbackLevel == 'lowFeedback') {
     if (allParametersCorrect && optimized) {
       settingsCorrect = true;
       document.getElementById("feedbackBox").innerText = "OPTIMAL"
@@ -2854,113 +2996,107 @@ function feedbackFunction() // provides feedback on settings
       document.getElementById("feedbackBox").style.backgroundColor = "yellow"
     }
   }
-    else if (feedbackLevel == 'medFeedback') {
+  else if (feedbackLevel == 'medFeedback') {
 
 
-      // sensitivities and outputs
-      if (!aSensitivityTooHigh && !aSensitivityTooLow && !vSensitivityTooHigh && !vSensitivityTooLow && !aPacerOutputTooLow && !vPacerOutputTooLow) // sensitivity settings
-      {
-        if (aPacerOutputTooHigh || vPacerOutputTooHigh) {
-          document.getElementById("feedbackBox").innerText = "sensing/output: outputs are unnecessarily high"
-          document.getElementById("feedbackBox").style.backgroundColor = "yellow"
-        }
-        else {
-          settingsCorrect = true;
-          document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
-          document.getElementById("feedbackBox").style.backgroundColor = "green"
-        }
-
+    // sensitivities and outputs
+    if (!aSensitivityTooHigh && !aSensitivityTooLow && !vSensitivityTooHigh && !vSensitivityTooLow && !aPacerOutputTooLow && !vPacerOutputTooLow) // sensitivity settings
+    {
+      if (aPacerOutputTooHigh || vPacerOutputTooHigh) {
+        document.getElementById("feedbackBox").innerText = "sensing/output: outputs are unnecessarily high"
+        document.getElementById("feedbackBox").style.backgroundColor = "yellow"
       }
       else {
-        settingsCorrect = false;
-        document.getElementById("feedbackBox").innerHTML = '';
-        for (let i = 0; i < arrayOfBad.length; i++) {
-          if (arrayOfBad[i] != '') {
-            document.getElementById("feedbackBox").append(arrayOfBad[i])
-            document.getElementById("feedbackBox").append(document.createElement("br"))
-          }
-        }
-        //document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
-        document.getElementById("feedbackBox").style.backgroundColor = "red"
-      }
-      // MORE SPECIFIC ISSUES
-
-      // A-fib specific 
-      if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter') {
-
-        if (pacerMode == 'DDD') {
-          let newDiv = document.createElement("div")
-          newDiv.append("Be careful of A-tracking supraventricular arrhythmias while in DDD mode")
-          newDiv.append(document.createElement("br"))
-          newDiv.style.backgroundColor = "yellow"
-          document.getElementById("feedbackBox").append(newDiv)
-        }
-        // atrial capture in a-fib
-        if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI" || pacerMode == "AOO" || pacerMode == "DOO") {
-          let newDiv = document.createElement("div")
-          newDiv.append("Mode: Atrial capture is not generally possible with atrial fib/flutter.")
-          newDiv.append(document.createElement("br"))
-          newDiv.style.backgroundColor = "red"
-          document.getElementById("feedbackBox").append(newDiv)
-
-
-          //document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nMode: Atrial capture is not generally possible with atrial fib/flutter.")
-
-          //document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat('\nMode: Atrial sensing is not reliable/useful with atrial fib/flutter')
-        }
-        // atrial sensing in a-fib
-        if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI") {
-          let newDiv = document.createElement("div")
-          if (currentRhythm == "aFib") {
-            newDiv.append("Mode: Atrial sensing is not reliable with atrial fibrillation")
-            newDiv.append(document.createElement("br"))
-            newDiv.style.backgroundColor = "yellow"
-            document.getElementById("feedbackBox").append(newDiv)
-          }
-        }
+        settingsCorrect = true;
+        document.getElementById("feedbackBox").innerText = "sensing/output: CORRECT"
+        document.getElementById("feedbackBox").style.backgroundColor = "green"
       }
 
-      // complete heart block (A-pacing alone not sufficient; try to keep AV synchrony)
-      if (currentRhythm=="completeBlock")
-      {
-        if (pacerMode == "AAI" || pacerMode == "AOO")
-        {
-          let newDiv = document.createElement("div")
-          newDiv.append("Atrial-only pacing will not conduct to ventricles in CHB")
-          newDiv.append(document.createElement("br"))
-          newDiv.style.backgroundColor = "red"
-          document.getElementById("feedbackBox").append(newDiv)
-        }
-        if (pacerMode == "VVI" || pacerMode == "VOO")
-        {
-          let newDiv = document.createElement("div")
-          newDiv.append("Ventricle-only pacing and sensing will not maintain AV synchrony in CHB")
-          newDiv.append(document.createElement("br"))
-          newDiv.style.backgroundColor = "yellow"
-          document.getElementById("feedbackBox").append(newDiv)
+    }
+    else {
+      settingsCorrect = false;
+      document.getElementById("feedbackBox").innerHTML = '';
+      for (let i = 0; i < arrayOfBad.length; i++) {
+        if (arrayOfBad[i] != '') {
+          document.getElementById("feedbackBox").append(arrayOfBad[i])
+          document.getElementById("feedbackBox").append(document.createElement("br"))
         }
       }
-      // high degree AV blocks
-      if (currentRhythm=="2ndtypeII" || currentRhythm == "highDegreeBlock")
-      {
-        if (pacerMode == "AAI" || pacerMode == "AOO")
-        {
-          let newDiv = document.createElement("div")
-          newDiv.append("Atrial-only pacing may not always conduct to ventricles in high degree AV blocks")
-          newDiv.append(document.createElement("br"))
-          newDiv.style.backgroundColor = "yellow"
-          document.getElementById("feedbackBox").append(newDiv)
-        }
-        if (pacerMode == "VVI" || pacerMode == "VOO")
-        {
-          let newDiv = document.createElement("div")
-          newDiv.append("Ventricle-only pacing and sensing will not maintain AV synchrony in high degree AV blocks")
+      //document.getElementById("feedbackBox").innerText = "sensing/output: INCORRECT"
+      document.getElementById("feedbackBox").style.backgroundColor = "red"
+    }
+    // MORE SPECIFIC ISSUES
+
+    // A-fib specific 
+    if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter') {
+
+      if (pacerMode == 'DDD') {
+        let newDiv = document.createElement("div")
+        newDiv.append("Be careful of A-tracking supraventricular arrhythmias while in DDD mode")
+        newDiv.append(document.createElement("br"))
+        newDiv.style.backgroundColor = "yellow"
+        document.getElementById("feedbackBox").append(newDiv)
+      }
+      // atrial capture in a-fib
+      if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI" || pacerMode == "AOO" || pacerMode == "DOO") {
+        let newDiv = document.createElement("div")
+        newDiv.append("Mode: Atrial capture is not generally possible with atrial fib/flutter.")
+        newDiv.append(document.createElement("br"))
+        newDiv.style.backgroundColor = "red"
+        document.getElementById("feedbackBox").append(newDiv)
+
+
+        //document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat("\nMode: Atrial capture is not generally possible with atrial fib/flutter.")
+
+        //document.getElementById("feedbackBox").innerText = document.getElementById("feedbackBox").innerText.concat('\nMode: Atrial sensing is not reliable/useful with atrial fib/flutter')
+      }
+      // atrial sensing in a-fib
+      if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI") {
+        let newDiv = document.createElement("div")
+        if (currentRhythm == "aFib") {
+          newDiv.append("Mode: Atrial sensing is not reliable with atrial fibrillation")
           newDiv.append(document.createElement("br"))
           newDiv.style.backgroundColor = "yellow"
           document.getElementById("feedbackBox").append(newDiv)
         }
       }
     }
+
+    // complete heart block (A-pacing alone not sufficient; try to keep AV synchrony)
+    if (currentRhythm == "completeBlock") {
+      if (pacerMode == "AAI" || pacerMode == "AOO") {
+        let newDiv = document.createElement("div")
+        newDiv.append("Atrial-only pacing will not conduct to ventricles in CHB")
+        newDiv.append(document.createElement("br"))
+        newDiv.style.backgroundColor = "red"
+        document.getElementById("feedbackBox").append(newDiv)
+      }
+      if (pacerMode == "VVI" || pacerMode == "VOO") {
+        let newDiv = document.createElement("div")
+        newDiv.append("Ventricle-only pacing and sensing will not maintain AV synchrony in CHB")
+        newDiv.append(document.createElement("br"))
+        newDiv.style.backgroundColor = "yellow"
+        document.getElementById("feedbackBox").append(newDiv)
+      }
+    }
+    // high degree AV blocks
+    if (currentRhythm == "2ndtypeII" || currentRhythm == "highGradeBlock") {
+      if (pacerMode == "AAI" || pacerMode == "AOO") {
+        let newDiv = document.createElement("div")
+        newDiv.append("Atrial-only pacing may not always conduct to ventricles in high degree AV blocks")
+        newDiv.append(document.createElement("br"))
+        newDiv.style.backgroundColor = "yellow"
+        document.getElementById("feedbackBox").append(newDiv)
+      }
+      if (pacerMode == "VVI" || pacerMode == "VOO") {
+        let newDiv = document.createElement("div")
+        newDiv.append("Ventricle-only pacing and sensing will not maintain AV synchrony in high degree AV blocks")
+        newDiv.append(document.createElement("br"))
+        newDiv.style.backgroundColor = "yellow"
+        document.getElementById("feedbackBox").append(newDiv)
+      }
+    }
+  }
 }
 
 
@@ -2998,7 +3134,10 @@ function animateButton(clickedButton) {
 }
 
 let pauseButtonDepressed = false
+
 function pauseButton(event) {
+  if (pacerOn)
+  {
   let pauseButton = event.target
   let startTime = Date.now()
   pauseButton.style.transform = 'scale(85%)';
@@ -3033,15 +3172,22 @@ function pauseButton(event) {
     updateAllGUIValues()
   }
 
-
+}
+else // pacer is off
+{
+  animateButton(this)
+}
 }
 
 document.getElementById('pauseButton').addEventListener('mousedown', pauseButton)
 document.getElementById('pauseButton').addEventListener('touchstart', pauseButton)
 
 function lockButtonClick() {
+  if (pacerOn)
+  {
   pacerLocked = !pacerLocked
   updateAllGUIValues()
+  }
 }
 
 function RAPclick() {
@@ -3182,11 +3328,10 @@ function reassignRowNumbers() {
   else if (currentBottomScreen == 'RAPscreen') { var ancestor = document.getElementById('RAPscreen'); }
 
   var descendents = ancestor.getElementsByTagName('*');
-  
+
   for (let i = 0; i < descendents.length; ++i) {
     e = descendents[i];
-    if (e.dataset.rownum != null)
-    {
+    if (e.dataset.rownum != null) {
       e.dataset.rownum = null
     }
   }
@@ -3204,7 +3349,10 @@ function reassignRowNumbers() {
 
 var selectedRow
 var selectableRows = []
+
 function downArrowClick() {
+  if (pacerOn)
+  {
   selectableRows = getSelectableRows()
   reassignRowNumbers()
   maxRowNumber = selectableRows.length - 1
@@ -3227,10 +3375,13 @@ function downArrowClick() {
   getBottomDialParameters()
   // resetBottomKnob()
 }
-
+}
 
 
 function upArrowClick() {
+
+  if (pacerOn)
+  {
   selectableRows = getSelectableRows()
 
   reassignRowNumbers()
@@ -3254,6 +3405,7 @@ function upArrowClick() {
   getBottomDialParameters()
   // resetBottomKnob()
 
+}
 }
 
 
@@ -3341,97 +3493,101 @@ function getSelectedRow() {
 }
 
 function enterClick(event) {
+  if (pacerOn) {
 
-  let enterButton = document.getElementById('enterButton')
-  if (currentBottomScreen == 'mainmenu') { var ancestor = document.getElementById('mainScreen'); }
-  else if (currentBottomScreen == 'modeScreen') { var ancestor = document.getElementById('modeScreen'); }
-  else if (currentBottomScreen == 'RAPscreen') { var ancestor = document.getElementById('RAPscreen'); }
+    let enterButton = document.getElementById('enterButton')
+    if (currentBottomScreen == 'mainmenu') { var ancestor = document.getElementById('mainScreen'); }
+    else if (currentBottomScreen == 'modeScreen') { var ancestor = document.getElementById('modeScreen'); }
+    else if (currentBottomScreen == 'RAPscreen') { var ancestor = document.getElementById('RAPscreen'); }
 
-  var descendents = ancestor.getElementsByTagName('*');
-  // gets all rows
+    var descendents = ancestor.getElementsByTagName('*');
+    // gets all rows
 
-  var i, e, d;
-  for (i = 0; i < descendents.length; ++i) {
-    e = descendents[i];
-    if (i==41)
-    {
-      let stop = "STOP"
-    }
-    if (e.dataset.rownum == currentlySelectedRowNumber) {
-      if (e.id != "RAPrateRow" && e.id != "pauseButton") {
-        animateButton(enterButton)
+    var i, e, d;
+    for (i = 0; i < descendents.length; ++i) {
+      e = descendents[i];
+      if (i == 41) {
+        let stop = "STOP"
       }
-      if (e.id == "radio") {
-        e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
-        pacerMode = e.firstElementChild.nextElementSibling.innerText
-        document.getElementById("pacingBoxMode").innerText = pacerMode
-        let element = document.getElementById("pacingMode")
-        element.selectedIndex = currentlySelectedRowNumber
-        updateAllGUIValues()
-
-      }
-      else if (e.id == "backOption") {
-        backClick()
-        break
-      }
-      else if (e.id == "modeSelection") {
-        modeSelectionClick()
-        break
-      }
-      else if (e.id == "aTracking") {
-        if (e.lastElementChild.lastElementChild.innerHTML == "On") {
-          e.lastElementChild.lastElementChild.innerHTML = 'Off'
+      if (e.dataset.rownum == currentlySelectedRowNumber) {
+        if (e.id != "RAPrateRow" && e.id != "pauseButton") {
+          animateButton(enterButton)
+        }
+        if (e.id == "radio") {
+          e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
+          pacerMode = e.firstElementChild.nextElementSibling.innerText
+          document.getElementById("pacingBoxMode").innerText = pacerMode
           let element = document.getElementById("pacingMode")
-          element.selectedIndex = 1;
-          pacerMode = document.getElementById("pacingBoxMode").innerText = 'DDI'
+          element.selectedIndex = currentlySelectedRowNumber
+          updateAllGUIValues()
+
         }
-        else if (e.lastElementChild.lastElementChild.innerHTML == "Off") {
-          e.lastElementChild.lastElementChild.innerHTML = 'On'
-          let element = document.getElementById("pacingMode")
-          element.selectedIndex = 0;
-          pacerMode = document.getElementById("pacingBoxMode").innerText = 'DDD'
+        else if (e.id == "backOption") {
+          backClick()
+          break
         }
-        break
-      }
-      else if (e.id == "settings") {
-        if (e.lastElementChild.lastElementChild.innerHTML == "Automatic") {
-          e.lastElementChild.lastElementChild.innerHTML = 'Manual(*)'  // set all rate-dependent settings to manual
-          manAVI = manURL = manPVARP = true;
+        else if (e.id == "modeSelection") {
+          modeSelectionClick()
+          break
         }
-        else if (e.lastElementChild.lastElementChild.innerHTML == "Manual(*)") {
-          e.lastElementChild.lastElementChild.innerHTML = 'Automatic'
-          manAVI = manURL = manPVARP = false;
-          AVInterval = makeItEven(HRadjustedAV)
-          upperRateLimit = 110
-          PVARP = 300
+        else if (e.id == "aTracking") {
+          if (e.lastElementChild.lastElementChild.innerHTML == "On") {
+            e.lastElementChild.lastElementChild.innerHTML = 'Off'
+            let element = document.getElementById("pacingMode")
+            element.selectedIndex = 1;
+            pacerMode = document.getElementById("pacingBoxMode").innerText = 'DDI'
+          }
+          else if (e.lastElementChild.lastElementChild.innerHTML == "Off") {
+            e.lastElementChild.lastElementChild.innerHTML = 'On'
+            let element = document.getElementById("pacingMode")
+            element.selectedIndex = 0;
+            pacerMode = document.getElementById("pacingBoxMode").innerText = 'DDD'
+          }
+          break
         }
-        break
+        else if (e.id == "settings") {
+          if (e.lastElementChild.lastElementChild.innerHTML == "Automatic") {
+            e.lastElementChild.lastElementChild.innerHTML = 'Manual(*)'  // set all rate-dependent settings to manual
+            manAVI = manURL = manPVARP = true;
+          }
+          else if (e.lastElementChild.lastElementChild.innerHTML == "Manual(*)") {
+            e.lastElementChild.lastElementChild.innerHTML = 'Automatic'
+            manAVI = manURL = manPVARP = false;
+            AVInterval = makeItEven(HRadjustedAV)
+            upperRateLimit = 110
+            PVARP = 300
+          }
+          break
+        }
+        else if (e.id == "RAP") {
+          RAPclick()
+          break
+        }
+        else if (e.id == "RAPrateRow") {
+          deliverRAP(event)
+          //deliverRAP()
+          break
+        }
       }
-      else if (e.id == "RAP") {
-        RAPclick()
-        break
+      else if (e.dataset.rownum != undefined && e.id == "radio") {
+        e.firstElementChild.firstElementChild.src = "assets/radio-circle.svg"
+
       }
-      else if (e.id == "RAPrateRow") {
-        deliverRAP(event)
-        //deliverRAP()
-        break
-      }
-    }
-    else if (e.dataset.rownum != undefined && e.id == "radio") {
-      e.firstElementChild.firstElementChild.src = "assets/radio-circle.svg"
 
     }
+    updateAllGUIValues()
+    if (event != undefined) {
+      event.preventDefault()
+    }
 
+    if (e.id != "RAPrateRow") {
+      keyDown = false
+    }
   }
-  updateAllGUIValues()
-  if (event != undefined) {
-    event.preventDefault()
+  else // if pacer is off
+  {
+    animateButton(enterButton)
   }
-
-  if (e.id != "RAPrateRow") {
-    keyDown = false
-  }
-
 }
 
 function backClick() {
@@ -3497,8 +3653,6 @@ function calcKnobParams(knobImage) {
 
   // calculate minDegree and maxDegree for the knob clicked
   if (knobImage.reverseKnob) {
-
-    // DEBUGGING 4/21/23 *** when startvalue changes (every time knob is clicked), the min and maxdegrees change (that shouldn't be)
     knobImage.maxDegree = -(knobImage.minValue - knobImage.startValue) / knobImage.turnFactor
     knobImage.minDegree = -(knobImage.maxValue - knobImage.startValue) / knobImage.turnFactor
   }
@@ -3507,7 +3661,7 @@ function calcKnobParams(knobImage) {
     knobImage.maxDegree = (knobImage.maxValue - knobImage.startValue) / knobImage.turnFactor
   }
 
-  // initialize cumdegrees and revs
+
   if (isNaN(knobImage.cumulativeDegrees)) { knobImage.cumulativeDegrees = 0 }
   if (isNaN(knobImage.revolutions)) { knobImage.revolutions = 0 }
   //if (isNaN(knobImage.lastDeg)) {knobImage.lastDeg=0}
@@ -3534,10 +3688,9 @@ function knobClick(clickEvent) {
 
   calcKnobParams(clickTarget)
 
-  // DEBUG 4/21/2023 **** this should be == undefined, NOT isNaN (this always returns false as it is written)
-  if (isNaN(clickTarget.lastDeg ||typeof clickTarget.lastDeg === 'undefined')) // if it's undefined, then it must be the first run
+  if (isNaN(clickTarget.lastDeg)) // if it's undefined, then it must be the first run
   {
-    if (isNaN(clickTarget.deg || clickTarget.deg == undefined)) {
+    if (isNaN(clickTarget.deg)) {
       clickTarget.deg = clickTarget.lastDeg = 0
     }
     else {
@@ -3562,7 +3715,7 @@ function knobClick(clickEvent) {
     clickTarget.deg = Math.round(Math.atan2(clickTarget.mouseRelativetoKnobCenter[0], clickTarget.mouseRelativetoKnobCenter[1]) * (180 / Math.PI)); // x,y -> rad -> degree
     if (clickTarget.deg < 0) { clickTarget.deg += 360 }
 
-    // DEBUG 4/21/2023 - this is where lastDeg is actually first initialized
+
     if (isNaN(clickTarget.lastDeg)) // if it's undefined, then it must be the first run
     {
       clickTarget.lastDeg = clickTarget.deg
@@ -3574,7 +3727,7 @@ function knobClick(clickEvent) {
     //rotateKnobImage(clickTarget, clickTarget.deg)
     knobAngleToResult(clickEvent, clickTarget) // (event, knob image)
 
-  
+
 
     dragEvent.preventDefault()
   }
@@ -3612,6 +3765,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
 
   if (event.key == 'ArrowLeft') {
     knobImage.deg -= 10
+   
   }
   if (event.key == 'ArrowRight') {
     knobImage.deg += 10
@@ -3624,14 +3778,29 @@ function knobAngleToResult(event, knobImage)  // working here ***
     knobImage.deg = knobImage.deg + 360
   }
 
-  knobImage.setAttribute('style', 'transform: rotate(' + knobImage.deg + 'deg)');
+  //knobImage.setAttribute('style', 'transform: rotate(' + knobImage.deg + 'deg)');
 
   calcKnobParams(knobImage)
 
-  // DEBUG 4/21/2023 - lastDeg has already been initialized by this point
   if (isNaN(knobImage.lastDeg)) {
     knobImage.lastDeg = knobImage.deg
+    knobImage.physicalRotationOld = knobImage.deg
   }
+  if (knobImage.moveSteps == 1) {
+    knobImage.lastDeg = knobImage.deg
+    knobImage.physicalRotationOld = knobImage.deg
+  }
+    knobImage.physicalRotationNew = knobImage.deg
+    let rotateAmt = knobImage.physicalRotationNew - knobImage.physicalRotationOld
+    // rotate knob //
+    //let deltaDeg = knobImage.deg - knobImage.lastDeg
+    //let rotateAmt = deltaDeg
+    
+
+    
+    knobImage.setAttribute('style', 'transform: rotate(' + rotateAmt + 'deg)');
+
+
   if (!pacerLocked && pacerOn) // let knob spin but do nothing else if pacer is locked OR if pacer is off
   {
     //////////////////
@@ -3670,7 +3839,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
     }
     
     let testCumulative = knobImage.cumulativeDegrees + (knobImage.deg - knobImage.lastDeg) + revolution
-    let testValue = Math.round(knobImage.startValue + knobImage.cumulativeDegrees * knobImage.turnFactor) // convert degrees to output value
+    let testValue = Math.round(knobImage.startValue + knobImage.cumulativeDegrees * knobImage.turnFactor)
 
     // 4/21/2023 new math test (use difference of start and end cum and add to value)
       let oldCum = knobImage.cumulativeDegrees
@@ -3769,12 +3938,9 @@ function knobAngleToResult(event, knobImage)  // working here ***
     ///////////////////
     knobImage.lastDeg = knobImage.deg
 
-    // 4/21/2023 new Math
-      let result = knobImage.currentValue + differenceCum * knobImage.turnFactor
-      let negresult = knobImage.currentValue - differenceCum * knobImage.turnFactor
 
-    let OLDresult = knobImage.startValue + (knobImage.cumulativeDegrees * knobImage.turnFactor)
-    let OLDnegresult = knobImage.startValue + (-knobImage.cumulativeDegrees * knobImage.turnFactor)
+    let result = knobImage.startValue + (knobImage.cumulativeDegrees * knobImage.turnFactor)
+    let negresult = knobImage.startValue + (-knobImage.cumulativeDegrees * knobImage.turnFactor)
 
     if (knobImage.reverseKnob) { knobImage.currentValue = result = negresult }
     else { knobImage.currentValue = result }
@@ -3807,7 +3973,7 @@ var elem
 // set rateDial parameters
 elem = document.getElementById('rateDialImg')
 elem.minValue = minPaceRate
-elem.startValue = pacingRate  // this can be set to pacingRate because it is only run once during program
+elem.startValue = pacingRate
 elem.maxValue = maxPaceRate
 elem.turnFactor = knobTurnFactor
 
@@ -3843,7 +4009,7 @@ function getBottomDialParameters() {
   if (selectedOption == "AsenseRow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = aPacerMaxSensitivity
-    elem.startValue = 0.5   // this needs to be a constant that is == the default for the pacer
+    elem.startValue = aPacerSensitivityDefault
     elem.maxValue = aPacerMinSensitivity
     elem.turnFactor = knobTurnFactor / 3
     elem.reverseKnob = true
@@ -3855,7 +4021,7 @@ function getBottomDialParameters() {
   if (selectedOption == "VsenseRow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = vPacerMaxSensitivity
-    elem.startValue = 2.0
+    elem.startValue = vPacerSensitivityDefault
     elem.maxValue = vPacerMinSensitivity
     elem.turnFactor = knobTurnFactor / 2
     elem.reverseKnob = true
@@ -3867,7 +4033,7 @@ function getBottomDialParameters() {
   if (selectedOption == "AVIrow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = AVImin
-    elem.startValue = 170 /// ***
+    elem.startValue = AVIntervalDefault
     elem.maxValue = AVImax
     elem.turnFactor = knobTurnFactor * 3
     elem.reverseKnob = false
@@ -3877,9 +4043,9 @@ function getBottomDialParameters() {
   }
 
   if (selectedOption == "PVARProw") {
-    var elem = document.getElementById('bottomKnobImg') // select the knob and set its attributes
+    var elem = document.getElementById('bottomKnobImg')
     elem.minValue = PVARPmin
-    elem.startValue = 300
+    elem.startValue = PVARPDefault
     elem.maxValue = PVARPmax
     elem.turnFactor = knobTurnFactor * 3
     elem.reverseKnob = false
@@ -3891,7 +4057,7 @@ function getBottomDialParameters() {
   if (selectedOption == "URLrow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = URLmin
-    elem.startValue = 110
+    elem.startValue = upperRateLimitDefault
     elem.maxValue = URLmax
     elem.turnFactor = knobTurnFactor * 3
     elem.reverseKnob = false
@@ -3903,7 +4069,7 @@ function getBottomDialParameters() {
   if (selectedOption == "RAPrateRow") {
     var elem = document.getElementById('bottomKnobImg')
     elem.minValue = RAPrateMin
-    elem.startValue = 250
+    elem.startValue = RAPrateDefault
     elem.maxValue = RAPrateMax
     elem.turnFactor = knobTurnFactor * 3
     elem.reverseKnob = false
@@ -3936,7 +4102,7 @@ function bottomKnobFunction(knobResult) {
   }
 
   if (selectedOption == "AVIrow") {
-    AVInterval = Math.round(knobResult/10)*10   // round to nearest 10s
+    AVInterval = Math.round(knobResult / 10) * 10   // round to nearest 10s
     manAVI = true
   }
 
