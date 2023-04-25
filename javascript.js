@@ -1045,20 +1045,25 @@ function masterRhythmFunction() {
     }
 
 
-    if (timeSinceP >= goalMS && timeSinceV >= goalMS - currentWenkPR && timeSinceLastV() > 200) {
+    if (timeSinceP >= goalMS && timeSinceV >= goalMS - currentWenkPR && timeSinceLastV() > 200) 
+    {
+      /*
       if (wenkCount < wenkDegree) {
         currentWenkPR += wenkPRincreaseAmount
       }
+      */
+      
       drawPWave();
       timeSinceP = timeSinceLastP();
+      
       if (wenkCount < wenkDegree) {
         drawQRS = true; // flag that QRS should come follow sinus P
-        wenkCount++
+        //wenkCount++
       }
       else {
         //drawQRS=false;
         currentWenkPR = HRadjustedPR
-        wenkCount = 0
+        //wenkCount = 0
       }
     }
 
@@ -1070,6 +1075,7 @@ function masterRhythmFunction() {
       PRtimer = 0; // start P-R timer (QRS should follow a P wave, whether P is intrinsic or paced)
       drawQRS = true;
     }
+
     if (PRtimer >= 0) {
       PRtimer += 2;
     }
@@ -1085,6 +1091,23 @@ function masterRhythmFunction() {
     {
       drawQRS = false;
       PRtimer = -1;
+    }
+    // debug
+    if (timeSinceLastP() == 0 || timeSinceLastP() == 2)
+    {
+      let test = "STOP"
+    }
+    //
+    if (timeSinceLastP() == 2) {
+      wenkCount++
+      if (wenkCount < wenkDegree) {
+        currentWenkPR += wenkPRincreaseAmount
+      }
+    }
+
+    if (wenkCount > wenkDegree)
+    {
+      wenkCount=0
     }
 
   }
