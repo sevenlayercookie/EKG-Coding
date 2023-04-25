@@ -3960,8 +3960,6 @@ function knobAngleToResult(event, knobImage)  // working here ***
     let negresult = newtestnegresult = knobImage.currentValue - differenceCum * knobImage.turnFactor
 
       // last line hard limits on value range
-      if (knobImage.reverseKnob)
-      {
         if (result < knobImage.minValue)
         {
           result = knobImage.minValue
@@ -3970,18 +3968,8 @@ function knobAngleToResult(event, knobImage)  // working here ***
         {
           result = knobImage.maxValue
         }
-      }
-      else // normal knob
-      {
-        if (result < knobImage.minValue)
-        {
-          result = knobImage.minValue
-        }
-        if (result > knobImage.maxValue)
-        {
-          result = knobImage.maxValue
-        }
-      }
+      
+
 
     if (knobImage.reverseKnob) { knobImage.currentValue = result = negresult }
     else { knobImage.currentValue = result }
