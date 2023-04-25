@@ -50,6 +50,12 @@ var intermittentAVblock = false;
 var AVBlockRandom = 1 // random factor of AV block
 var lastBlocked = false;
 var ratioBlockedPs = .20 // 20% of P's will be blocked
+
+// debug vars to check if correct % being blocked over time
+var numBeats = 0
+var numBlockedBeats = 0
+//
+
 // a flutter vars
 var baselineFlutterConductionRatio = 4; // default 4:1 conduction ratio
 var currentFlutterConductionRatio = baselineFlutterConductionRatio; // this one can be varied for irregularity
@@ -1227,9 +1233,18 @@ function masterRhythmFunction() {
       }
       else // if it wasn't blocked, keep generating new
       {
-        AVBlockRandom = Math.random();
+        //AVBlockRandom = Math.random();
       }
 
+    }
+
+    if (timeSinceP == 2 )
+    {
+      AVBlockRandom = Math.random();
+      if (AVBlockRandom <= ratioBlockedPs)
+      {
+        let blocked = true
+      }
     }
     testClock = dataClock;
     timeSinceP = timeSinceLastP()
@@ -1246,6 +1261,7 @@ function masterRhythmFunction() {
     // if (drawQRS && timeSinceLastV()>=goalMS && timeSinceLastP()>=HRadjustedPR && !CHB) // QRS should respond to any P's after a PR interval (unless CHB)
     if (drawQRS && PRtimer >= HRadjustedPR && !CHB && timeSinceLastV() > 150)  // !!! THIS PART CAUSING DOUBLE V-PACING -- built in minimum V-refractory 150 ms
     {
+      //numBeats++ //debug var
       if (AVBlockRandom > ratioBlockedPs) // 20% of time, drop a QRS
       {
         drawQRST();
@@ -1254,8 +1270,9 @@ function masterRhythmFunction() {
       }
       else {
         lastBlocked = true
+       // numBlockedBeats++ //debug var
       }
-
+      //let percentBlocked = numBlockedBeats/numBeats
       PRtimer = -1; // stop PRtimer
     }
     else if (drawQRS && PRtimer >= HRadjustedPR && !CHB) // if above never runs, then clear QRS and PR timer
