@@ -842,7 +842,7 @@ function masterRhythmFunction() {
 
     // narrow QRS
     let timeSinceV = timeSinceLastV()
-    ventHeartRate = document.getElementById("ventRateBox").value;
+    ventHeartRate = document.getElementById("avgRateBox").value;
     let goalVentMs = 1 / (ventHeartRate / 60000)
     if (timeSinceLastV() >= 1 / (ventHeartRate / 60000)) {
       drawQRST();
