@@ -2303,7 +2303,7 @@ function pacingFunction() {
       // ventricular pacing (after timers expire)
       //if ((AVITimer <= 0 && AVITimerFlag) || VVtimer >= goalPacerMs) // if atrium-to-vent timer runs out, pace vent (VVtimer shouldn't be necessary?)
       var maxTrackingMS = 1 / (maxTrackingRate / 60000)
-      if ((AVITimer <= 0 && AVITimerFlag && VVtimer < maxTrackingMS)) // if atrium-to-vent timer runs out, pace vent
+      if ((AVITimer <= 0 && AVITimerFlag && VVtimer > maxTrackingMS)) // if atrium-to-vent timer runs out, pace vent
       {
         //if (pacerCapturing(vent))
         //{
