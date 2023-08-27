@@ -2320,7 +2320,15 @@ function pacingFunction() {
       // tick the timers down
       if (AVITimerFlag) {
         AVITimer -= 2;
+
+        // try new code 8/26
+        if (AVITimer < 0)
+        {
+          AVITimerFlag = false
+        }
+
       }
+
       if (VAITimerFlag) {
         VAItimer -= 2;
       }
