@@ -569,7 +569,7 @@ function drawPWave(morphOnly, width, height, invert) { // morphOnly='morphOnly' 
   if (typeof height == 'undefined') { height = 1 } // 1 means normal height
   if (typeof invert == 'undefined') { invert = 0 } // 1 means normal height
   let refracPeriod = 200
-  if (currentRhythm == "aFlutter" || currentRhythm == "afib")
+  if (currentRhythm == "aFlutter" || currentRhythm == "aFib")
   {
     refracPeriod = 100
   }
