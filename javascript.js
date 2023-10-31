@@ -39,7 +39,7 @@ PHYSIOLOGY POINTS
 var pacedBeatFlag = false;
 var ventRefractoryTimer = 9999
 var ventricleRefractoryPeriod = 200 // intrinsic refractory period
-var atrialRefractoryPeriod = 100 // intrinsic refractory period
+var atrialRefractoryPeriod = 200 // intrinsic refractory period (when not in fib or flutter)
 var atrialRefractoryTimer = 9999
 var afibPSenseTimer = 9999
 // Wenkebach
