@@ -39,7 +39,7 @@ PHYSIOLOGY POINTS
 var pacedBeatFlag = false;
 var ventRefractoryTimer = 9999
 var ventricleRefractoryPeriod = 200 // intrinsic refractory period
-var atrialRefractoryPeriod = 200 // intrinsic refractory period
+var atrialRefractoryPeriod = 100 // intrinsic refractory period
 var atrialRefractoryTimer = 9999
 var afibPSenseTimer = 9999
 // Wenkebach
@@ -568,8 +568,14 @@ function drawPWave(morphOnly, width, height, invert) { // morphOnly='morphOnly' 
   if (typeof width == 'undefined') { width = 0 } // 0 means normal width
   if (typeof height == 'undefined') { height = 1 } // 1 means normal height
   if (typeof invert == 'undefined') { invert = 0 } // 1 means normal height
+  let refracPeriod = 200
+  if (currentRhythm == "aFlutter" || currentRhythm == "afib")
+  {
+    refracPeriod = 100
+  }
+  else {refracPeriod = atrialRefractoryPeriod}
 
-  if (atrialRefractoryTimer > atrialRefractoryPeriod) // when atrium is depolarized, should be completely refractory for xxx ms (need to adjust?)
+  if (atrialRefractoryTimer > refracPeriod) // when atrium is depolarized, should be completely refractory for xxx ms (need to adjust?)
   {
     atrialRefractoryTimer = 0 // make atrium refractory
 
