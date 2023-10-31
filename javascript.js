@@ -38,6 +38,8 @@ PHYSIOLOGY POINTS
 //
 var pacedBeatFlag = false;
 var ventRefractoryTimer = 9999
+var ventricleRefractoryPeriod = 200 // intrinsic refractory period
+var atrialRefractoryPeriod = 200 // intrinsic refractory period
 var atrialRefractoryTimer = 9999
 var afibPSenseTimer = 9999
 // Wenkebach
@@ -567,7 +569,7 @@ function drawPWave(morphOnly, width, height, invert) { // morphOnly='morphOnly' 
   if (typeof height == 'undefined') { height = 1 } // 1 means normal height
   if (typeof invert == 'undefined') { invert = 0 } // 1 means normal height
 
-  if (atrialRefractoryTimer > 100) // when atrium is depolarized, should be completely refractory for 100 ms (need to adjust?)
+  if (atrialRefractoryTimer > atrialRefractoryPeriod) // when atrium is depolarized, should be completely refractory for xxx ms (need to adjust?)
   {
     atrialRefractoryTimer = 0 // make atrium refractory
 
@@ -635,7 +637,7 @@ function drawQRST(width, invertT, invertQRS) {   // width: 0=normal, 1=double, 2
 
   i = 0;
   j = 0;
-  if (ventRefractoryTimer > 100) // when vent is depolarized, should be completely refractory for 100 ms (need to adjust?)
+  if (ventRefractoryTimer > ventricleRefractoryPeriod) // when vent is depolarized, should be completely refractory for xxx ms
   {
     ventRefractoryTimer = 0 // make ventricle refractory
 
@@ -1938,7 +1940,7 @@ var vPacerInterval;
 var pacerInterval;
 
 
-var atrialRefactoryPeriod = 0;
+var atrialPacerRefractoryPeriod = 0;
 var ventBlankingPeriod = 0;
 
 function pacingModeBoxChange() {
@@ -1979,7 +1981,7 @@ function pacingFunction() {
 
         if (aPacerSensitivity >= aOversenseThreshold) // is pacer not oversensing?
         {
-          if (atrialRefactoryPeriod <= 0) // if pacer fires, should have a 'refractory period' where it will not pace again
+          if (atrialPacerRefractoryPeriod <= 0) // if pacer fires, should have a 'refractory period' where it will not pace again
           {
             //if (pacerCapturing(atrium)) // is output high enough?
             //{
@@ -1995,14 +1997,14 @@ function pacingFunction() {
               drawPacingSpike();
             }
             */
-            atrialRefactoryPeriod = goalPacerMs; // with capture or not, start pacertimeout
+            atrialPacerRefractoryPeriod = goalPacerMs; // with capture or not, start pacertimeout
           }
 
         }
       }
-      if (atrialRefactoryPeriod > 0)  // augment pacer timer if running
+      if (atrialPacerRefractoryPeriod > 0)  // augment pacer timer if running
       {
-        atrialRefactoryPeriod -= 2;
+        atrialPacerRefractoryPeriod -= 2;
       }
     }
     // VVI (V pace only, V sense, ignore A completely)
