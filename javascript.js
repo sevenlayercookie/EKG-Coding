@@ -2916,6 +2916,21 @@ function feedbackFunction() // provides feedback on settings
 
   let optimized = !aPacerOutputTooHigh && !vPacerOutputTooHigh
 
+  if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter') {
+
+    if (pacerMode == 'DDD') {
+      optimized = false;
+    }
+    // atrial capture in a-fib
+    if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI" || pacerMode == "AOO" || pacerMode == "DOO") {
+      optimized = false;
+    }
+    // atrial sensing in a-fib
+    if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI") {
+      optimized = false;
+    }
+  }
+
   let allParametersCorrect = true
 
   if (pacerMode == 'DDD' || pacerMode == 'DDI') {
