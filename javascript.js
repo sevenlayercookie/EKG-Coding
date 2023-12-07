@@ -2922,11 +2922,7 @@ function feedbackFunction() // provides feedback on settings
       optimized = false;
     }
     // atrial capture in a-fib
-    if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI" || pacerMode == "AOO" || pacerMode == "DOO") {
-      optimized = false;
-    }
-    // atrial sensing in a-fib
-    if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI") {
+    if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "AOO" || pacerMode == "DOO") {
       optimized = false;
     }
   }
