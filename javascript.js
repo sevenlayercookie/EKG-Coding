@@ -2945,8 +2945,13 @@ function feedbackFunction() // provides feedback on settings
   */
 
 
-  let aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdBaseline + 0.5 * aOversenseThresholdBaseline
-  let aSensitivityTooLow = aPacerSensitivity > aUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline
+  let aSensitivityTooHigh = false;
+  let aSensitivityTooLow = false;
+  if (currentRhythm != "aFib") 
+    {
+      aSensitivityTooLow = aPacerSensitivity > aUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline
+      aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdBaseline + 0.5 * aOversenseThresholdBaseline
+    }
   let vSensitivityTooHigh = vPacerSensitivity < vOversenseThresholdBaseline + 0.5 * vOversenseThresholdBaseline
   let vSensitivityTooLow = vPacerSensitivity > vUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline
   let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdBaseline + 0.5 * aCaptureThresholdBaseline
