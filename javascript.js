@@ -209,7 +209,7 @@ var vOversenseThresholdDefault = vOversenseThresholdBaseline = vOversenseThresho
 var vUndersenseThresholdDefault = vUndersenseThresholdBaseline = vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
 
 // feedback
-var feedbackLevel = 'medFeedback'
+var feedbackLevel = 'lowFeedback'
 
 // knob intialization
 
@@ -506,6 +506,8 @@ function onload() {
 
 function senseP(inhibitSenseLight) // if inhibitSenseLight == 'inhibitSenseLight', don't turn on the sense light (but still sense)
 {
+  if (pacerOn && (pacerMode == "AAI" || pacerMode == "DDD" ||pacerMode == "DDI"))
+  {
   let testvar = typeof inhibitSenseLight
   if (typeof inhibitSenseLight == undefined || inhibitSenseLight != 'inhibitSenseLight') {
     inhibitSenseLight = false; // sense light should turn on
@@ -516,15 +518,16 @@ function senseP(inhibitSenseLight) // if inhibitSenseLight == 'inhibitSenseLight
 
   sensedPTimes.push(dataClock); // add to record of all sensed P activity
 
-  if (pacerOn && !inhibitSenseLight) // if sense light should turn on
+  if (pacerOn && !inhibitSenseLight && (pacerMode == "AAI" || pacerMode == "DDD" ||pacerMode == "DDI")) // if sense light should turn on
   {
     document.getElementById("aSenseLight").src = "assets/senseLightOn.svg" // turn sense light on
     setTimeout(function () { document.getElementById("aSenseLight").src = "assets/senseLightOff.svg" }, "250") // turn light off after time period
   }
 }
+}
 
 function senseV(inhibitSenseLight) {
-  if (pacerOn) {
+  if (pacerOn && (pacerMode == "DDD" || pacerMode == "DDI" || pacerMode == "VVI")) {
     if (typeof inhibitSenseLight == undefined || inhibitSenseLight != 'inhibitSenseLight') {
       inhibitSenseLight = false; // sense light should turn on
     }
