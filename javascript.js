@@ -145,13 +145,17 @@ let speed = .2 // .2 pixels per data point. speed of the cursor across the scree
 var HRchanged = false;
 var paceSpike = false;
 var px = 0;
+// set height of tele to 1/3 window height
+var teleHeight = window.innerHeight / 3;
+var scaleFactor = teleHeight/200;
+tele.height = teleHeight;
 h = tele.height
 var processingSpeed = 570;
 var realtimeProcessSpeed = 2;
 var adjustRatio = 1;
 var lastBrowserTime = Date.now();
 dataHertz = 500, // in Hz (data points per second)
-  canvasBaseline = tele.height / 2 + 25,
+  canvasBaseline = tele.height / 2 + 20*scaleFactor,
   py = canvasBaseline;
 var y = dataHertz / 144;
 var histPTimes = [0];
@@ -319,6 +323,12 @@ function onload() {
   document.getElementById("tele").width = window.innerWidth;
   document.getElementById("HRLayer").width = window.innerWidth;
   document.getElementById("caliperCanvas").width = window.innerWidth;
+
+  document.getElementById("tele").height = tele.height;
+  document.getElementById("canvasesdiv").height = tele.height;
+  document.getElementById("HRLayer").height = tele.height;
+  document.getElementById("caliperCanvas").height = tele.height;
+
   PRInterval = parseInt(document.getElementById("PRbox").value)
   var w = tele.width,
 
@@ -334,10 +344,10 @@ function onload() {
     isPainted = true;
   timestamp = performance.now();
   paintCount = 1;
-  (opy = py), (scanBarWidth = 1), (PVCflag = 0);
+  (opy = py), (scanBarWidth = 1*scaleFactor), (PVCflag = 0);
   k = 0;
   teleCtx.strokeStyle = "#00bd00";
-  teleCtx.lineWidth = 3;
+  teleCtx.lineWidth = 3*scaleFactor;
 
   // framelimiter code
   var fpsInterval, startTime, now, then, elapsed;
@@ -371,7 +381,7 @@ function onload() {
   }
 
   function parseData() {
-    py = -parseInt(dataFeed.shift() * 1000) / compressHfactor + canvasBaseline;
+    py = -parseInt(dataFeed.shift() * 1000) / compressHfactor * scaleFactor + canvasBaseline;
     if (dataFeed.length < 1000) {
       dataFeed.push(0);
       if (noiseFlag) { noiseFunction() }
@@ -429,7 +439,8 @@ function onload() {
 
     for (let z = 0; z < y; z++) {
       parseData();
-      px += speed; // horizontal pixels per data point
+      var scaleFactor = teleHeight/200
+      px += speed*scaleFactor; // horizontal pixels per data point
 
       //if (paceSpike)
       //{drawPacingSpike();}
@@ -1736,10 +1747,11 @@ function clearRhythms() {
 var currentHeartRate = 0;
 
 function paintHR() {
-
-  HRctx.font = "50px Arial";
+  HRctx.font = "Arial 50px";
+  var scaledFontSize = 50 * scaleFactor
+  HRctx.font = HRctx.font.replace(/\d+(.\d+)?/, scaledFontSize.toString());
   HRctx.fillStyle = "#00bd00";
-  HRctx.lineWidth = 3;
+  HRctx.lineWidth = 3*scaleFactor;
   HRctx.clearRect(0, 0, HRCanvas.width, HRCanvas.height); //clears previous HR 
   // rolling average (weighted)
   // histVentTimes contains absolute timestamps of V beats  
@@ -1780,10 +1792,10 @@ function paintHR() {
   currentHeartRate = Math.ceil(weightedAverageHR); // unaffected by realtime browser time measurements
 
   if (teleCanvas.width < document.getElementById("canvasesdiv").offsetWidth) {
-    HRctx.fillText("HR: " + currentHeartRate, teleCanvas.width - 200, 50); //actual paint command
+    HRctx.fillText("HR: " + currentHeartRate, teleCanvas.width - 200*scaleFactor, 50*scaleFactor); //actual paint command
   }
   else {
-    HRctx.fillText("HR: " + currentHeartRate, document.getElementById("canvasesdiv").offsetWidth - 190, 50); //actual paint command
+    HRctx.fillText("HR: " + currentHeartRate, document.getElementById("canvasesdiv").offsetWidth - 190*scaleFactor, 50*scaleFactor); //actual paint command
   }
 }
 paintHR();
@@ -1791,7 +1803,7 @@ setInterval(paintHR, 1000);
 
 function drawPacingSpike() {
   teleCtx.fillStyle = 'white';
-  teleCtx.fillRect(px, py, 2, -75)
+  teleCtx.fillRect(px, py, 2*scaleFactor, -75*scaleFactor)
   teleCtx.fillStyle = "#00bd00";
   paceSpike = false;
 }
@@ -2504,11 +2516,11 @@ function windowSizeChange() {
   // run code to match canvas to current window size
   // should probably change both canvas sizes (canvas, canvas1), clear both canvases, realign drawing point to left side of screen, and move HR indicator
 
-  //canvas.width = window.innerWidth;
   HRCanvas.width = window.innerWidth;
-  //ctx.width = window.innerWidth;
-  //ctx1.width = window.innerWidth;
-  //px = opx = 0;
+
+  //tele.height = window.innerHeight / 3;
+
+  
   teleCtx.clearRect(px, 0, scanBarWidth, h);
   paintHR();
   //ctx1.clearRect(0,0,canvas1.width,canvas1.height); //clears previous HR 
@@ -4399,9 +4411,13 @@ function drawCaliper(clickEvent) {
   let startingX = fromX
 
   caliperCtx.strokeStyle = "#a1a2ff";
-  caliperCtx.lineWidth = 2;
+  caliperCtx.lineWidth = 2*scaleFactor;
 
   caliperCtx.font = "18px Arial";
+
+  var scaledFontSize = 18 * scaleFactor
+  caliperCtx.font = caliperCtx.font.replace(/\d+(.\d+)?/, scaledFontSize.toString());
+
   caliperCtx.fillStyle = "#a1a2ff";
   caliperCtx.textAlign = "center";
 
@@ -4441,7 +4457,7 @@ function drawCaliper(clickEvent) {
     drawVerticalLine(toX)
 
     // draw label   
-    let pixels = Math.abs(toX - startingX)  // # of pixels between the markers
+    let pixels = Math.abs(toX - startingX)/scaleFactor  // # of pixels between the markers
     let ms = Math.abs(((pixels / dataHertz) / speed) * 1000)
     let bpm = Math.abs(1 / (ms / 60000))
 
@@ -4459,9 +4475,9 @@ function drawCaliper(clickEvent) {
     }
 
 
-    caliperCtx.fillText(label1, startingX + (toX - startingX) / 2, (toY - 10))
+    caliperCtx.fillText(label1, startingX + (toX - startingX) / 2, (toY - 10*scaleFactor))
     if (label2 != undefined) {
-      caliperCtx.fillText(label2, startingX + (toX - startingX) / 2, (toY + 20))
+      caliperCtx.fillText(label2, startingX + (toX - startingX) / 2, (toY + 20*scaleFactor))
     }
 
     fromX = toX

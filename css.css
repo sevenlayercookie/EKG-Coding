@@ -48,6 +48,8 @@ cursor:crosshair;
 .left {
   left: 0;
   width: 70%;
+  height: 100%;
+  font-size: 3vw;
 }
 
 /* Control the right side */
