@@ -62,7 +62,7 @@
         
       </div>
       <label for="feedbackList">Feedback:</label>
-      <select id="feedbackList">
+      <select id="feedbackList" title="Select the level of feedback you want">
         <option value="noFeedback">No feedback</option>
         <option value="lowFeedback" selected>Low feedback</option>
         <option value="medFeedback">Medium feedback</option>
@@ -73,7 +73,7 @@
         
           
         <label for="rhythmList">Rhythm:</label>
-        <select id="rhythmList">
+        <select id="rhythmList" title="Select the patient's intrinsic rhythm">
           <option value="NSR">Sinus rhythm</option>
           <option value="flatline">Flatline</option>
           <option value="junctional">Junctional escape</option>
@@ -91,13 +91,13 @@
         </select>
         <br>
         <div id="nativeRate">
-          <label for="avgRateBox">native rate:</label> <input type="number" id="avgRateBox" value=60 size="2" max="1000"
+          <label for="avgRateBox">native rate:</label> <input type="number" id="avgRateBox" title="Select the patient's intrinsic rate" value=60 size="2" max="1000"
             min="0">
             <br>
 
         </div>
         <div id="nativePR">
-          <label for="PRbox">native PR interval</label> <input type="number" id="PRbox" value=150 size="2" max="1000"
+          <label for="PRbox">native PR interval</label> <input type="number" id="PRbox" title="Select the patient's native PR interval" value=150 size="2" max="1000"
           min="0">
           <br>
         </div>
@@ -146,11 +146,11 @@
       </div>
       <div class="checkboxStuff">
         <div>
-        <input type="checkbox" id="noise" value="noise" onclick="noiseToggle()">
+        <input type="checkbox" id="noise" value="noise" title="Check to simulate realistic telemetry noise" onclick="noiseToggle()">
         <label for="noise"> noise</label>
         </div>
         <div class="scrambleStuff">
-          <input type="button" id="scrambleThresholds" value="SCRAMBLE THRESHOLDS" onclick="scrambleThresholds()">
+          <input type="button" id="scrambleThresholds" value="SCRAMBLE THRESHOLDS" title="Click this button to scramble thresholds -- you'll need to reoptimize pacer settings after this is pressed" onclick="scrambleThresholds()">
         </div>
       </div>
     
@@ -175,8 +175,8 @@
       <div class="pacemakerGraphic" id="pacemakerGraphic">
         <div class="wholeBox">
           <div class="topButtons">
-            <img class='topButtonImgs allButtons' src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick(this)" draggable="false">
-            <img class='topButtonImgs allButtons' src="assets/powerButton-white-blackback.svg"  onclick="animateButton(this); paceButtonClick()" draggable="false">
+            <img class='topButtonImgs allButtons' title="Emergency pace" src="assets/DOObutton-red-whitetext.svg" onclick="DOObuttonClick(this)" draggable="false">
+            <img class='topButtonImgs allButtons' title="Power" src="assets/powerButton-white-blackback.svg"  onclick="animateButton(this); paceButtonClick()" draggable="false">
           </div>
     
           <div class ="topHalf">
@@ -277,7 +277,7 @@
               
               </div>
               <div class = "lockButton">
-                <img class = "rightSideButtonImgs allButtons" src="assets/lockButton-white-blackback.svg" onclick="animateButton(this); lockButtonClick()" draggable="false"> 
+                <img class = "rightSideButtonImgs allButtons" title="Lock pacer" src="assets/lockButton-white-blackback.svg" onclick="animateButton(this); lockButtonClick()" draggable="false"> 
               </div>
             </div>
           
@@ -443,7 +443,7 @@
                 <img draggable="false" class="knobImg" id = "bottomKnobImg"src="assets/knob-full-gradient.svg">
               </div>
               <div id = 'pauseButtonDiv'>
-              <img class='rightSideButtonImgs allButtons' id = "pauseButton" src="assets/pauseButton-white-black.svg" draggable="false">
+              <img class='rightSideButtonImgs allButtons' id = "pauseButton" title="Pause pacing" src="assets/pauseButton-white-black.svg" draggable="false">
             </div>
             </div>
           
