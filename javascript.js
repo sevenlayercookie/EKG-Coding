@@ -200,16 +200,16 @@ var autoAV = true
 var meanRatePacer = 60
 
 // pacer thresholds
-var vCaptureThresholdBaseline = vCaptureThreshold = 5; // default V capture threshold (mA)
-var aCaptureThresholdBaseline = aCaptureThreshold = 2; // default A capture threshold (mA)
+var vCaptureThresholdDefault = vCaptureThresholdBaseline = vCaptureThreshold = 5; // default V capture threshold (mA)
+var aCaptureThresholdDefault = aCaptureThresholdBaseline = aCaptureThreshold = 2; // default A capture threshold (mA)
 // The sensing threshold is the least sensitive mV setting at which the temporary pacemaker can detect a heartbeat
-var aOversenseThresholdBaseline = aOversenseThreshold = 0.3 // threhsold below which pacer will oversense (e.g. T wave)
-var aUndersenseThresholdBaseline = aUndersenseThreshold = 6 // threshold above which pacer will undersense (e.g. won't see P wave)
-var vOversenseThresholdBaseline = vOversenseThreshold = 1 // threhsold below which pacer will oversense (e.g. T wave)
-var vUndersenseThresholdBaseline = vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
+var aOversenseThresholdDefault = aOversenseThresholdBaseline = aOversenseThreshold = 0.3 // threhsold below which pacer will oversense (e.g. T wave)
+var aUndersenseThresholdDefault = aUndersenseThresholdBaseline = aUndersenseThreshold = 6 // threshold above which pacer will undersense (e.g. won't see P wave)
+var vOversenseThresholdDefault = vOversenseThresholdBaseline = vOversenseThreshold = 1 // threhsold below which pacer will oversense (e.g. T wave)
+var vUndersenseThresholdDefault = vUndersenseThresholdBaseline = vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
 
 // feedback
-var feedbackLevel = 'lowFeedback'
+var feedbackLevel = 'medFeedback'
 
 // knob intialization
 
@@ -2872,6 +2872,45 @@ function randomizeThresholds() // randomize a bit capture, oversense, undersense
   vCaptureThresholdRandomRange = [vCaptureThresholdBaseline + randomRangeMin, vCaptureThresholdBaseline + randomRangeMax]
 }
 
+function scrambleThresholds () // make sensing and/or output inappropriate
+{
+  // I think can accomplish by altering the baselines for each
+  // capture thresholds (default A=2, V=5)
+
+  if(coinFlip()) {vCaptureThresholdBaseline = randomNumGen(vCaptureThresholdDefault,25)} // 50% chance it will be higher than default or lower than default
+  else  {vCaptureThresholdBaseline = randomNumGen(0,vCaptureThresholdDefault)}
+
+  if(coinFlip()) {aCaptureThresholdBaseline = randomNumGen(aCaptureThresholdDefault,20)}
+  else  {aCaptureThresholdBaseline = randomNumGen(0,aCaptureThresholdDefault)}
+  
+  // sensitivity Thresholds (default A=1.5, 10   and V=1.5, 10)
+  if(coinFlip()) {aOversenseThresholdBaseline = randomNumGen(0.4,aOversenseThresholdDefault)}
+  else  {aOversenseThresholdBaseline = randomNumGen(aOversenseThresholdDefault,5)}
+  aUndersenseThresholdBaseline = aOversenseThresholdBaseline + 5
+
+  if(coinFlip()) {vOversenseThresholdBaseline = randomNumGen(0.8,vOversenseThresholdDefault)}
+  else  {vOversenseThresholdBaseline = randomNumGen(vOversenseThresholdDefault,10)}
+  vUndersenseThresholdBaseline = vOversenseThresholdBaseline + 8
+
+  console.log("vCapThres = ", vCaptureThresholdBaseline)
+  console.log("aCapThres = ", aCaptureThresholdBaseline)
+  console.log("Atrial sense range = ", aOversenseThresholdBaseline, " - ", aUndersenseThresholdBaseline)
+  console.log("Vent sense range = ", vOversenseThresholdBaseline, " - ", vUndersenseThresholdBaseline)
+}
+
+function coinFlip ()
+{
+  let test = Math.random() - 0.5
+  if (test>0)
+    return true
+  return false
+}
+
+function randomNumGen (min, max)
+{
+  return (Math.random() * (max-min) + min) // returns between min and max
+}
+
 function noiseToggle() { noiseFlag = !noiseFlag }
 
 function noiseFunction() {
@@ -3010,8 +3049,12 @@ function feedbackFunction() // provides feedback on settings
   if (aPacerOutputTooLow) { arrayOfBad[i] = "Atrial output is too low. May lose capture"; i++ }
   if (vPacerOutputTooLow) { arrayOfBad[i] = "Ventricular output is too low. May lose capture"; i++ }
 
+  if (feedbackLevel == "noFeedback") {
+    document.getElementById("feedbackBox").hidden = true
+  }
 
   if (feedbackLevel == 'lowFeedback') {
+    document.getElementById("feedbackBox").hidden = false
     if (allParametersCorrect && optimized) {
       settingsCorrect = true;
       document.getElementById("feedbackBox").innerText = "OPTIMAL"
@@ -3028,7 +3071,7 @@ function feedbackFunction() // provides feedback on settings
     }
   }
   else if (feedbackLevel == 'medFeedback') {
-
+    document.getElementById("feedbackBox").hidden = false
 
     // sensitivities and outputs
     if (!aSensitivityTooHigh && !aSensitivityTooLow && !vSensitivityTooHigh && !vSensitivityTooLow && !aPacerOutputTooLow && !vPacerOutputTooLow) // sensitivity settings

@@ -480,6 +480,11 @@ color:#fff
   cursor:grabbing;
 }
 
+.checkboxStuff {
+  display: flex;
+  justify-content: space-between;
+}
+
 /* Media queries */
 
 /* small screens */
@@ -527,9 +532,5 @@ color:#fff
     border-radius: min(3vh, 30px);
    }
 
-
-  .checkboxStuff {
-    display: none;
-  }
 
 }
