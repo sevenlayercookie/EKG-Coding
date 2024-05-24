@@ -3781,13 +3781,20 @@ function knobClick(clickEvent) {
 
   }
 
-  //clickTarget.cumulativeDegrees = clickTarget.turnFactor
-  let isTouchEvent = false; // **** NEW CODE ****
 
   function mousemove(dragEvent) {
-    if (isTouchEvent && dragEvent.type !== 'touchmove') { // **** NEW CODE ****
-      return; // Skip mousemove if a touch event is active // **** NEW CODE ****
-    }
+
+    // unneeeded debugging testing code
+      if (dragEvent.type == "mousemove")
+        {
+          console.log("mousemove")
+        }
+        if (dragEvent.type == "touchmove")
+          {
+            console.log("touchmove")
+          }
+    /// end of debug code
+        
 
     clickTarget.moveSteps += 1
     // calculate position of mouse relative to center of knob
@@ -3809,9 +3816,6 @@ function knobClick(clickEvent) {
     }
 
 
-
-    // console.log('degree: ' + clickTarget.deg)
-    //rotateKnobImage(clickTarget, clickTarget.deg)
     knobAngleToResult(clickEvent, clickTarget) // (event, knob image)
 
 
@@ -3823,22 +3827,22 @@ function knobClick(clickEvent) {
     document.getElementById('mainDiv').classList.remove('grabbed')
     clickTarget.classList.remove('grabbed')
 
-    window.removeEventListener('mousemove', mousemove)
-    window.removeEventListener('touchmove', mousemove)
+    clickTarget.removeEventListener('mousemove', mousemove)
+    clickTarget.removeEventListener('touchmove', mousemove)
 
-    window.removeEventListener('touchend', knobOff)
-    window.removeEventListener('mouseup', knobOff)
-    isTouchEvent = false; // **** NEW CODE ****
+    clickTarget.removeEventListener('touchend', knobOff)
+    clickTarget.removeEventListener('mouseup', knobOff)
+
     clickTarget.lastDeg = undefined;
     event.preventDefault()
   }
 
-  window.addEventListener('mousemove', mousemove);
-  window.addEventListener('touchmove', mousemove);
-  window.addEventListener('mouseup', knobOff);
-  window.addEventListener('touchend', knobOff);
+  clickTarget.addEventListener('mousemove', mousemove);
+  clickTarget.addEventListener('touchmove', mousemove);
+  clickTarget.addEventListener('mouseup', knobOff);
+  clickTarget.addEventListener('touchend', knobOff);
 
-  isTouchEvent = clickEvent.type === 'touchstart'; // **** NEW CODE ****
+
   clickEvent.preventDefault()
 
 }
