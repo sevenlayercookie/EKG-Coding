@@ -3782,8 +3782,13 @@ function knobClick(clickEvent) {
   }
 
   //clickTarget.cumulativeDegrees = clickTarget.turnFactor
+  let isTouchEvent = false; // **** NEW CODE ****
 
   function mousemove(dragEvent) {
+    if (isTouchEvent && dragEvent.type !== 'touchmove') { // **** NEW CODE ****
+      return; // Skip mousemove if a touch event is active // **** NEW CODE ****
+    }
+
     clickTarget.moveSteps += 1
     // calculate position of mouse relative to center of knob
     if (dragEvent.type == 'touchmove') {
@@ -3823,7 +3828,7 @@ function knobClick(clickEvent) {
 
     window.removeEventListener('touchend', knobOff)
     window.removeEventListener('mouseup', knobOff)
-
+    isTouchEvent = false; // **** NEW CODE ****
     clickTarget.lastDeg = undefined;
     event.preventDefault()
   }
@@ -3833,6 +3838,7 @@ function knobClick(clickEvent) {
   window.addEventListener('mouseup', knobOff);
   window.addEventListener('touchend', knobOff);
 
+  isTouchEvent = clickEvent.type === 'touchstart'; // **** NEW CODE ****
   clickEvent.preventDefault()
 
 }
