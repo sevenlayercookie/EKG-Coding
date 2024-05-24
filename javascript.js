@@ -3827,22 +3827,16 @@ function knobClick(clickEvent) {
     document.getElementById('mainDiv').classList.remove('grabbed')
     clickTarget.classList.remove('grabbed')
 
-    clickTarget.removeEventListener('mousemove', mousemove)
-    clickTarget.removeEventListener('touchmove', mousemove)
+    window.removeEventListener('mousemove', mousemove)
+    window.removeEventListener('touchmove', mousemove)
 
-    clickTarget.removeEventListener('touchend', knobOff)
-    clickTarget.removeEventListener('mouseup', knobOff)
+    window.removeEventListener('touchend', knobOff)
+    window.removeEventListener('mouseup', knobOff)
 
     clickTarget.lastDeg = undefined;
     event.preventDefault()
   }
 
-  /*
-  clickTarget.addEventListener('mousemove', mousemove);
-  clickTarget.addEventListener('touchmove', mousemove);
-  clickTarget.addEventListener('mouseup', knobOff);
-  clickTarget.addEventListener('touchend', knobOff);
-    */
       window.addEventListener('mousemove', mousemove);
       window.addEventListener('touchmove', mousemove);
       window.addEventListener('mouseup', knobOff);
