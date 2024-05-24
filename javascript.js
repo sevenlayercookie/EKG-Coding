@@ -3799,10 +3799,10 @@ function knobClick(clickEvent) {
     clickTarget.moveSteps += 1
     // calculate position of mouse relative to center of knob
     if (dragEvent.type == 'touchmove') {
-      clickTarget.mouseRelativetoKnobCenter = [dragEvent.touches[0].pageX - clickTarget.centerPos[0], clickTarget.centerPos[1] - dragEvent.touches[0].pageY]
+      clickTarget.mouseRelativetoKnobCenter = [dragEvent.touches[0].clientX - clickTarget.centerPos[0], clickTarget.centerPos[1] - dragEvent.touches[0].clientY]
     }
     else {
-      clickTarget.mouseRelativetoKnobCenter = [dragEvent.pageX - clickTarget.centerPos[0], clickTarget.centerPos[1] - dragEvent.pageY]
+      clickTarget.mouseRelativetoKnobCenter = [dragEvent.clientX - clickTarget.centerPos[0], clickTarget.centerPos[1] - dragEvent.clientY]
     }
 
     // convert coordinates to angle in degrees
@@ -3837,11 +3837,17 @@ function knobClick(clickEvent) {
     event.preventDefault()
   }
 
+  /*
   clickTarget.addEventListener('mousemove', mousemove);
   clickTarget.addEventListener('touchmove', mousemove);
   clickTarget.addEventListener('mouseup', knobOff);
   clickTarget.addEventListener('touchend', knobOff);
-
+    */
+      window.addEventListener('mousemove', mousemove);
+      window.addEventListener('touchmove', mousemove);
+      window.addEventListener('mouseup', knobOff);
+      window.addEventListener('touchend', knobOff);
+    
 
   clickEvent.preventDefault()
 
