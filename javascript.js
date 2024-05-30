@@ -3620,16 +3620,16 @@ function enterClick(event) {
             aPacerOutput = 10
             // !!! need to set the output knobs to the equivalent degree as well!
             var knobImage = document.getElementById('aOutputDialImg')
-            if (isNaN(knobImage.cumulativeDegrees)) { knobImage.cumulativeDegrees = 0 }
-            if (isNaN(knobImage.revolutions)) { knobImage.revolutions = 0 }
+            knobImage.cumulativeDegrees = 0 
+            knobImage.revolutions = 0
           }
           if (ventPacedRhythms.includes(pacerMode) && !ventPacedRhythms.includes(priorPacerMode)) // if switching from non-vent paced rhythm to a vent paced rhythm
           {
             vPacerOutput = 10
             // !!! need to set the output knobs to the equivalent degree as well!
             var knobImage = document.getElementById('vOutputDialImg')
-            if (isNaN(knobImage.cumulativeDegrees)) { knobImage.cumulativeDegrees = 0 }
-            if (isNaN(knobImage.revolutions)) { knobImage.revolutions = 0 }
+            knobImage.cumulativeDegrees = 0
+            knobImage.revolutions = 0
           }
           updateAllGUIValues()
 
