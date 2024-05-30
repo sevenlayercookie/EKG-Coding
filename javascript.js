@@ -3993,6 +3993,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
           pacerMode = "AOO"
         }
         document.getElementById("pacingBoxMode").innerText = pacerMode
+        modeSelectionClick()
         updateAllGUIValues()
       }
     }
