@@ -3595,12 +3595,34 @@ function enterClick(event) {
         if (e.id != "RAPrateRow" && e.id != "pauseButton") {
           animateButton(enterButton)
         }
+
         if (e.id == "radio") {
           e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
+          var priorPacerMode = pacerMode
           pacerMode = e.firstElementChild.nextElementSibling.innerText
           document.getElementById("pacingBoxMode").innerText = pacerMode
           let element = document.getElementById("pacingMode")
           element.selectedIndex = currentlySelectedRowNumber
+
+          /* Excerpt from manual:
+          RATE, OUTPUT values, and Sensitivity values are set to the nominal values when a pacing
+          mode is selected unless they have been manually adjusted before the pacing mode was
+          selected. If they have been manually adjusted before the pacing mode was selected, the
+          new pacing mode retains these values.
+          For example, if you change from AAI to DDD pacing mode, the value for A OUTPUT is
+          retained; V OUTPUT is set to the nominal value.
+          */
+          var atrialPacedRhythms = ["DDD","DDI","DOO","AAI","AOO"]
+          var ventPacedRhythms = ["DDD","DDI","DOO","VVI","VOO"]
+
+          if (atrialPacedRhythms.includes(pacerMode) && !atrialPacedRhythms.includes(priorPacerMode)) // if switching from non-atrial paced rhythm to an atrial paced rhythm
+          {
+            aPacerOutput = 10
+          }
+          if (ventPacedRhythms.includes(pacerMode) && !ventPacedRhythms.includes(priorPacerMode)) // if switching from non-vent paced rhythm to a vent paced rhythm
+          {
+            vPacerOutput = 10
+          }
           updateAllGUIValues()
 
         }
