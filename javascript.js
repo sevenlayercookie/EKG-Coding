@@ -4026,6 +4026,8 @@ function knobAngleToResult(event, knobImage)  // working here ***
         modeSelectionClick()
         updateAllGUIValues()
       }
+      // now need to program if going from V-pacer being off to knob being turned clockwise, V pacer should turn on, starting with output of 1 mA
+      // (and with appropriate pacerMode set)
     }
 
     if (knobImage.id == "aOutputDialImg") {
@@ -4044,6 +4046,8 @@ function knobAngleToResult(event, knobImage)  // working here ***
         modeSelectionClick()
         updateAllGUIValues()
       }
+      // now need to program if going from A-pacer being off to knob being turned clockwise, A pacer should turn on, starting with output of 1 mA
+      // (and with appropriate pacerMode set)
     }
 
     if (knobImage.id == "bottomKnobImg") {
