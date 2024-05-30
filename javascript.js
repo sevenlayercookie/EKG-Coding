@@ -4034,7 +4034,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
         if (pacerMode == "DDD" || pacerMode == "DDI") {
           pacerMode = "VVI"
         }
-        if (pacerMode == "VVI" || pacerMode == "VOO") {
+        if (pacerMode == "AAI" || pacerMode == "AOO") {
           pacerMode = "OOO"
         }
         if (pacerMode == "DOO") {
