@@ -4030,6 +4030,20 @@ function knobAngleToResult(event, knobImage)  // working here ***
 
     if (knobImage.id == "aOutputDialImg") {
       aPacerOutput = Math.round(result)
+      if (aPacerOutput == 0) {
+        if (pacerMode == "DDD" || pacerMode == "DDI") {
+          pacerMode = "VVI"
+        }
+        if (pacerMode == "VVI" || pacerMode == "VOO") {
+          pacerMode = "OOO"
+        }
+        if (pacerMode == "DOO") {
+          pacerMode = "VOO"
+        }
+        document.getElementById("pacingBoxMode").innerText = pacerMode
+        modeSelectionClick()
+        updateAllGUIValues()
+      }
     }
 
     if (knobImage.id == "bottomKnobImg") {
