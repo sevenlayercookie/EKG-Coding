@@ -3618,10 +3618,12 @@ function enterClick(event) {
           if (atrialPacedRhythms.includes(pacerMode) && !atrialPacedRhythms.includes(priorPacerMode)) // if switching from non-atrial paced rhythm to an atrial paced rhythm
           {
             aPacerOutput = 10
+            // !!! need to set the output knobs to the equivalent degree as well!
           }
           if (ventPacedRhythms.includes(pacerMode) && !ventPacedRhythms.includes(priorPacerMode)) // if switching from non-vent paced rhythm to a vent paced rhythm
           {
             vPacerOutput = 10
+            // !!! need to set the output knobs to the equivalent degree as well!
           }
           updateAllGUIValues()
 
