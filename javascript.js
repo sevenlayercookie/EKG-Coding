@@ -3992,6 +3992,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
         if (pacerMode == "DOO") {
           pacerMode = "AOO"
         }
+        document.getElementById("pacingBoxMode").innerText = pacerMode
         updateAllGUIValues()
       }
     }
