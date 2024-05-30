@@ -3982,6 +3982,17 @@ function knobAngleToResult(event, knobImage)  // working here ***
 
     if (knobImage.id == "vOutputDialImg") {
       vPacerOutput = Math.round(result)
+      if (vPacerOutput == 0) {
+        if (pacerMode == "DDD" || pacerMode == "DDI") {
+          pacerMode = "AAI"
+        }
+        if (pacerMode == "VVI" || pacerMode == "VOO") {
+          pacerMode = "OOO"
+        }
+        if (pacerMode == "DOO") {
+          pacerMode = "AOO"
+        }
+      }
     }
 
     if (knobImage.id == "aOutputDialImg") {
