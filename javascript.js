@@ -2930,7 +2930,17 @@ function noiseFunction() {
 function feedbackFunction() // provides feedback on settings
 {
   /*
+
+        OPTIMIZATION DETERMINATION
+        Program needs to first determine which settings are:
+          'optimal' == this setting is as correct as it can be
+          'suboptimal' == not necessarily dangerous, but not optimal
+          'incorrect' == dangerous, incorrect, stupid
+  */
+  /*
         PACING FEEDBACK LEVEL OPTIONS
+        based on these optimization determinations, program will give feedback at three levels:
+
         'noFeedback' == hides all feedback (maybe I'll control this in the pacing function?)
         'lowFeedback' == three feedback results: "INCORRECT", "ACCEPTABLE, but not optimized", "OPTIMIZED"
         'medFeedback'== hints at which option should be corrected (e.g. "Check outputs", etc.)
@@ -2949,6 +2959,21 @@ function feedbackFunction() // provides feedback on settings
   */
 
 
+  //   START DETERMINING WHAT OR WHAT ISN'T OPTIMAL
+  //    - run a function that determines this and returns an object with all parameters set as follows:
+  /*
+   OBJECT STRUCTURE
+
+    const optimizations = {
+      pacingMode: 
+        { "optimal", "suboptimal", "incorrect" *** STOPPED HERE on 6/6/2024***
+      vOutput: "optimal", "too low", "too high"
+      aOutput: "optimal", "too low", "too high"
+      aSensitivity: "optimal", "too low", "too high"
+      vSensitivity: "optimal", "too low", "too high"
+
+};
+  */
   let aSensitivityTooHigh = false;
   let aSensitivityTooLow = false;
   if (currentRhythm != "aFib") 
