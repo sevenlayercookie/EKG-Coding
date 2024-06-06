@@ -3126,7 +3126,7 @@ function feedbackFunction() // provides feedback on settings
       // atrial capture in a-fib
       if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "DDI" || pacerMode == "AOO" || pacerMode == "DOO") {
         let newDiv = document.createElement("div")
-        newDiv.append("Mode: Atrial capture is not generally possible with atrial fib/flutter.")
+        newDiv.append("Mode: Atrial pacing is ineffective in the presence of atrial fibrillation or flutter.")
         newDiv.append(document.createElement("br"))
         newDiv.style.backgroundColor = "red"
         document.getElementById("feedbackBox").append(newDiv)
@@ -3169,9 +3169,9 @@ function feedbackFunction() // provides feedback on settings
     if (currentRhythm == "2ndtypeII" || currentRhythm == "highGradeBlock") {
       if (pacerMode == "AAI" || pacerMode == "AOO") {
         let newDiv = document.createElement("div")
-        newDiv.append("Atrial-only pacing may not always conduct to ventricles in high degree AV blocks")
+        newDiv.append("Atrial pacing may not conduct to ventricles in AV blocks and so atrial-only pacing should be avoided")
         newDiv.append(document.createElement("br"))
-        newDiv.style.backgroundColor = "yellow"
+        newDiv.style.backgroundColor = "orange"
         document.getElementById("feedbackBox").append(newDiv)
       }
       if (pacerMode == "VVI" || pacerMode == "VOO") {
