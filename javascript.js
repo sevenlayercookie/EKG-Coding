@@ -208,6 +208,10 @@ var aUndersenseThresholdDefault = aUndersenseThresholdBaseline = aUndersenseThre
 var vOversenseThresholdDefault = vOversenseThresholdBaseline = vOversenseThreshold = 1 // threhsold below which pacer will oversense (e.g. T wave)
 var vUndersenseThresholdDefault = vUndersenseThresholdBaseline = vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
 
+// pacing mode lists
+var atrialPacedModes = ["DDD","DDI","DOO","AAI","AOO"]
+var ventPacedModes = ["DDD","DDI","DOO","VVI","VOO"]
+
 // feedback
 var feedbackLevel = 'lowFeedback'
 
@@ -3612,10 +3616,8 @@ function enterClick(event) {
           For example, if you change from AAI to DDD pacing mode, the value for A OUTPUT is
           retained; V OUTPUT is set to the nominal value.
           */
-          var atrialPacedRhythms = ["DDD","DDI","DOO","AAI","AOO"]
-          var ventPacedRhythms = ["DDD","DDI","DOO","VVI","VOO"]
 
-          if (atrialPacedRhythms.includes(pacerMode) && !atrialPacedRhythms.includes(priorPacerMode)) // if switching from non-atrial paced rhythm to an atrial paced rhythm
+          if (atrialPacedModes.includes(pacerMode) && !atrialPacedModes.includes(priorPacerMode)) // if switching from non-atrial paced rhythm to an atrial paced rhythm
           {
             aPacerOutput = 10
             // !!! need to set the output knobs to the equivalent degree as well!
@@ -3623,7 +3625,7 @@ function enterClick(event) {
             knobImage.cumulativeDegrees = 0 
             knobImage.revolutions = 0
           }
-          if (ventPacedRhythms.includes(pacerMode) && !ventPacedRhythms.includes(priorPacerMode)) // if switching from non-vent paced rhythm to a vent paced rhythm
+          if (ventPacedModes.includes(pacerMode) && !ventPacedModes.includes(priorPacerMode)) // if switching from non-vent paced rhythm to a vent paced rhythm
           {
             vPacerOutput = 10
             // !!! need to set the output knobs to the equivalent degree as well!
@@ -3748,6 +3750,8 @@ function modeSelectionClick() {
       const element = descendents[j];
       if (element.innerText == pacerMode) {
         e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
+        currentlySelectedRowNumber = i;
+        drawBordersAndArrow()
       }
       else if (e.id == "radio") {
         e.firstElementChild.firstElementChild.src = "assets/radio-circle.svg"
@@ -4012,7 +4016,7 @@ function knobAngleToResult(event, knobImage)  // working here ***
 
     if (knobImage.id == "vOutputDialImg") {
       vPacerOutput = Math.round(result)
-      if (vPacerOutput == 0) {
+      if (vPacerOutput <= 0 && ventPacedModes.includes(pacerMode)) { // if pacer drops to 0 and pacer is set to a v paced mode
         if (pacerMode == "DDD" || pacerMode == "DDI") {
           pacerMode = "AAI"
         }
@@ -4023,16 +4027,34 @@ function knobAngleToResult(event, knobImage)  // working here ***
           pacerMode = "AOO"
         }
         document.getElementById("pacingBoxMode").innerText = pacerMode
-        modeSelectionClick()
+        if (currentBottomScreen == "modeScreen")
+          {
+            modeSelectionClick()
+          }
         updateAllGUIValues()
       }
-      // now need to program if going from V-pacer being off to knob being turned clockwise, V pacer should turn on, starting with output of 1 mA
-      // (and with appropriate pacerMode set)
+      else if (vPacerOutput > 0 && (pacerMode == "AAI" || pacerMode == "AOO" || pacerMode == "OOO")) { // logic to turn V pacing back on if knob increases above 0
+        if (pacerMode == "AAI") {
+          pacerMode = "DDD"
+        }
+        if (pacerMode == "AOO") {
+          pacerMode = "DOO"
+        }
+        if (pacerMode == "OOO") {
+          pacerMode = "VVI"
+        }
+        document.getElementById("pacingBoxMode").innerText = pacerMode
+        if (currentBottomScreen == "modeScreen")
+          {
+            modeSelectionClick()
+          }
+        updateAllGUIValues()
+      }
     }
 
     if (knobImage.id == "aOutputDialImg") {
       aPacerOutput = Math.round(result)
-      if (aPacerOutput == 0) {
+      if (aPacerOutput <= 0 && atrialPacedModes.includes(pacerMode)) {
         if (pacerMode == "DDD" || pacerMode == "DDI") {
           pacerMode = "VVI"
         }
@@ -4043,11 +4065,29 @@ function knobAngleToResult(event, knobImage)  // working here ***
           pacerMode = "VOO"
         }
         document.getElementById("pacingBoxMode").innerText = pacerMode
-        modeSelectionClick()
+        if (currentBottomScreen == "modeScreen")
+          {
+            modeSelectionClick()
+          }
         updateAllGUIValues()
       }
-      // now need to program if going from A-pacer being off to knob being turned clockwise, A pacer should turn on, starting with output of 1 mA
-      // (and with appropriate pacerMode set)
+      else if (aPacerOutput > 0 && (pacerMode == "VVI" || pacerMode == "VOO" || pacerMode == "OOO")) { // logic to turn V pacing back on if knob increases above 0
+        if (pacerMode == "VVI") {
+          pacerMode = "DDD"
+        }
+        if (pacerMode == "VOO") {
+          pacerMode = "DOO"
+        }
+        if (pacerMode == "OOO") {
+          pacerMode = "AAI"
+        }
+        document.getElementById("pacingBoxMode").innerText = pacerMode
+        if (currentBottomScreen == "modeScreen")
+          {
+            modeSelectionClick()
+          }
+        updateAllGUIValues()
+      }
     }
 
     if (knobImage.id == "bottomKnobImg") {
