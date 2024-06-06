@@ -3784,6 +3784,7 @@ function knobClick(clickEvent) {
 
   function mousemove(dragEvent) {
 
+    /*
     // unneeeded debugging testing code
       if (dragEvent.type == "mousemove")
         {
@@ -3794,7 +3795,7 @@ function knobClick(clickEvent) {
             console.log("touchmove")
           }
     /// end of debug code
-        
+       */ 
 
     clickTarget.moveSteps += 1
     // calculate position of mouse relative to center of knob
