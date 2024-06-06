@@ -208,6 +208,10 @@ var aUndersenseThresholdDefault = aUndersenseThresholdBaseline = aUndersenseThre
 var vOversenseThresholdDefault = vOversenseThresholdBaseline = vOversenseThreshold = 1 // threhsold below which pacer will oversense (e.g. T wave)
 var vUndersenseThresholdDefault = vUndersenseThresholdBaseline = vUndersenseThreshold = 10 // threshold above which pacer will undersense (e.g. won't see R wave)
 
+// pacing mode lists
+var atrialPacedModes = ["DDD","DDI","DOO","AAI","AOO"]
+var ventPacedModes = ["DDD","DDI","DOO","VVI","VOO"]
+
 // feedback
 var feedbackLevel = 'lowFeedback'
 
@@ -3595,12 +3599,40 @@ function enterClick(event) {
         if (e.id != "RAPrateRow" && e.id != "pauseButton") {
           animateButton(enterButton)
         }
+
         if (e.id == "radio") {
           e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
+          var priorPacerMode = pacerMode
           pacerMode = e.firstElementChild.nextElementSibling.innerText
           document.getElementById("pacingBoxMode").innerText = pacerMode
           let element = document.getElementById("pacingMode")
           element.selectedIndex = currentlySelectedRowNumber
+
+          /* Excerpt from manual:
+          RATE, OUTPUT values, and Sensitivity values are set to the nominal values when a pacing
+          mode is selected unless they have been manually adjusted before the pacing mode was
+          selected. If they have been manually adjusted before the pacing mode was selected, the
+          new pacing mode retains these values.
+          For example, if you change from AAI to DDD pacing mode, the value for A OUTPUT is
+          retained; V OUTPUT is set to the nominal value.
+          */
+
+          if (atrialPacedModes.includes(pacerMode) && !atrialPacedModes.includes(priorPacerMode)) // if switching from non-atrial paced rhythm to an atrial paced rhythm
+          {
+            aPacerOutput = 10
+            // !!! need to set the output knobs to the equivalent degree as well!
+            var knobImage = document.getElementById('aOutputDialImg')
+            knobImage.cumulativeDegrees = 0 
+            knobImage.revolutions = 0
+          }
+          if (ventPacedModes.includes(pacerMode) && !ventPacedModes.includes(priorPacerMode)) // if switching from non-vent paced rhythm to a vent paced rhythm
+          {
+            vPacerOutput = 10
+            // !!! need to set the output knobs to the equivalent degree as well!
+            var knobImage = document.getElementById('vOutputDialImg')
+            knobImage.cumulativeDegrees = 0
+            knobImage.revolutions = 0
+          }
           updateAllGUIValues()
 
         }
@@ -3718,6 +3750,8 @@ function modeSelectionClick() {
       const element = descendents[j];
       if (element.innerText == pacerMode) {
         e.firstElementChild.firstElementChild.src = "assets/radio-circle-marked.svg"
+        currentlySelectedRowNumber = i;
+        drawBordersAndArrow()
       }
       else if (e.id == "radio") {
         e.firstElementChild.firstElementChild.src = "assets/radio-circle.svg"
@@ -3983,10 +4017,78 @@ function knobAngleToResult(event, knobImage)  // working here ***
 
     if (knobImage.id == "vOutputDialImg") {
       vPacerOutput = Math.round(result)
+      if (vPacerOutput <= 0 && ventPacedModes.includes(pacerMode)) { // if pacer drops to 0 and pacer is set to a v paced mode
+        if (pacerMode == "DDD" || pacerMode == "DDI") {
+          pacerMode = "AAI"
+        }
+        if (pacerMode == "VVI" || pacerMode == "VOO") {
+          pacerMode = "OOO"
+        }
+        if (pacerMode == "DOO") {
+          pacerMode = "AOO"
+        }
+        document.getElementById("pacingBoxMode").innerText = pacerMode
+        if (currentBottomScreen == "modeScreen")
+          {
+            modeSelectionClick()
+          }
+        updateAllGUIValues()
+      }
+      else if (vPacerOutput > 0 && (pacerMode == "AAI" || pacerMode == "AOO" || pacerMode == "OOO")) { // logic to turn V pacing back on if knob increases above 0
+        if (pacerMode == "AAI") {
+          pacerMode = "DDD"
+        }
+        if (pacerMode == "AOO") {
+          pacerMode = "DOO"
+        }
+        if (pacerMode == "OOO") {
+          pacerMode = "VVI"
+        }
+        document.getElementById("pacingBoxMode").innerText = pacerMode
+        if (currentBottomScreen == "modeScreen")
+          {
+            modeSelectionClick()
+          }
+        updateAllGUIValues()
+      }
     }
 
     if (knobImage.id == "aOutputDialImg") {
       aPacerOutput = Math.round(result)
+      if (aPacerOutput <= 0 && atrialPacedModes.includes(pacerMode)) {
+        if (pacerMode == "DDD" || pacerMode == "DDI") {
+          pacerMode = "VVI"
+        }
+        if (pacerMode == "AAI" || pacerMode == "AOO") {
+          pacerMode = "OOO"
+        }
+        if (pacerMode == "DOO") {
+          pacerMode = "VOO"
+        }
+        document.getElementById("pacingBoxMode").innerText = pacerMode
+        if (currentBottomScreen == "modeScreen")
+          {
+            modeSelectionClick()
+          }
+        updateAllGUIValues()
+      }
+      else if (aPacerOutput > 0 && (pacerMode == "VVI" || pacerMode == "VOO" || pacerMode == "OOO")) { // logic to turn V pacing back on if knob increases above 0
+        if (pacerMode == "VVI") {
+          pacerMode = "DDD"
+        }
+        if (pacerMode == "VOO") {
+          pacerMode = "DOO"
+        }
+        if (pacerMode == "OOO") {
+          pacerMode = "AAI"
+        }
+        document.getElementById("pacingBoxMode").innerText = pacerMode
+        if (currentBottomScreen == "modeScreen")
+          {
+            modeSelectionClick()
+          }
+        updateAllGUIValues()
+      }
     }
 
     if (knobImage.id == "bottomKnobImg") {
