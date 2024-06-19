@@ -3285,15 +3285,33 @@ function generateArrayOfProblems()
           arrayOfProblems.push(problem)
         } 
     } // STOPPED HERE 6/19/23
+
+    if (ventSensedModes.contains(pacerMode)) // if pacerMode is currently set to an vent sensed mode
+    {
+      if (vPacerSensitivity > vUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline) // vent sensitivity too loo, undersensing
+        {
+          const problem = {
+            severity:"incorrect", 
+            mediumFeedback:"Ventricular undersensing", 
+            highFeedback:"Ventricular sensitivity is too low, leading to undersensing of ventricular activity. This can lead to inappropriate pacing spikes."
+            };
+          arrayOfProblems.push(problem)
+        } 
+
+        if (vPacerSensitivity < vOversenseThresholdBaseline + 0.5 * vOversenseThresholdBaseline) // vent sensitivity too high, oversensing
+        {
+          const problem = {
+            severity:"incorrect", 
+            mediumFeedback:"Ventricular oversensing", 
+            highFeedback:"Ventricular sensitivity is too high, leading to oversensing of ventricular activity. This can lead to lack of pacing when would be appropriate."
+            };
+          arrayOfProblems.push(problem)
+        } 
+    } // STOPPED HERE 6/19/23
   
   let aSensitivityTooHigh = false;
   let aSensitivityTooLow = false;
 
-      aSensitivityTooLow = aPacerSensitivity > aUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline
-      aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdBaseline + 0.5 * aOversenseThresholdBaseline
-
-  let vSensitivityTooHigh = vPacerSensitivity < vOversenseThresholdBaseline + 0.5 * vOversenseThresholdBaseline
-  let vSensitivityTooLow = vPacerSensitivity > vUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline
   let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdBaseline + 0.5 * aCaptureThresholdBaseline
   let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline * 5 // overly high output is not optimal (should be around 2x greater than capture threshold)
   let vPacerOutputTooLow = vPacerOutput < vCaptureThresholdBaseline + 0.5 * vCaptureThresholdBaseline
