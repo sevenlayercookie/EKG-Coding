@@ -211,6 +211,8 @@ var vUndersenseThresholdDefault = vUndersenseThresholdBaseline = vUndersenseThre
 // pacing mode lists
 var atrialPacedModes = ["DDD","DDI","DOO","AAI","AOO"]
 var ventPacedModes = ["DDD","DDI","DOO","VVI","VOO"]
+var atrialSensedModes = ["DDD","DDI","AAI"]
+var ventSensedModes = ["DDD","DDI","VVI"]
 
 // feedback
 var feedbackLevel = 'lowFeedback'
@@ -2930,7 +2932,10 @@ function noiseFunction() {
 function feedbackFunction() // provides feedback on settings
 {
   /*
-
+        FEEDBACK PROCESS
+        (1) determine which settings are optimal or not
+        (2) use this info to provide feedback to user (depending on which feedback level is selected
+        
         OPTIMIZATION DETERMINATION
         Program needs to first determine which settings are:
           'optimal' == this setting is as correct as it can be
@@ -2947,33 +2952,63 @@ function feedbackFunction() // provides feedback on settings
         'highFeedback' == comprehensive explanation of error and how to fix it
   */
 
-  /*
-    let aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdRandomRange[0]
-    let aSensitivityTooLow = aPacerSensitivity > aUndersenseThresholdRandomRange[1]
-    let vSensitivityTooHigh = vPacerSensitivity < vOversenseThresholdRandomRange[0]
-    let vSensitivityTooLow = vPacerSensitivity > vUndersenseThresholdRandomRange[1]
-    let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdRandomRange[1]
-    let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline * 3 // overly high output is not optimal (should be around 2x greater than capture threshold)
-    let vPacerOutputTooLow = vPacerOutput < vCaptureThresholdRandomRange[1]
-    let vPacerOutputTooHigh = vPacerOutput > vCaptureThresholdBaseline * 3// overly high output is not optimal (should be around 2x greater than capture threshold)
-  */
-
-
   //   START DETERMINING WHAT OR WHAT ISN'T OPTIMAL
   //    - run a function that determines this and returns an object with all parameters set as follows:
   /*
-   OBJECT STRUCTURE
+   OBJECT STRUCTURE IDEAS
+   ---- IDEA 1 ----
+     an "array of problems"
+     anytime a problem is identified, it will be added, along with its severity (suboptimal, incorrect), a medium description, and a high description
+    
+ILLUSTRATION
+    array of problems
+      problem 1
+        severity: 
+        mediumFeedback:
+        highFeedback:
+      problem 2
+        severity:
+        mediumFeedback:
+        highFeedback:
+      
+  Once all problems have been added, another function will form them into HTML divs and create an appendable feedback div
+  If no problems, then OPTIMIZED will be displayed in green
+    
+     pacingMode will be the most complex. It will be set 
+   
+    ---- IDEA 2 ----
+     an object with multiple properties, each representing a setting on the pacemaker
+
+
 
     const optimizations = {
       pacingMode: 
-        { "optimal", "suboptimal", "incorrect" *** STOPPED HERE on 6/6/2024***
-      vOutput: "optimal", "too low", "too high"
-      aOutput: "optimal", "too low", "too high"
-      aSensitivity: "optimal", "too low", "too high"
-      vSensitivity: "optimal", "too low", "too high"
+        { "optimal", "suboptimal", "incorrect" }
+      vOutput: "optimal", "too low to capture", "too high", "below safety margin"
+      aOutput: "optimal", "too low to capture", "too high", "below safety margin"
+      aSensitivity: "optimal", "undersensing", "oversensing", "below safety margin"
+      vSensitivity: "optimal", "undersensing", "oversensing", "below safety margin"
 
 };
   */
+let arrayOfProblems = generateArrayOfProblems()
+  // START ARRAY OF PROBLEMS RESTRUCTURE 6/19/2024
+    
+
+    /* problem object
+
+        const problem = {
+          severity:"incorrect", 
+          mediumFeedback:"500", 
+          highFeedback:"white"
+          };
+    */
+
+  // iterate through all pacemaker settings and add problems to the array as I come across them
+
+  // END ARRAY OF PROBLEMS RESTRUCTURE 6/19/2024
+
+
   let aSensitivityTooHigh = false;
   let aSensitivityTooLow = false;
   if (currentRhythm != "aFib") 
@@ -3210,6 +3245,160 @@ function feedbackFunction() // provides feedback on settings
   }
 }
 
+function generateArrayOfProblems()
+{
+  // START ARRAY OF PROBLEMS RESTRUCTURE 6/19/2024
+    
+
+    /* problem object
+
+        const problem = {
+          severity:"incorrect", 
+          mediumFeedback:"Undersensing", 
+          highFeedback:"Atrial sensitivity is too low, leading to undersensing of atrial activity"
+          };
+    */
+
+  let arrayOfProblems = []
+  // iterate through all pacemaker settings and add problems to the array as I come across them
+
+  // SENSITIVITIES 
+  if (atrialSensedModes.contains(pacerMode)) // if pacerMode is currently set to an atrial sensed mode
+    {
+      if (aPacerSensitivity > aUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline) // atrial sensitivity too loo, undersensing
+        {
+          const problem = {
+            severity:"incorrect", 
+            mediumFeedback:"Atrial undersensing", 
+            highFeedback:"Atrial sensitivity is too low, leading to undersensing of atrial activity. This can lead to inappropriate pacing spikes."
+            };
+          arrayOfProblems.push(problem)
+        } 
+
+        if (aPacerSensitivity < aOversenseThresholdBaseline + 0.5 * aOversenseThresholdBaseline) // atrial sensitivity too high, oversensing
+        {
+          const problem = {
+            severity:"incorrect", 
+            mediumFeedback:"Atrial oversensing", 
+            highFeedback:"Atrial sensitivity is too high, leading to oversensing of atrial activity. This can lead to lack of pacing when would be appropriate."
+            };
+          arrayOfProblems.push(problem)
+        } 
+    } // STOPPED HERE 6/19/23
+  
+  let aSensitivityTooHigh = false;
+  let aSensitivityTooLow = false;
+
+      aSensitivityTooLow = aPacerSensitivity > aUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline
+      aSensitivityTooHigh = aPacerSensitivity < aOversenseThresholdBaseline + 0.5 * aOversenseThresholdBaseline
+
+  let vSensitivityTooHigh = vPacerSensitivity < vOversenseThresholdBaseline + 0.5 * vOversenseThresholdBaseline
+  let vSensitivityTooLow = vPacerSensitivity > vUndersenseThresholdBaseline - 0.5 * aUndersenseThresholdBaseline
+  let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdBaseline + 0.5 * aCaptureThresholdBaseline
+  let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline * 5 // overly high output is not optimal (should be around 2x greater than capture threshold)
+  let vPacerOutputTooLow = vPacerOutput < vCaptureThresholdBaseline + 0.5 * vCaptureThresholdBaseline
+  let vPacerOutputTooHigh = vPacerOutput > vCaptureThresholdBaseline * 4 // overly high output is not optimal (should be around 2x greater than capture threshold)
+
+
+
+  let optimized = !aPacerOutputTooHigh && !vPacerOutputTooHigh
+
+  if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter') {
+
+    if (pacerMode == 'DDD') {
+      optimized = false;
+    }
+    // atrial capture in a-fib
+    if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "AOO" || pacerMode == "DOO") {
+      optimized = false;
+    }
+  }
+
+  let allParametersCorrect = true
+
+  if (pacerMode == 'DDD' || pacerMode == 'DDI') {
+    allParametersCorrect =
+      !aSensitivityTooHigh && !aSensitivityTooLow &&
+      !vSensitivityTooHigh && !vSensitivityTooLow &&
+      !aPacerOutputTooLow &&
+      !vPacerOutputTooLow
+  }
+  if (pacerMode == 'DOO') {
+    allParametersCorrect =
+      !aPacerOutputTooLow &&
+      !vPacerOutputTooLow
+    // if a setting isn't relevant to this pacing mode, set it as correct
+    aSensitivityTooHigh = false;
+    aSensitivityTooLow = false;
+    vSensitivityTooHigh = false;
+    vSensitivityTooLow = false;
+
+  }
+  if (pacerMode == 'AAI') {
+    allParametersCorrect =
+      !aSensitivityTooHigh && !aSensitivityTooLow &&
+      !aPacerOutputTooLow
+    //
+    vPacerOutputTooHigh = false;
+    vPacerOutputTooLow = false;
+    vSensitivityTooHigh = false;
+    vSensitivityTooLow = false;
+  }
+  if (pacerMode == 'VVI') {
+    allParametersCorrect =
+      !vSensitivityTooHigh && !vSensitivityTooLow &&
+      !vPacerOutputTooLow
+    //
+    aPacerOutputTooHigh = false
+    aPacerOutputTooLow = false
+    aSensitivityTooHigh = false
+    aSensitivityTooLow = false
+  }
+  if (pacerMode == 'AOO') {
+    allParametersCorrect =
+      !aPacerOutputTooLow
+    //
+    aSensitivityTooHigh = false
+    aSensitivityTooLow = false
+    vSensitivityTooHigh = false
+    vSensitivityTooLow = false
+    vPacerOutputTooLow = false
+    vPacerOutputTooHigh = false
+  }
+  if (pacerMode == 'VOO') {
+    allParametersCorrect =
+      !vPacerOutputTooLow
+    //
+    aSensitivityTooHigh = false
+    aSensitivityTooLow = false
+    vSensitivityTooHigh = false
+    vSensitivityTooLow = false
+    aPacerOutputTooLow = false
+    aPacerOutputTooHigh = false
+  }
+  if (pacerMode == 'OOO') {
+    allParametersCorrect = true;
+    vPacerOutputTooHigh = false;
+    vPacerOutputTooLow = false;
+    aSensitivityTooHigh = false
+    aSensitivityTooLow = false
+    vSensitivityTooHigh = false
+    vSensitivityTooLow = false
+    aPacerOutputTooLow = false
+    aPacerOutputTooHigh = false
+  }
+
+  let arrayOfBad = ["", "", "", "", "", "", "", ""]
+  let i = 0;
+  if (aSensitivityTooHigh) { arrayOfBad[i] = "Atrial sensitivity is too high. May cause oversensing"; i++ }
+  if (aSensitivityTooLow) { arrayOfBad[i] = "Atrial sensitivity is too low. May cause undersensing"; i++ }
+  if (vSensitivityTooHigh) { arrayOfBad[i] = "Ventricular sensitivity is too high. May cause oversensing"; i++ }
+  if (vSensitivityTooLow) { arrayOfBad[i] = "Ventricular sensitivity is too low. May cause undersensing"; i++ }
+  if (aPacerOutputTooLow) { arrayOfBad[i] = "Atrial output is too low. May lose capture"; i++ }
+  if (vPacerOutputTooLow) { arrayOfBad[i] = "Ventricular output is too low. May lose capture"; i++ }
+
+
+}
 
 function tickTimers() // advance all timers every time dataClock is advanced
 {
