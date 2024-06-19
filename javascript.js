@@ -3358,13 +3358,24 @@ function generateArrayOfProblems()
     
     // STOPPED HERE 6/19/23
   
+
   let optimized = !aPacerOutputTooHigh && !vPacerOutputTooHigh
 
+  // PACING MODES
+  
   if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter') {
 
     if (pacerMode == 'DDD') {
-      optimized = false;
+      const problem = {
+        severity:"incorrect", 
+        mediumFeedback:"DDD is inappropriate when in a-fib or flutter", 
+        highFeedback:"DDD uses atrial tracking, meaning the ventricles will be paced according to the atrial rate. In a-fib/flutter, atria may be sensed at a very fast rate, causing pacemaker-mediated tachycardia"
+        };
+      arrayOfProblems.push(problem)
     }
+
+        // STOPPED HERE 6/19/23
+
     // atrial capture in a-fib
     if (pacerMode == 'AAI' || pacerMode == "DDD" || pacerMode == "AOO" || pacerMode == "DOO") {
       optimized = false;
