@@ -3307,10 +3307,35 @@ function generateArrayOfProblems()
             };
           arrayOfProblems.push(problem)
         } 
-    } // STOPPED HERE 6/19/23
+    }
+    
+    if (atrialPacedModes.contains(pacerMode)) // if pacerMode is currently set to an atrial paced mode
+    {
+      if (aPacerOutput < aCaptureThresholdBaseline + 0.5 * aCaptureThresholdBaseline) // atrial output too low, not capturing
+        {
+          const problem = {
+            severity:"incorrect", 
+            mediumFeedback:"Atrial output too low", 
+            highFeedback:"Atrial output too low, which may lead to loss of capture."
+            };
+          arrayOfProblems.push(problem)
+        } 
+
+        if (aPacerOutput > aCaptureThresholdBaseline * 5) // atrial output too high, suboptimal
+        {
+          const problem = {
+            severity:"suboptimal", 
+            mediumFeedback:"Atrial output is higher than necessary", 
+            highFeedback:"Atrial output is higher than necessary. This can burn out pacing wires faster."
+            };
+          arrayOfProblems.push(problem)
+        } 
+    }
+    
+    
+    
+    // STOPPED HERE 6/19/23
   
-  let aSensitivityTooHigh = false;
-  let aSensitivityTooLow = false;
 
   let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdBaseline + 0.5 * aCaptureThresholdBaseline
   let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline * 5 // overly high output is not optimal (should be around 2x greater than capture threshold)
