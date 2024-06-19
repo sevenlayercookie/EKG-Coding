@@ -3284,7 +3284,7 @@ function generateArrayOfProblems()
             };
           arrayOfProblems.push(problem)
         } 
-    } // STOPPED HERE 6/19/23
+    }
 
     if (ventSensedModes.contains(pacerMode)) // if pacerMode is currently set to an vent sensed mode
     {
