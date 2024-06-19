@@ -3326,24 +3326,38 @@ function generateArrayOfProblems()
           const problem = {
             severity:"suboptimal", 
             mediumFeedback:"Atrial output is higher than necessary", 
-            highFeedback:"Atrial output is higher than necessary. This can burn out pacing wires faster."
+            highFeedback:"Atrial output is higher than necessary. This can burn out pacing wires faster." // overly high output is not optimal (should be around 2x greater than capture threshold)
+            };
+          arrayOfProblems.push(problem)
+        } 
+    }
+    
+    if (ventPacedModes.contains(pacerMode)) // if pacerMode is currently set to an vent paced mode
+    {
+      if (vPacerOutput < vCaptureThresholdBaseline + 0.5 * vCaptureThresholdBaseline) // vent output too low, not capturing
+        {
+          const problem = {
+            severity:"incorrect", 
+            mediumFeedback:"Ventricular output too low", 
+            highFeedback:"Ventricular output too low, which may lead to loss of capture."
+            };
+          arrayOfProblems.push(problem)
+        } 
+
+        if (vPacerOutput > vCaptureThresholdBaseline * 4) // vent output too high, suboptimal
+        {
+          const problem = {
+            severity:"suboptimal", 
+            mediumFeedback:"Ventricular output is higher than necessary", 
+            highFeedback:"Ventricular output is higher than necessary. This can burn out pacing wires faster." // overly high output is not optimal (should be around 2x greater than capture threshold)
             };
           arrayOfProblems.push(problem)
         } 
     }
     
     
-    
     // STOPPED HERE 6/19/23
   
-
-  let aPacerOutputTooLow = aPacerOutput < aCaptureThresholdBaseline + 0.5 * aCaptureThresholdBaseline
-  let aPacerOutputTooHigh = aPacerOutput > aCaptureThresholdBaseline * 5 // overly high output is not optimal (should be around 2x greater than capture threshold)
-  let vPacerOutputTooLow = vPacerOutput < vCaptureThresholdBaseline + 0.5 * vCaptureThresholdBaseline
-  let vPacerOutputTooHigh = vPacerOutput > vCaptureThresholdBaseline * 4 // overly high output is not optimal (should be around 2x greater than capture threshold)
-
-
-
   let optimized = !aPacerOutputTooHigh && !vPacerOutputTooHigh
 
   if (currentRhythm == 'aFib' || currentRhythm == 'aFlutter') {
