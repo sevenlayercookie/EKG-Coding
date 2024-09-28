@@ -2301,7 +2301,7 @@ function startVAI()
         AVITimerFlag = true; // turn on A-V timer
         }
       
-      if (timeSinceLastSensedP() == 2)  // The second interval begins with an atrial sensed or paced event and extends to a ventricular event. This interval may be defined by a paced AV, PR, AR, or PV interval.
+      if (timeSinceLastSensedP() == 2 && !AVITimerFlag)  // The second interval begins with an atrial sensed or paced event and extends to a ventricular event. This interval may be defined by a paced AV, PR, AR, or PV interval.
       {
         startAVI()
 
