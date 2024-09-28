@@ -2240,7 +2240,7 @@ function pacingFunction() {
     // A PVC should reset the VAI(AEI) timer and STOP any active AVI timer
     // 
 
-    if (pacerMode == 'DDD') // sensing fixed
+  if (pacerMode == 'DDD') // sensing fixed (9/28/24)
     {
       // vars
       timeSinceV = timeSinceLastSensedV();
@@ -2264,9 +2264,8 @@ function pacingFunction() {
 
       // once pacer is turned on, timers should start immediately regardless of sensing or anything else
 
-
-      if (timeSinceLastSensedV() == 2) // The first is the interval from a ventricular sensed or paced event to an atrial paced event and is known as the AEI, or VAI.
-      {
+function startVAI()
+  {
         VVtimer = 0;
         rOLD = rNEW
         rNEW = dataClock
@@ -2280,19 +2279,31 @@ function pacingFunction() {
         AVITimer = usedAVinterval; // set timers
         VAITimerFlag = true;  // turn on V-A timer
         AVITimerFlag = false; // turn off A-V timer
+  }
+      
+      if (timeSinceLastSensedV() == 2) // The first is the interval from a ventricular sensed or paced event to an atrial paced event and is known as the AEI, or VAI.
+      {
+        startVAI()
       }
+      
       if (goalPacerMs - (rNEW - rOLD) > 0 && goalPacerMs - (rNEW - rOLD) <= usedAVinterval) {
         AVExtension = goalPacerMs - (rNEW - rOLD) // how far off was last effect pacing rate from goal rate?
       }
       else { AVExtension = 0 }
 
       timeSinceP = timeSinceLastSensedP()
-      if (timeSinceLastSensedP() == 2)  // The second interval begins with an atrial sensed or paced event and extends to a ventricular event. This interval may be defined by a paced AV, PR, AR, or PV interval.
-      {
+
+      function startAVI()
+        {
         //VAItimer = goalPacerMs - AVInterval // start the VAI/AEI timer (interval from vent to next P)
         AVITimer = usedAVinterval // set timers
         VAITimerFlag = false; // turn off V-A timer
         AVITimerFlag = true; // turn on A-V timer
+        }
+      
+      if (timeSinceLastSensedP() == 2)  // The second interval begins with an atrial sensed or paced event and extends to a ventricular event. This interval may be defined by a paced AV, PR, AR, or PV interval.
+      {
+        startAVI()
 
       }
 
@@ -2311,12 +2322,16 @@ function pacingFunction() {
         }
         */
         VAITimerFlag = false; // turn off the VA timer
+        startAVI()
+        
       }
       // backup reset timers if timers fail for some reason (undersensing?)
+      /*
       if (timeSinceLastSensedP() > goalPacerMs + 50)    // backup to pace P if timers fail
       {
         VAITimerFlag = true
       }
+      */
 
 
       // ventricular pacing (after timers expire)
@@ -2335,6 +2350,7 @@ function pacingFunction() {
         }
         */
         AVITimerFlag = false; // turn off the AV timer
+        startVAI()
       }
       // tick the timers down
       if (AVITimerFlag) {
